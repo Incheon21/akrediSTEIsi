@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# Environment
+.env
+
+# uv
+.python-version
+uv.lock
+
+# Database
+*.db
+
+# Build
+*.egg-info/
+dist/
