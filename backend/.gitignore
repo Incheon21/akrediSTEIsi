@@ -9,7 +9,6 @@ __pycache__/
 
 # uv
 .python-version
-uv.lock
 
 # Database
 *.db
