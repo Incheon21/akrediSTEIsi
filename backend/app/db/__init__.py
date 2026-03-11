@@ -1,11 +1,16 @@
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
+
 from app.core.config import get_settings
 
 settings = get_settings()
 
-# Use psycopg3 driver
-db_url = settings.DATABASE_URL.replace("postgresql://", "postgresql+psycopg://")
+# Ensure psycopg3 driver is used
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg://")
 
 engine = create_engine(
     db_url,
@@ -19,7 +24,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-def get_db():
+def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db
