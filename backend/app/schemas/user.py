@@ -1,45 +1,43 @@
-from pydantic import BaseModel, EmailStr
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
-from app.schemas.role import RoleResponse
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, EmailStr
+
 from app.schemas.program_studi import ProgramStudiResponse
+from app.schemas.role import RoleResponse
 
 
 class UserBase(BaseModel):
-    email: str
+    email: EmailStr
     nama: str
-    nip: Optional[str] = None
-    role_id: UUID
-    program_studi_id: Optional[UUID] = None
+    nip: str | None = None
 
 
 class UserCreate(UserBase):
     password: str
+    role_id: UUID
+    program_studi_id: UUID | None = None
 
 
 class UserUpdate(BaseModel):
-    email: Optional[str] = None
-    nama: Optional[str] = None
-    nip: Optional[str] = None
-    password: Optional[str] = None
-    is_active: Optional[bool] = None
-    role_id: Optional[UUID] = None
-    program_studi_id: Optional[UUID] = None
+    email: str | None = None
+    nama: str | None = None
+    nip: str | None = None
+    password: str | None = None
+    is_active: bool | None = None
+    role_id: UUID | None = None
+    program_studi_id: UUID | None = None
 
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     email: str
     nama: str
-    nip: Optional[str] = None
+    nip: str | None = None
     is_active: bool
-    role_id: UUID
-    program_studi_id: Optional[UUID] = None
     created_at: datetime
     updated_at: datetime
-    role: Optional[RoleResponse] = None
-    program_studi: Optional[ProgramStudiResponse] = None
-
-    class Config:
-        from_attributes = True
+    role: RoleResponse | None = None
+    program_studi: ProgramStudiResponse | None = None

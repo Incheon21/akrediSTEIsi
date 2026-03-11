@@ -1,12 +1,12 @@
-from pydantic import BaseModel
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict
 
 
 class RoleBase(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class RoleCreate(RoleBase):
@@ -14,14 +14,13 @@ class RoleCreate(RoleBase):
 
 
 class RoleUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: str | None = None
+    description: str | None = None
 
 
 class RoleResponse(RoleBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
