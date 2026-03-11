@@ -1,9 +1,11 @@
 from logging.config import fileConfig
+
 from sqlalchemy import engine_from_config, pool
+
 from alembic import context
 from app.core.config import get_settings
 from app.db import Base
-from app.models import Role, User, ProgramStudi
+from app.models import ProgramStudi, Role, User
 
 config = context.config
 
@@ -13,7 +15,9 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 settings = get_settings()
-db_url = settings.DATABASE_URL.replace("postgresql://", "postgresql+psycopg://")
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg://")
 config.set_main_option("sqlalchemy.url", db_url)
 
 
