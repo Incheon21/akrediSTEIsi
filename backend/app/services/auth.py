@@ -29,9 +29,9 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
     user = get_user_by_email(db, email)
     if user is None:
         return None
-    if not verify_password(password, user.hashed_password):
+    if not verify_password(password, str(user.hashed_password)):
         return None
-    if not user.is_active:
+    if not bool(user.is_active):
         return None
     return user
 
@@ -62,7 +62,7 @@ def refresh_access_token(db: Session, refresh_token: str) -> AccessTokenResponse
         raise ValueError("Token payload is missing subject.")
 
     user = get_user_by_id(db, UUID(user_id))
-    if user is None or not user.is_active:
+    if user is None or not bool(user.is_active):
         raise ValueError("User not found or inactive.")
 
     return AccessTokenResponse(access_token=create_access_token(subject=str(user.id)))
