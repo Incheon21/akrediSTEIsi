@@ -16,3 +16,8 @@ __pycache__/
 # Build
 *.egg-info/
 dist/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
