@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# Environment
+.env
+
+# uv
+.python-version
+
+# Database
+*.db
+
+# Build
+*.egg-info/
+dist/
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Git
+.git/
+.gitignore
