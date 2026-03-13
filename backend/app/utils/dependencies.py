@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.orm import Session, joinedload
+import json
 
 from app.core.security import decode_token
 from app.db import get_db
@@ -38,7 +39,7 @@ def get_current_user(
     if payload.get("type") != "access":
         raise credentials_exception
 
-    user_id: str | None = payload.get("sub")
+    user_id: str | None = json.loads(payload.get("sub")).get("user_id")
     if user_id is None:
         raise credentials_exception
 

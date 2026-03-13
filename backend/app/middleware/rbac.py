@@ -12,6 +12,9 @@ class RBACMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
 
         # Public endpoints
+        if request.url.path in ["/health"] or request.url.path.startswith('/api/v1/auth'):
+            return await call_next(request)
+
         auth_header = request.headers.get("Authorization")
 
         if not auth_header or not auth_header.startswith("Bearer "):
