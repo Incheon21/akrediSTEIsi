@@ -47,7 +47,7 @@ def create_access_token_with_role(user_id: str, role: str, expires_minutes: int 
 def create_tokens_for_user(user: User) -> TokenResponse:
     """Issue a fresh access + refresh token pair for a given user."""
     return TokenResponse(
-        access_token=create_access_token(subject=json.dumps({'user_id': str(user.id), 'role': str(user.role.id)})),
+        access_token=create_access_token(subject=json.dumps({'user_id': str(user.id), 'role': user.role.name})),
         refresh_token=create_refresh_token(subject=str(user.id)),
     )
 

@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
-from app.middleware.rbac import RBACMiddleware
 
 settings = get_settings()
 
@@ -21,7 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(RBACMiddleware)
 app.include_router(api_router)
 
 
