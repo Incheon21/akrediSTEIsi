@@ -1,43 +1,67 @@
-from fastapi import FastAPI, Request
+from fastapi import Request
 from fastapi.responses import JSONResponse
-from jose import jwt, JWTError
+from starlette.middleware.base import BaseHTTPMiddleware
+from sqlalchemy.orm import Session
 
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
+from app.core.security import decode_token
+from app.db import SessionLocal
+from app.models.role_access import RoleAccess
 
-# TODO: move access config to database
-ROLE_PERMISSIONS = {
-    "admin": ["/dashboard", "/users/create"],
-    "user": ["/dashboard"],
-}
 
-class RBACMiddleware:
-    def __init__(self, app: FastAPI):
-        self.app = app
+class RBACMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
 
-    async def __call__(self, request: Request, call_next):
-        if request.url.path in ["/open", "/login"]:
-            return await call_next(request)
-
+        # Public endpoints
         auth_header = request.headers.get("Authorization")
-        if auth_header is None or not auth_header.startswith("Bearer "):
-            return JSONResponse({"detail": "Missing or invalid Authorization header"}, status_code=401)
-        
-        token = auth_header.split(" ")[1]
-        try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            role = payload.get("role")
-            if role is None:
-                return JSONResponse({"detail": "Role missing in token"}, status_code=403)
-            
-            allowed_paths = ROLE_PERMISSIONS.get(role, [])
-            if request.url.path not in allowed_paths:
-                return JSONResponse({"detail": "You do not have permission to access this resource"}, status_code=403)
 
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return JSONResponse(
+                {"detail": "Missing or invalid Authorization header"},
+                status_code=401,
+            )
+
+        token = auth_header.split(" ")[1]
+
+        try:
+            payload = decode_token(token)
+
+            role_id = payload.get("role_id")
+            if role_id is None:
+                return JSONResponse(
+                    {"detail": "Role missing in token"},
+                    status_code=403,
+                )
+
+            path = request.url.path
+            method = request.method
+
+            db: Session = SessionLocal()
+
+            permission = (
+                db.query(RoleAccess)
+                .filter(
+                    RoleAccess.role_id == role_id,
+                    RoleAccess.api_path == path,
+                    RoleAccess.http_method == method,
+                )
+                .first()
+            )
+
+            db.close()
+
+            if permission is None:
+                return JSONResponse(
+                    {"detail": "You do not have permission to access this resource"},
+                    status_code=403,
+                )
+
+            # Attach user info to request
             request.state.user = payload
 
-        except JWTError:
-            return JSONResponse({"detail": "Invalid token"}, status_code=401)
+        except Exception:
+            return JSONResponse(
+                {"detail": "Invalid token"},
+                status_code=401,
+            )
 
-        response = await call_next(request)
-        return response
+        return await call_next(request)
