@@ -2,6 +2,7 @@ from uuid import UUID
 
 from jose import JWTError
 from sqlalchemy.orm import Session
+import json
 
 from datetime import datetime, timedelta
 from jose import jwt
@@ -46,7 +47,7 @@ def create_access_token_with_role(user_id: str, role: str, expires_minutes: int 
 def create_tokens_for_user(user: User) -> TokenResponse:
     """Issue a fresh access + refresh token pair for a given user."""
     return TokenResponse(
-        access_token=create_access_token(subject=str({'user_id': user.id, 'role': user.role})),
+        access_token=create_access_token(subject=json.dumps({'user_id': str(user.id), 'role': user.role.name})),
         refresh_token=create_refresh_token(subject=str(user.id)),
     )
 
@@ -72,4 +73,6 @@ def refresh_access_token(db: Session, refresh_token: str) -> AccessTokenResponse
     if user is None or not bool(user.is_active):
         raise ValueError("User not found or inactive.")
 
-    return AccessTokenResponse(access_token=create_access_token(subject=str(user.id)))
+    return AccessTokenResponse(
+        access_token=create_access_token(subject=json.dumps({'user_id': str(user.id), 'role': str(user.role.id)}))
+    )

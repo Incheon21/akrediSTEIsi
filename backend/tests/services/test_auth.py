@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
+import json
 
 from app.core.security import (
     create_access_token,
@@ -187,7 +188,7 @@ class TestCreateTokensForUser:
         user = make_user()
         result = create_tokens_for_user(user)
         payload = decode_token(result.access_token)
-        assert payload["sub"] == str(user.id)
+        assert json.loads(payload["sub"])["user_id"] == str(user.id)
         assert payload["type"] == "access"
 
     def test_refresh_token_contains_user_id(self):
@@ -209,7 +210,7 @@ class TestRefreshAccessToken:
         result = refresh_access_token(db, refresh_token)
         assert result.access_token
         payload = decode_token(result.access_token)
-        assert payload["sub"] == str(user.id)
+        assert json.loads(payload["sub"])["user_id"] == str(user.id)
         assert payload["type"] == "access"
 
     def test_invalid_token_raises(self):
