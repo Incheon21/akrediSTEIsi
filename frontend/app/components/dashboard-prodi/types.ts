@@ -2,31 +2,30 @@ export type StatusColor = "green" | "yellow" | "red" | "orange";
 
 export interface KriteriaRow {
   id: string;
-  nama: string;       // e.g. "Visi & Misi (C1)"
+  nama: string;
   status: StatusColor;
-  statusLabel: string; // e.g. "Baik"
-  progres: number;    // 0–100
+  statusLabel: string;
+  progres: number;
   hasLKPS: boolean;
   hasLED: boolean;
   hasEvidence: boolean;
 }
 
 export interface DashboardProdiProps {
-  tahunOptions: string[];             // e.g. ["2023", "2024", "2025"]
+  tahunOptions: string[];
   defaultTahun?: string;
-  lkpsPercent: number;                // 0–100
-  ledPercent: number;                 // 0–100
-  dokumenPendukungPercent: number;    // 0–100
+  lkpsPercent: number;
+  ledPercent: number;
+  dokumenPendukungPercent: number;
   kriteriaList: KriteriaRow[];
   pesanRekomendasi: string[];
   // Gauge
-  skorNilai: number;                  // e.g. 3.2
-  skorTarget: number;                 // e.g. 3.5 (affects needle)
+  skorNilai: number;
+  skorTarget: number;
   // Early Warning
-  deadline: string;                   // e.g. "24 Maret 2026"
+  deadline: string;
   sisaHari: number;
-  earlyWarnings: string[];            // list of warning messages
-  // Handlers (optional – wire up later)
+  earlyWarnings: string[];
   onUnduhLKPS?: () => void;
   onUnduhLED?: () => void;
   onEditLKPS?: (id: string) => void;

@@ -1,10 +1,9 @@
-/** Semicircle gauge SVG */
+
 const GaugeMeter = ({ score, target }: { score: number; target: number }) => {
-  // Map score 1.0–4.0 → angle -90° to +90°
   const clamp = (v: number, min: number, max: number) =>
     Math.min(max, Math.max(min, v));
-  const scoreAngleDeg = ((clamp(score, 1, 4) - 1) / 3) * 180 - 90;
-  const targetAngleDeg = ((clamp(target, 1, 4) - 1) / 3) * 180 - 90;
+  const scoreAngleDeg = ((clamp(score, 1, 4) - 1) / 3) * 180 - 180;
+  const targetAngleDeg = ((clamp(target, 1, 4) - 1) / 3) * 180 - 180;
 
   const toRad = (d: number) => (d * Math.PI) / 180;
   const cx = 100;
@@ -21,12 +20,12 @@ const GaugeMeter = ({ score, target }: { score: number; target: number }) => {
     <div className="flex flex-col items-center">
       <p className="text-sm font-semibold text-gray-700 mb-1">Hasil Skor</p>
       <svg viewBox="0 0 200 110" className="w-52">
-        {/* Gradient arcs */}
+        {/* Gradient */}
         {[
-          { start: -90, end: -30, color: "#ef4444" },   // 1.0–2.0 red
-          { start: -30, end: 30,  color: "#eab308" },   // 2.0–3.0 yellow
-          { start: 30,  end: 60,  color: "#a3e635" },   // 3.0–3.5 light green
-          { start: 60,  end: 90,  color: "#22c55e" },   // 3.5–4.0 green
+          { start: -180, end: -120, color: "#ef4444" },
+          { start: -120, end: -60, color: "#eab308" },
+          { start: -60, end: -30, color: "#a3e635" },
+          { start: -30, end: 0, color: "#22c55e" },
         ].map(({ start, end, color }, i) => {
           const x1 = cx + r * Math.cos(toRad(start));
           const y1 = cy + r * Math.sin(toRad(start));
@@ -45,7 +44,6 @@ const GaugeMeter = ({ score, target }: { score: number; target: number }) => {
           );
         })}
 
-        {/* Range labels */}
         <text x="18" y="105" fontSize="7" fill="#6b7280">1,0 - 2,0</text>
         <text x="70" y="30" fontSize="7" fill="#6b7280" textAnchor="middle">2,01 - 3,5</text>
         <text x="148" y="60" fontSize="7" fill="#6b7280" textAnchor="middle">3,51 - 4,0</text>

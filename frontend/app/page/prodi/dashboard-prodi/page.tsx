@@ -30,7 +30,6 @@ const earlyWarnings = [
   "Deadline pengumpulan dokumen C9 dalam 30 hari",
 ];
 
-// ─── Main Page 
 
 const DashboardProdiPage = () => {
   // Data dummy
@@ -47,19 +46,18 @@ const DashboardProdiPage = () => {
   const sisaHari = 376;
 
   // Handlers (kosong)
-  const onUnduhLKPS = () => alert("Unduh LKPS...");
-  const onUnduhLED = () => alert("Unduh LED...");
-  const onEditLKPS = (id: string) => alert(`Edit LKPS ${id}`);
-  const onEditLED = (id: string) => alert(`Edit LED ${id}`);
-  const onEditEvidence = (id: string) => alert(`Edit Evidence ${id}`);
-  const onAturDeadline = () => alert("Atur Deadline...");
+  const onUnduhLKPS = () => alert("Unduh LKPS Coming soon...");
+  const onUnduhLED = () => alert("Unduh LED Coming soon...");
+  const onEditLKPS = (id: string) => alert(`Edit LKPS ${id} Coming soon...`);
+  const onEditLED = (id: string) => alert(`Edit LED ${id} Coming soon...`);
+  const onEditEvidence = (id: string) => alert(`Edit Evidence ${id} Coming soon...`);
+  const onAturDeadline = () => alert("Atur Deadline Coming soon...");
 
   return (
     <div className="p-6 px-10 bg-background min-h-screen">
       <div className="flex gap-6 flex-wrap">
 
         <div className="flex-1 min-w-[320px]">
-          {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-bold underline text-gray-800">
               Akreditasi
@@ -91,7 +89,7 @@ const DashboardProdiPage = () => {
             </div>
           </div>
 
-          {/* Progress Bars */}
+          {/* Progress Bar */}
           <div className="space-y-2 mb-4">
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-700 w-32 shrink-0">LKPS</span>
@@ -109,7 +107,6 @@ const DashboardProdiPage = () => {
             </div>
           </div>
 
-          {/* Download Buttons */}
           <div className="flex gap-2 mb-5">
             <button
               onClick={onUnduhLKPS}
@@ -185,7 +182,7 @@ const DashboardProdiPage = () => {
           </div>
 
           {/* Pesan Rekomendasi */}
-          <div>
+          <div className="bg-[#fdf0f0] p-2 rounded-md">
             <p className="text-sm font-semibold text-gray-800 mb-1">
               Pesan Rekomendasi :
             </p>
@@ -199,12 +196,11 @@ const DashboardProdiPage = () => {
           </div>
         </div>
 
-        {/* ── RIGHT PANEL ── */}
+        {/* RIGHT PANELL */}
         <div className="flex flex-col gap-4 w-64 shrink-0">
           {/* Gauge */}
           <GaugeMeter score={skorNilai} target={skorTarget} />
 
-          {/* Early Warning */}
           <div className="border border-red-300 bg-red-50 rounded-md p-4">
             <p className="text-sm font-bold text-gray-800 mb-2">Early Warning</p>
             <div className="space-y-1.5 text-xs text-gray-700">
@@ -219,7 +215,7 @@ const DashboardProdiPage = () => {
           {/* Atur Deadline */}
           <button
             onClick={onAturDeadline}
-            className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full border border-gray-300 bg-red-50 rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
           >
             Atur deadline
           </button>
