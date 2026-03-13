@@ -19,6 +19,7 @@ class Role(Base):
     )
 
     users = relationship("User", back_populates="role")
+    accesses = relationship("RoleAccess", back_populates="role")
 
     def __repr__(self) -> str:
         return f"<Role id={self.id} name={self.name!r}>"

@@ -3,6 +3,9 @@ from uuid import UUID
 from jose import JWTError
 from sqlalchemy.orm import Session
 
+from datetime import datetime, timedelta
+from jose import jwt
+
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -35,11 +38,15 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
         return None
     return user
 
-
+def create_access_token_with_role(user_id: str, role: str, expires_minutes: int = 15):
+    expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
+    payload = {"sub": user_id, "role": role, "exp": expire}
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return token
 def create_tokens_for_user(user: User) -> TokenResponse:
     """Issue a fresh access + refresh token pair for a given user."""
     return TokenResponse(
-        access_token=create_access_token(subject=str(user.id)),
+        access_token=create_access_token(subject=str({'user_id': user.id, 'role': user.role})),
         refresh_token=create_refresh_token(subject=str(user.id)),
     )
 
