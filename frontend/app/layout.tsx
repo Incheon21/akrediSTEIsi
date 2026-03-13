@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inria_Serif } from "next/font/google";
 import "./globals.css";
-import Navbar from "./components/navigation/Navbar";
+import ConditionalNavbar from "./components/navigation/ConditionalNavbar";
 
 const inriaSerif = Inria_Serif({
   variable: "--font-inria-serif",
@@ -21,10 +21,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${inriaSerif.variable} font-sans antialiased`}
-      >
-        <Navbar />
+      <body className={`${inriaSerif.variable} font-sans antialiased`}>
+        <ConditionalNavbar />
         {children}
       </body>
     </html>

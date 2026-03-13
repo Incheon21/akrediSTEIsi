@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 interface NavbarProps {
   programStudi?: string;
@@ -16,7 +16,14 @@ export default function Navbar({
   userInitial = "A",
 }: NavbarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    router.push("/login");
+  };
 
   const isActive = (path: string) => pathname.startsWith(path);
 
@@ -34,19 +41,21 @@ export default function Navbar({
         <div className="flex items-stretch flex-1 justify-end px-0">
           <Link
             href="/page/prodi/simulasi-skor"
-            className={`px-6 flex items-center text-sm font-medium transition-all duration-150 ${isActive("/page/prodi/simulasi-skor")
+            className={`px-6 flex items-center text-sm font-medium transition-all duration-150 ${
+              isActive("/page/prodi/simulasi-skor")
                 ? "bg-[#177093] text-white shadow"
                 : "bg-cyan-300 text-black hover:bg-cyan-400"
-              }`}
+            }`}
           >
             Simulasi Skor
           </Link>
           <Link
             href="/page/prodi/dashboard-prodi"
-            className={`px-6 flex items-center text-sm font-medium transition-all duration-150 ${isActive("/page/prodi/dashboard-prodi")
+            className={`px-6 flex items-center text-sm font-medium transition-all duration-150 ${
+              isActive("/page/prodi/dashboard-prodi")
                 ? "bg-[#177093] text-white shadow"
                 : "bg-cyan-300 text-black hover:bg-cyan-400"
-              }`}
+            }`}
           >
             Dashboard Prodi
           </Link>
@@ -89,7 +98,10 @@ export default function Navbar({
                   Pengaturan
                 </button>
                 <div className="border-t border-gray-100 mt-1">
-                  <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                  >
                     Keluar
                   </button>
                 </div>
