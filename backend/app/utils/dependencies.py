@@ -45,7 +45,7 @@ def get_current_user(
 
     user = (
         db.query(User)
-        .options(joinedload(User.role))
+        .options(joinedload(User.role), joinedload(User.program_studi))
         .filter(User.id == UUID(user_id))
         .first()
     )

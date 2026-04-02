@@ -17,8 +17,11 @@ const GaugeMeter = ({ score, target }: { score: number; target: number }) => {
   const targetY = cy + (r + 14) * Math.sin(toRad(targetAngleDeg));
 
   return (
-    <div className="flex flex-col items-center">
-      <p className="text-sm font-semibold text-gray-700 mb-1">Hasil Skor</p>
+    <div className="flex flex-col items-center bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+      <div className="w-full flex items-center gap-2 mb-3">
+        <span className="w-1 h-5 bg-[#00509d] rounded-full inline-block" />
+        <p className="text-sm font-bold text-[#132040]">Hasil Skor Akreditasi</p>
+      </div>
       <svg viewBox="0 0 200 110" className="w-52">
         {/* Gradient */}
         {[
@@ -49,12 +52,12 @@ const GaugeMeter = ({ score, target }: { score: number; target: number }) => {
         <text x="148" y="60" fontSize="7" fill="#6b7280" textAnchor="middle">3,51 - 4,0</text>
 
         {/* Target marker */}
-        <circle cx={targetX} cy={targetY} r="4" fill="#1d4ed8" />
+        <circle cx={targetX} cy={targetY} r="4" fill="#00509d" />
         <text
           x={targetX + 4}
           y={targetY - 4}
           fontSize="7"
-          fill="#1d4ed8"
+          fill="#00509d"
           fontWeight="bold"
         >
           Target

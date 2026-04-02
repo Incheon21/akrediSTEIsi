@@ -29,8 +29,11 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[project.scripts]
+seed = "scripts.seed:seed"
+
 [tool.hatch.build.targets.wheel]
-packages = ["app"]
+packages = ["app", "scripts"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

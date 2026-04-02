@@ -36,7 +36,7 @@ export default function LoginPage() {
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("refresh_token", data.refresh_token);
 
-      router.push("/page/prodi/dashboard-prodi");
+      router.push("/prodi/dashboard-prodi");
     } catch {
       setError("Tidak dapat terhubung ke server. Coba lagi nanti.");
     } finally {

@@ -39,5 +39,7 @@ class UserResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    role_id: UUID
+    program_studi_id: UUID | None = None
     role: RoleResponse | None = None
     program_studi: ProgramStudiResponse | None = None
