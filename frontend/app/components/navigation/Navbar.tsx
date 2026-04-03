@@ -11,9 +11,9 @@ interface NavbarProps {
 }
 
 export default function Navbar({
-  programStudi = "Teknik Informatika",
-  userName = "Admin",
-  userInitial = "A",
+  programStudi = "",
+  userName = "",
+  userInitial = "",
 }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
