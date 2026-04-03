@@ -38,3 +38,6 @@ class DashboardProdiResponse(BaseModel):
     lkps_percent: int
     led_percent: int
     evidence_percent: int
+
+class DashboardMultiProdiResponse(BaseModel):
+    data_prodi: List[DashboardProdiResponse]
