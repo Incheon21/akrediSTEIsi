@@ -211,14 +211,14 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
   const totalRows = Object.values(recordsBySection).reduce((acc, rows) => acc + rows.length, 0);
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--accent-ink)] md:px-8">
+    <main className="min-h-screen bg-[#f4f6f8] px-4 py-8 text-[var(--accent-ink)] md:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 lg:flex-row">
         {/* ----------------------------------------------------------------
             Sidebar
         ---------------------------------------------------------------- */}
         <aside className="lg:w-72">
-          <div className="sticky top-6 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-primary)]/90 p-5 shadow-[var(--shadow-soft)]">
-            <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent-emerald)]">Submission</p>
+          <div className="sticky top-6 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-primary)] p-5 shadow-[var(--shadow-soft)]">
+            <p className="text-xs uppercase tracking-[0.3em] text-[#00509d]">Submission</p>
             <h2 className="mt-2 truncate text-lg font-semibold text-[var(--accent-ink)]">{submissionId}</h2>
 
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-[var(--surface-muted)]/70 px-3 py-2 text-xs font-semibold text-[var(--accent-ink)]">
@@ -230,7 +230,7 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
               type="button"
               onClick={handleExport}
               disabled={exporting}
-              className="mt-3 w-full rounded-2xl bg-[var(--accent-emerald)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
+              className="mt-3 w-full rounded-2xl bg-[#00509d] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#003f7d] disabled:opacity-50"
             >
               {exporting ? "Mengekspor..." : "Ekspor ke Excel (.xlsx)"}
             </button>
@@ -250,7 +250,7 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
                           onClick={() => setActiveSectionCode(section.code)}
                           className={`flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-left text-sm transition ${
                             isActive
-                              ? "border-[var(--accent-emerald)] bg-[var(--surface-primary)] text-[var(--accent-ink)]"
+                                ? "border-[#00509d] bg-[#eef4fb] text-[var(--accent-ink)]"
                               : "border-transparent bg-transparent text-[var(--accent-ink)]/70 hover:bg-white/40"
                           }`}
                         >
@@ -273,10 +273,10 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
         {/* ----------------------------------------------------------------
             Main panel
         ---------------------------------------------------------------- */}
-        <section className="flex-1 rounded-[32px] border border-[var(--border-soft)] bg-[var(--surface-primary)]/95 p-6 shadow-[var(--shadow-soft)] md:p-8">
+        <section className="flex-1 rounded-[32px] border border-[var(--border-soft)] bg-[var(--surface-primary)] p-6 shadow-[var(--shadow-soft)] md:p-8">
           <header className="flex flex-col gap-4 border-b border-[var(--border-soft)] pb-6 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[var(--accent-emerald)]">{activeSection.sheetLabel}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[#00509d]">{activeSection.sheetLabel}</p>
               <h1 className="mt-2 text-3xl font-semibold text-[var(--accent-ink)]">{activeSection.title}</h1>
               {activeSection.purpose && (
                 <p className="mt-2 max-w-2xl text-sm text-[var(--accent-ink)]/80">{activeSection.purpose}</p>
@@ -288,7 +288,7 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
                   type="button"
                   onClick={() => handleAddRecord(activeSection)}
                   disabled={savingIndex === -1}
-                  className="rounded-full bg-[var(--accent-emerald)] px-4 py-2 font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
+                  className="rounded-full bg-[#00509d] px-4 py-2 font-semibold text-white transition hover:bg-[#003f7d] disabled:opacity-50"
                 >
                   {savingIndex === -1 ? "Menyimpan..." : "Tambah baris"}
                 </button>
@@ -422,7 +422,7 @@ function FieldInput({
   const spanClass = spanClassMap[field.span ?? 1] ?? "md:col-span-2";
   const baseLabel = "mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--accent-ink)]/60";
   const baseInput =
-    "w-full rounded-2xl border border-[var(--border-soft)] bg-white px-3 py-2 text-sm text-[var(--accent-ink)] focus:border-[var(--accent-emerald)] focus:outline-none disabled:opacity-60";
+    "w-full rounded-2xl border border-[var(--border-soft)] bg-white px-3 py-2 text-sm text-[var(--accent-ink)] focus:border-[#00509d] focus:outline-none disabled:opacity-60";
 
   if (field.type === "textarea") {
     return (

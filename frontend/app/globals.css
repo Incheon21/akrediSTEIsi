@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5efe4;
-  --foreground: #1d1a16;
-  --surface-primary: #fffdf7;
-  --surface-muted: #f1e7d5;
+  --background: #f4f6f8;
+  --foreground: #132040;
+  --surface-primary: #ffffff;
+  --surface-muted: #edf3fb;
   --surface-glass: rgba(255, 255, 255, 0.7);
-  --border-soft: #e3d9c8;
-  --accent-emerald: #1c9c82;
-  --accent-sunset: #f28c3a;
-  --accent-ink: #23303d;
-  --shadow-soft: 0 25px 60px rgba(23, 24, 28, 0.08);
+  --border-soft: #d9e2ef;
+  --accent-emerald: #00509d;
+  --accent-sunset: #f39c12;
+  --accent-ink: #132040;
+  --shadow-soft: 0 14px 30px rgba(19, 32, 64, 0.08);
 }
 
 body {
@@ -19,9 +19,9 @@ body {
   font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
   color: var(--foreground);
   background-image:
-    radial-gradient(circle at 20% 20%, rgba(242, 140, 58, 0.12), transparent 45%),
-    radial-gradient(circle at 80% 0%, rgba(28, 156, 130, 0.15), transparent 40%),
-    linear-gradient(135deg, #f9f5ef 0%, #f2e8d8 60%, #fdfbf6 100%);
+    radial-gradient(circle at 10% 10%, rgba(0, 80, 157, 0.08), transparent 38%),
+    radial-gradient(circle at 85% 0%, rgba(0, 96, 184, 0.08), transparent 42%),
+    linear-gradient(180deg, #f8fbff 0%, #f4f6f8 55%, #eef3f9 100%);
   background-attachment: fixed;
   text-rendering: optimizeLegibility;
 }

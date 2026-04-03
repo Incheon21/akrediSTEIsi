@@ -157,7 +157,7 @@ export default function LkpsHomePage() {
             mengisi tabel, dan menutup gap sebelum unggah akhir.
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <StatCard title="Total Submission" value={stats.total.toString()} accent="bg-emerald-100 text-emerald-900" />
+            <StatCard title="Total Submission" value={stats.total.toString()} accent="bg-blue-100 text-[#00509d]" />
             <StatCard title="Selesai" value={stats.completed.toString()} accent="bg-slate-100 text-slate-900" />
             <StatCard title="Draft" value={stats.draft.toString()} accent="bg-amber-100 text-amber-900" />
           </div>
@@ -174,13 +174,13 @@ export default function LkpsHomePage() {
         )}
 
         <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-primary)]/90 p-6 shadow-sm">
+          <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-primary)] p-6 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="text-2xl font-semibold text-[var(--accent-ink)]">Submission terbaru</h2>
                 <p className="text-sm text-[var(--accent-ink)]/70">Pilih submission untuk membuka workspace per seksi.</p>
               </div>
-              <form onSubmit={handleCreate} className="w-full rounded-2xl bg-white/70 p-4 shadow-inner sm:max-w-md">
+              <form onSubmit={handleCreate} className="w-full rounded-2xl border border-[#dbe5f2] bg-white p-4 shadow-inner sm:max-w-md">
                 <p className="text-sm font-semibold text-[var(--accent-ink)]">Tambah submission</p>
                 <div className="mt-3 space-y-3 text-sm">
                   <div>
@@ -191,7 +191,7 @@ export default function LkpsHomePage() {
                       required
                       value={formState.program_studi_id}
                       onChange={(e) => setFormState((prev) => ({ ...prev, program_studi_id: e.target.value }))}
-                      className="w-full rounded-xl border border-[var(--border-soft)] bg-white px-3 py-2 text-sm focus:border-[var(--accent-emerald)] focus:outline-none"
+                      className="w-full rounded-xl border border-[var(--border-soft)] bg-white px-3 py-2 text-sm focus:border-[#00509d] focus:outline-none"
                     >
                       <option value="">Pilih program studi</option>
                       {programStudiList.map((ps) => (
@@ -211,7 +211,7 @@ export default function LkpsHomePage() {
                         min={2000}
                         value={formState.tahun_ts}
                         onChange={(e) => setFormState((prev) => ({ ...prev, tahun_ts: Number(e.target.value) }))}
-                        className="w-full rounded-xl border border-[var(--border-soft)] bg-white px-3 py-2 text-sm focus:border-[var(--accent-emerald)] focus:outline-none"
+                        className="w-full rounded-xl border border-[var(--border-soft)] bg-white px-3 py-2 text-sm focus:border-[#00509d] focus:outline-none"
                       />
                     </div>
                     <div>
@@ -222,7 +222,7 @@ export default function LkpsHomePage() {
                         type="text"
                         value={formState.nama_pengusul}
                         onChange={(e) => setFormState((prev) => ({ ...prev, nama_pengusul: e.target.value }))}
-                        className="w-full rounded-xl border border-[var(--border-soft)] bg-white px-3 py-2 text-sm focus:border-[var(--accent-emerald)] focus:outline-none"
+                        className="w-full rounded-xl border border-[var(--border-soft)] bg-white px-3 py-2 text-sm focus:border-[#00509d] focus:outline-none"
                         placeholder="Nama reviewer internal"
                       />
                     </div>
@@ -230,7 +230,7 @@ export default function LkpsHomePage() {
                   <button
                     type="submit"
                     disabled={isCreating}
-                    className="w-full rounded-xl bg-[var(--accent-emerald)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
+                    className="w-full rounded-xl bg-[#00509d] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#003f7d] disabled:opacity-50"
                   >
                     {isCreating ? "Menyimpan..." : "Buat submission"}
                   </button>
@@ -266,7 +266,7 @@ export default function LkpsHomePage() {
                     type="text"
                     value={templateVersion}
                     onChange={(e) => setTemplateVersion(e.target.value)}
-                    className="w-full rounded-xl border border-[var(--border-soft)] bg-white px-3 py-2 text-sm focus:border-[var(--accent-emerald)] focus:outline-none"
+                    className="w-full rounded-xl border border-[var(--border-soft)] bg-white px-3 py-2 text-sm focus:border-[#00509d] focus:outline-none"
                     placeholder="2024-v1"
                     required
                   />
@@ -284,7 +284,7 @@ export default function LkpsHomePage() {
                 <button
                   type="submit"
                   disabled={!templateFile || uploading}
-                  className="rounded-xl bg-[var(--accent-ink)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-125 disabled:opacity-50"
+                  className="rounded-xl bg-[#00509d] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#003f7d] disabled:opacity-50"
                 >
                   {uploading ? "Mengunggah..." : "Simpan sebagai versi aktif"}
                 </button>
@@ -305,7 +305,7 @@ export default function LkpsHomePage() {
                     </div>
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        template.is_active ? "bg-emerald-100 text-emerald-900" : "bg-slate-100 text-slate-700"
+                        template.is_active ? "bg-blue-100 text-[#00509d]" : "bg-slate-100 text-slate-700"
                       }`}
                     >
                       {template.is_active ? "Aktif" : "Arsip"}
@@ -349,7 +349,7 @@ function SubmissionCard({ submission }: { submission: LkpsSubmission }) {
         </span>
         <Link
           href={`/akreditasi/lkps/${submission.id}`}
-          className="rounded-full border border-[var(--accent-emerald)] px-4 py-1.5 text-sm font-semibold text-[var(--accent-emerald)] transition hover:bg-[var(--accent-emerald)] hover:text-white"
+          className="rounded-full border border-[#00509d] px-4 py-1.5 text-sm font-semibold text-[#00509d] transition hover:bg-[#00509d] hover:text-white"
         >
           Buka workspace
         </Link>

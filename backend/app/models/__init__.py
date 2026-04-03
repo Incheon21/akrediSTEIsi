@@ -1,6 +1,12 @@
 from app.models.program_studi import ProgramStudi
 from app.models.role import Role
 from app.models.user import User
+from app.models.kriteria import Kriteria
+from app.models.indikator import Indikator
+from app.models.target_akreditasi import TargetAkreditasi
+from app.models.evidence import Evidence, EvidenceProdi, EvidenceIndikator
+from app.models.data_lkps import DataLKPS
+from app.models.narasi_led import NarasiLED
 from app.models.lkps import (
     LkpsTemplate,
     LkpsSubmission,
@@ -41,16 +47,51 @@ from app.models.lkps import (
 )
 
 __all__ = [
-    "ProgramStudi", "Role", "User",
-    "LkpsTemplate", "LkpsSubmission", "LkpsSectionProgress",
-    "LkpsVmts", "LkpsKerjasama", "LkpsPenggunaanDana",
-    "LkpsKurikulum", "LkpsIntegrasiPenelitian", "LkpsMkBasicScience",
-    "LkpsCapstoneDesign", "LkpsPenelitianSummary", "LkpsPkmSummary",
-    "LkpsDosenProfil", "LkpsTenagaKependidikan", "LkpsBebanKerjaDosen",
-    "LkpsPublikasiIlmiah", "LkpsLuaranPenelitian", "LkpsProdukJasa",
-    "LkpsKinerjaDtps", "LkpsSitasiDtps", "LkpsRekognisiDtps",
-    "LkpsPembimbingLapangan", "LkpsPrasarana", "LkpsK3lDokumen", "LkpsK3lFasilitas",
-    "LkpsMahasiswaAktif", "LkpsIpkLulusan", "LkpsPrestasiMahasiswa", "LkpsMasaStudi",
-    "LkpsWaktuTunggu", "LkpsKesesuaianKerja", "LkpsTempatKerja", "LkpsKepuasanPengguna",
-    "LkpsPenelitianMahasiswa", "LkpsSpmiDokumen", "LkpsSpmiPelaksanaan",
+    "ProgramStudi",
+    "Role",
+    "User",
+    "Kriteria",
+    "Indikator",
+    "TargetAkreditasi",
+    "Evidence",
+    "EvidenceProdi",
+    "EvidenceIndikator",
+    "DataLKPS",
+    "NarasiLED",
+    "LkpsTemplate",
+    "LkpsSubmission",
+    "LkpsSectionProgress",
+    "LkpsVmts",
+    "LkpsKerjasama",
+    "LkpsPenggunaanDana",
+    "LkpsKurikulum",
+    "LkpsIntegrasiPenelitian",
+    "LkpsMkBasicScience",
+    "LkpsCapstoneDesign",
+    "LkpsPenelitianSummary",
+    "LkpsPkmSummary",
+    "LkpsDosenProfil",
+    "LkpsTenagaKependidikan",
+    "LkpsBebanKerjaDosen",
+    "LkpsPublikasiIlmiah",
+    "LkpsLuaranPenelitian",
+    "LkpsProdukJasa",
+    "LkpsKinerjaDtps",
+    "LkpsSitasiDtps",
+    "LkpsRekognisiDtps",
+    "LkpsPembimbingLapangan",
+    "LkpsPrasarana",
+    "LkpsK3lDokumen",
+    "LkpsK3lFasilitas",
+    "LkpsMahasiswaAktif",
+    "LkpsIpkLulusan",
+    "LkpsPrestasiMahasiswa",
+    "LkpsMasaStudi",
+    "LkpsWaktuTunggu",
+    "LkpsKesesuaianKerja",
+    "LkpsTempatKerja",
+    "LkpsKepuasanPengguna",
+    "LkpsPenelitianMahasiswa",
+    "LkpsSpmiDokumen",
+    "LkpsSpmiPelaksanaan",
 ]

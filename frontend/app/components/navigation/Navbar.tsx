@@ -28,57 +28,54 @@ export default function Navbar({
   const isActive = (path: string) => pathname.startsWith(path);
 
   return (
-    <nav className="w-full bg-blue-300 border-b border-gray-200 shadow-sm">
+    <nav className="w-full bg-[#00509d] shadow-md py-2">
       <div className="flex items-stretch h-14">
-        {/* Logo */}
-        <div className="flex items-center px-5 min-w-[120px] border-r border-gray-200">
-          <span className="text-sm font-semibold text-gray-500 tracking-wide">
-            Logo
-          </span>
+        <div className="flex items-center px-5 min-w-[140px] border-r border-[#0060b8]">
+          <img
+            src="/itb-stei-white.svg"
+            alt="STEI ITB"
+            className="h-8 w-auto"
+          />
         </div>
 
-        {/* Nav Tabs */}
         <div className="flex items-stretch flex-1 justify-end px-0">
           <Link
-            href="/page/prodi/simulasi-skor"
-            className={`px-6 flex items-center text-sm font-medium transition-all duration-150 ${
-              isActive("/page/prodi/simulasi-skor")
-                ? "bg-[#177093] text-white shadow"
-                : "bg-cyan-300 text-black hover:bg-cyan-400"
-            }`}
+            href="/prodi/simulasi-skor"
+            className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/simulasi-skor")
+              ? "text-[#f3e412]"
+              : "text-white hover:text-[#f3e412]"
+              }`}
           >
             Simulasi Skor
           </Link>
           <Link
-            href="/page/prodi/dashboard-prodi"
-            className={`px-6 flex items-center text-sm font-medium transition-all duration-150 ${
-              isActive("/page/prodi/dashboard-prodi")
-                ? "bg-[#177093] text-white shadow"
-                : "bg-cyan-300 text-black hover:bg-cyan-400"
-            }`}
+            href="/prodi/dashboard-prodi"
+            className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/dashboard-prodi")
+              ? "text-[#f3e412]"
+              : "text-white hover:text-[#f3e412]"
+              }`}
           >
             Dashboard Prodi
           </Link>
           <Link
             href="/akreditasi/lkps"
-            className={`px-6 flex items-center text-sm font-medium transition-all duration-150 ${
+            className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${
               isActive("/akreditasi/lkps")
-                ? "bg-[#177093] text-white shadow"
-                : "bg-cyan-300 text-black hover:bg-cyan-400"
+                ? "text-[#f3e412]"
+                : "text-white hover:text-[#f3e412]"
             }`}
           >
             LKPS Workspace
           </Link>
         </div>
 
-        {/* Right Section: Program Studi + Avatar */}
-        <div className="flex items-center gap-3 px-5 border-l border-gray-200">
+        <div className="flex items-center gap-3 px-5 border-l border-[#0060b8]">
           {/* Program Studi */}
           <div className="text-right hidden sm:block">
-            <p className="text-xs text-gray-400 leading-none mb-0.5">
+            <p className="text-xs text-blue-200 leading-none mb-0.5">
               Program Studi
             </p>
-            <p className="text-sm font-semibold text-gray-700 leading-none">
+            <p className="text-sm font-semibold text-white leading-none">
               {programStudi}
             </p>
           </div>
@@ -87,7 +84,7 @@ export default function Navbar({
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="w-9 h-9 rounded-full bg-cyan-500 text-white font-bold text-sm flex items-center justify-center hover:bg-cyan-600 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-1"
+              className="w-9 h-9 rounded-full bg-[#f39c12] text-white font-bold text-sm flex items-center justify-center hover:bg-[#e08e0b] transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-1 focus:ring-offset-[#00509d]"
               aria-label="User menu"
             >
               {userInitial}

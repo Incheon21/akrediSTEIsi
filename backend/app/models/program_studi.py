@@ -28,3 +28,4 @@ class ProgramStudi(Base):
 
     users = relationship("User", back_populates="program_studi")
     lkps_submissions = relationship("LkpsSubmission", back_populates="program_studi")
+    target_akreditasi = relationship("TargetAkreditasi", back_populates="program_studi")
