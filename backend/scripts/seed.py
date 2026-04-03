@@ -86,15 +86,14 @@ def seed():
         db.commit()
 
         kriteria_data = [
-            {"kode": "C1", "nama": "Visi & Misi"},
-            {"kode": "C2", "nama": "Tata Pamong"},
-            {"kode": "C3", "nama": "Mahasiswa"},
-            {"kode": "C4", "nama": "SDM"},
-            {"kode": "C5", "nama": "Keuangan"},
-            {"kode": "C6", "nama": "Pendidikan"},
-            {"kode": "C7", "nama": "Penelitian"},
-            {"kode": "C8", "nama": "PKM"},
-            {"kode": "C9", "nama": "Luaran"},
+            {"kode": "C1", "nama": "Tata Pamong, Tata Kelola, dan Kerjasama"},
+            {"kode": "C2", "nama": "Mahasiswa"},
+            {"kode": "C3", "nama": "Sumber Daya Manusia"},
+            {"kode": "C4", "nama": "Keuangan, Sarana, dan Prasarana"},
+            {"kode": "C5", "nama": "Pendidikan"},
+            {"kode": "C6", "nama": "Penelitian"},
+            {"kode": "C7", "nama": "Pengabdian Kepada Masyarakat"},
+            {"kode": "C8", "nama": "Luaran dan Capaian"},
         ]
         
         for k in kriteria_data:
@@ -106,7 +105,12 @@ def seed():
                 print(f"Seeded kriteria: {k['kode']} - {k['nama']}")
             else:
                 kriteria = existing
-                print(f"Kriteria already exists: {k['kode']}")
+                if kriteria.nama != k["nama"]:
+                    kriteria.nama = k["nama"]
+                    db.add(kriteria)
+                    print(f"Updated kriteria name: {k['kode']} to {k['nama']}")
+                else:
+                    print(f"Kriteria already exists: {k['kode']}")
             
             # Seed some indicators
             for i in range(1, 3):

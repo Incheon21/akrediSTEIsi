@@ -40,10 +40,10 @@ const DashboardProdiPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const url = tahun 
+        const url = tahun
           ? `/api/v1/prodi/${prodiId}/dashboard?tahun=${tahun}`
           : `/api/v1/prodi/${prodiId}/dashboard`;
-          
+
         const res = await apiFetch(url);
         if (!res.ok) throw new Error("Gagal mengambil data dashboard");
         const data: DashboardData = await res.json();
@@ -178,7 +178,7 @@ const DashboardProdiPage = () => {
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <span className="w-1 h-6 bg-[#00509d] rounded-full inline-block" />
-                <h1 className="text-xl font-bold text-[#132040]">Akreditasi</h1>
+                <h1 className="text-xl font-bold text-[#132040]">Progres Akreditasi</h1>
               </div>
 
               {/* Dropdown dengan click-outside */}
@@ -259,14 +259,7 @@ const DashboardProdiPage = () => {
                     <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-[#f8fafc]"}>
                       <td className="px-4 py-2.5 text-gray-800 font-medium whitespace-nowrap">
                         {row.name}
-                        <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded font-normal ${row.input_type === "formula"
-                          ? "bg-purple-100 text-purple-600"
-                          : row.input_type === "manual"
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-gray-100 text-gray-500"
-                          }`}>
-                          {row.input_type === "formula" ? "Auto" : row.input_type === "manual" ? "Narasi" : "Campuran"}
-                        </span>
+
                       </td>
                       <td className="px-4 py-2.5">
                         <StatusDot color={row.status} label={row.status_label} />

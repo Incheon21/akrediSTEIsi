@@ -70,38 +70,49 @@ def get_dashboard_prodi_data(db: Session, prodi_id: UUID, tahun: int | None = No
                 ).count()
                 led_ada = led_count > 0
 
-        # TODO Replace statis 50/100 dengan rumus perhitungan progres indikator IABEE aktual
-        progres_mock = 50 if lkps_ada or led_ada else 0
-        if lkps_ada and led_ada: progres_mock = 100
+        # Status & Progress score per kriteria
+        total_indicators = len(indikators)
+        progress_score = 0
+        
+        if total_indicators > 0 and active_target:
+            fulfilled_count = 0
+            for ind in indikators:
+                # indikator "selesai dikerjakan" jika sudah diberi Evidence, atau ada isian LKPS / LED
+                has_lkps = db.query(DataLKPS).filter(
+                    DataLKPS.target_akreditasi_id == active_target.id, 
+                    DataLKPS.indikator_id == ind.id
+                ).first() is not None
+                
+                has_led = db.query(NarasiLED).filter(
+                    NarasiLED.target_akreditasi_id == active_target.id, 
+                    NarasiLED.indikator_id == ind.id
+                ).first() is not None
+                
+                # minimal led dan lkps ada
+                if has_lkps and has_led:
+                    fulfilled_count += 1
+                    
+            progress_score = int((fulfilled_count / total_indicators) * 100)
 
-        # TODO Status & Label saat ini hanya membaca mentah dari progres_mock di atas
-        k_status = "green" if progres_mock >= 80 else ("yellow" if progres_mock >= 50 else "red")
-        k_status_label = "Baik" if progres_mock >= 80 else ("Cukup" if progres_mock >= 50 else "Buruk")
+        k_status = "green" if progress_score >= 80 else ("yellow" if progress_score >= 50 else "red")
+        k_status_label = "Baik" if progress_score >= 80 else ("Cukup" if progress_score >= 50 else "Buruk")
 
         has_formula = any(ind.tipe_input == "formula" for ind in indikators)
         has_manual = any(ind.tipe_input == "manual" for ind in indikators)
         
-        if has_formula and has_manual:
-            c_input_type = "both"
-        elif has_formula:
-            c_input_type = "formula"
-        elif has_manual:
-            c_input_type = "manual"
-        else:
-            c_input_type = "both"
 
         kriteria_list_response.append({
             "id": k.kode.lower(),
             "name": f"{k.nama} ({k.kode})",
             "status": k_status,
             "status_label": k_status_label,
-            "progress": progres_mock,
+            "progress": progress_score,
             "has_lkps": True, 
             "lkps_available": lkps_ada,
             "has_led": True,
             "led_available": led_ada,
             "has_evidence": has_evidence,
-            "input_type": c_input_type
+
         })
 
 

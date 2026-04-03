@@ -21,7 +21,6 @@ export interface CriteriaRow {
   has_led: boolean;
   led_available: boolean;
   has_evidence: boolean;
-  input_type: "formula" | "manual" | "both";
 }
 
 export interface DashboardProdiProps {

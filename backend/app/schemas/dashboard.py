@@ -21,7 +21,6 @@ class KriteriaRowSchema(BaseModel):
     has_led: bool
     led_available: bool
     has_evidence: bool
-    input_type: str
 
 
 class DashboardProdiResponse(BaseModel):
