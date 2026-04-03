@@ -1,6 +1,8 @@
 from typing import List, Optional
-from pydantic import BaseModel
 from uuid import UUID
+
+from pydantic import BaseModel
+
 
 class ProfilProdiSchema(BaseModel):
     name: str
@@ -11,7 +13,7 @@ class ProfilProdiSchema(BaseModel):
 
 
 class KriteriaRowSchema(BaseModel):
-    id: str  
+    id: str
     name: str
     status: str
     status_label: str
@@ -25,6 +27,7 @@ class KriteriaRowSchema(BaseModel):
 
 class DashboardProdiResponse(BaseModel):
     program_studi_profile: ProfilProdiSchema
+    target_akreditasi_id: str
     current_year: int
     available_years: List[int]
     criteria_list: List[KriteriaRowSchema]
@@ -34,11 +37,12 @@ class DashboardProdiResponse(BaseModel):
     target_score: float
     deadline: Optional[str] = None
     days_remaining: Optional[int] = None
-    
+
     # Overview progress bars
     lkps_percent: int
     led_percent: int
     evidence_percent: int
+
 
 class DashboardMultiProdiResponse(BaseModel):
     data_prodi: List[DashboardProdiResponse]
