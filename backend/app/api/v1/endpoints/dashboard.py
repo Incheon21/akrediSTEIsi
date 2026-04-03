@@ -17,7 +17,8 @@ router = APIRouter(prefix="/prodi", tags=["dashboard-prodi"])
 )
 def get_dashboard_prodi(
     prodi_id: UUID,
+    tahun: int | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> dict:
-    return get_dashboard_prodi_data(db, prodi_id)
+    return get_dashboard_prodi_data(db, prodi_id, tahun)

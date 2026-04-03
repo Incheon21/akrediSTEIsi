@@ -12,7 +12,7 @@ from app.models.narasi_led import NarasiLED
 from app.models.evidence import Evidence, EvidenceIndikator
 
 
-def get_dashboard_prodi_data(db: Session, prodi_id: UUID) -> dict:
+def get_dashboard_prodi_data(db: Session, prodi_id: UUID, tahun: int | None = None) -> dict:
     prodi = db.query(ProgramStudi).filter(ProgramStudi.id == prodi_id).first()
     if not prodi:
         raise HTTPException(
@@ -20,11 +20,18 @@ def get_dashboard_prodi_data(db: Session, prodi_id: UUID) -> dict:
             detail="Program Studi tidak ditemukan."
         )
 
-    active_target = db.query(TargetAkreditasi)\
-        .filter(TargetAkreditasi.program_studi_id == prodi_id, TargetAkreditasi.is_aktif == True)\
-        .first()
+    # Get all target akreditasi years for this prodi
+    all_targets = db.query(TargetAkreditasi).filter(TargetAkreditasi.program_studi_id == prodi_id).all()
+    available_years = sorted(list(set([t.tahun_akreditasi for t in all_targets if t.tahun_akreditasi])))
+
+    if tahun:
+        active_target = next((t for t in all_targets if t.tahun_akreditasi == tahun), None)
+    else:
+        active_target = next((t for t in all_targets if t.is_aktif), None)
 
     aktif_akreditasi = active_target is not None
+    current_year = active_target.tahun_akreditasi if active_target else (tahun or 0)
+
 
     target_score = active_target.target_skor if active_target and active_target.target_skor else 3.5
     deadline_str = active_target.deadline.strftime("%d %B %Y") if active_target and active_target.deadline else "Belum Diatur"
@@ -149,6 +156,8 @@ def get_dashboard_prodi_data(db: Session, prodi_id: UUID) -> dict:
             "last_accreditation_year": prodi.tanggal_akreditasi.year if prodi.tanggal_akreditasi else 0,
             "is_active_accreditation": aktif_akreditasi
         },
+        "current_year": current_year,
+        "available_years": available_years,
         "criteria_list": kriteria_list_response,
         "recommendation_messages": pesan_rekomendasi,
         "early_warnings": early_warnings,

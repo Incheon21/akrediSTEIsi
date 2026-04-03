@@ -13,8 +13,7 @@ const canEdit = (role: string) =>
   ["admin", "koordinator", "tim_prodi"].includes(role);
 
 const DashboardProdiPage = () => {
-  const tahunOptions = ["2023", "2024", "2025"];
-  const [tahun, setTahun] = useState("2025");
+  const [tahun, setTahun] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -41,9 +40,11 @@ const DashboardProdiPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await apiFetch(
-          `/api/v1/prodi/${prodiId}/dashboard?tahun=${tahun}`
-        );
+        const url = tahun 
+          ? `/api/v1/prodi/${prodiId}/dashboard?tahun=${tahun}`
+          : `/api/v1/prodi/${prodiId}/dashboard`;
+          
+        const res = await apiFetch(url);
         if (!res.ok) throw new Error("Gagal mengambil data dashboard");
         const data: DashboardData = await res.json();
         setDashboardData(data);
@@ -107,6 +108,8 @@ const DashboardProdiPage = () => {
 
   const {
     program_studi_profile: profilProdi,
+    current_year,
+    available_years,
     criteria_list: criteriaList,
     recommendation_messages: pesanRekomendasi,
     early_warnings: earlyWarnings,
@@ -184,23 +187,26 @@ const DashboardProdiPage = () => {
                   onClick={() => setDropdownOpen((prev) => !prev)}
                   className="flex items-center gap-2 border border-[#00509d] rounded-lg px-3 py-1.5 text-sm text-[#00509d] font-semibold hover:bg-blue-50 transition-colors"
                 >
-                  {tahun}
+                  {tahun || current_year}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
                 {dropdownOpen && (
-                  <ul className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[100px] overflow-hidden">
-                    {tahunOptions.map((t) => (
+                  <ul className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[100px] overflow-hidden max-h-48 overflow-y-auto">
+                    {available_years.map((t) => (
                       <li key={t}>
                         <button
                           className="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 hover:text-[#00509d] transition-colors"
-                          onClick={() => { setTahun(t); setDropdownOpen(false); }}
+                          onClick={() => { setTahun(t.toString()); setDropdownOpen(false); }}
                         >
                           {t}
                         </button>
                       </li>
                     ))}
+                    {available_years.length === 0 && (
+                      <li className="px-4 py-2 text-sm text-gray-500 italic">Data kosong</li>
+                    )}
                   </ul>
                 )}
               </div>
