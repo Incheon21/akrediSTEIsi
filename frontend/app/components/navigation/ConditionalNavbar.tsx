@@ -10,7 +10,7 @@ export default function ConditionalNavbar() {
 
   if (pathname === "/login") return null;
 
-  const prodiName = loading ? "..." : (user?.program_studi?.nama || "Program Studi");
+  const prodiName = loading ? "..." : (user?.program_studi?.nama || "");
   const fullName = loading ? "..." : (user?.nama || "User");
   const initial = loading ? "" : (user?.nama ? user.nama.charAt(0).toUpperCase() : "?");
   const role = loading ? "" : (user?.role || "");

@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { apiFetch } from "../../services/api";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface NavbarProps {
   programStudi?: string;
@@ -21,26 +20,8 @@ export default function Navbar({
   const pathname = usePathname();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [prodiDropdownOpen, setProdiDropdownOpen] = useState(false);
-  const [prodiList, setProdiList] = useState<{ id: string; name: string }[]>([]);
-
-  useEffect(() => {
-    if (role === "admin") {
-      // Fetch list prodi for admin
-      const fetchProdiList = async () => {
-        try {
-          const res = await apiFetch("/api/v1/multiprodi/dashboard");
-          if (res.ok) {
-            const data = await res.json();
-            setProdiList(data.prodi_list.map((p: any) => ({ id: p.id, name: p.name })));
-          }
-        } catch (err) {
-          console.error("Failed to fetch prodi list:", err);
-        }
-      };
-      fetchProdiList();
-    }
-  }, [role]);
+  const searchParams = useSearchParams();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -50,19 +31,62 @@ export default function Navbar({
 
   const isActive = (path: string) => pathname.startsWith(path);
 
+  // Admin sedang di dalam dashboard prodi tertentu
+  const isAdminInProdiPage =
+    (role === "admin" || role === "pimpinan") && pathname.includes("/prodi/");
+
+  const prodiId = searchParams.get("id");
+  const prodiQuery = prodiId ? `?id=${prodiId}` : "";
+
   return (
     <nav className="w-full bg-[#00509d] shadow-md py-2">
       <div className="flex items-stretch h-14">
+
+        {/* Logo */}
         <div className="flex items-center px-5 min-w-[140px] border-r border-[#0060b8]">
-          <img
-            src="/itb-stei-white.svg"
-            alt="STEI ITB"
-            className="h-8 w-auto"
-          />
+          <img src="/itb-stei-white.svg" alt="STEI ITB" className="h-8 w-auto" />
         </div>
 
-        <div className="flex items-stretch flex-1 justify-end px-0">
-          {role !== "admin" && (
+        {/* Nav links */}
+        <div className="flex items-stretch flex-1 px-2">
+          {role === "admin" || role === "pimpinan" ? (
+            <>
+              <Link
+                href="/dashboard-multiprodi"
+                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/dashboard-multiprodi")
+                  ? "text-[#f3e412]"
+                  : "text-white hover:text-[#f3e412]"
+                  }`}
+              >
+                Dashboard Multiprodi
+              </Link>
+
+              {/* Link halaman prodi — hanya muncul saat sedang di konteks prodi tertentu */}
+              {isAdminInProdiPage && (
+                <>
+
+                  <Link
+                    href={`/prodi/dashboard-prodi${prodiQuery}`}
+                    className={`px-5 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/dashboard-prodi")
+                      ? "text-[#f3e412]"
+                      : "text-white hover:text-[#f3e412]"
+                      }`}
+                  >
+                    Dashboard Prodi
+                  </Link>
+                  <Link
+                    href={`/prodi/simulasi-skor${prodiQuery}`}
+                    className={`px-5 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/simulasi-skor")
+                      ? "text-[#f3e412]"
+                      : "text-white hover:text-[#f3e412]"
+                      }`}
+                  >
+                    Simulasi Skor
+                  </Link>
+                </>
+              )}
+            </>
+          ) : (
             <>
               <Link
                 href="/prodi/simulasi-skor"
@@ -86,56 +110,25 @@ export default function Navbar({
           )}
         </div>
 
+        {/* Kanan — info prodi + avatar */}
         <div className="flex items-center gap-3 px-5 border-l border-[#0060b8]">
-          {/* Program Studi or Prodi Selector for Admin */}
-          {role === "admin" ? (
-            <div className="relative hidden sm:block">
-              <button
-                onClick={() => setProdiDropdownOpen(!prodiDropdownOpen)}
-                className="flex items-center gap-2 text-right text-sm font-semibold text-white hover:text-[#f3e412] transition-colors"
-              >
-                <span>Pilih Prodi</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {prodiDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 z-50 max-h-60 overflow-y-auto">
-                  {prodiList.map((prodi) => (
-                    <div key={prodi.id} className="border-b border-gray-100 last:border-b-0">
-                      <div className="px-4 py-2 text-xs text-gray-400">{prodi.name}</div>
-                      <Link
-                        href={`/prodi/dashboard-prodi?id=${prodi.id}`}
-                        className="block px-6 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-                        onClick={() => setProdiDropdownOpen(false)}
-                      >
-                        📊 Dashboard Prodi
-                      </Link>
-                      <Link
-                        href={`/prodi/simulasi-skor?id=${prodi.id}`}
-                        className="block px-6 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-                        onClick={() => setProdiDropdownOpen(false)}
-                      >
-                        🎯 Simulasi Skor
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-right hidden sm:block">
-              <p className="text-xs text-blue-200 leading-none mb-0.5">
-                Program Studi
-              </p>
-              <p className="text-sm font-semibold text-white leading-none">
-                {programStudi}
-              </p>
-            </div>
-          )}
 
-          {/* Avatar Dropdown */}
-          <div className="relative">
+          {/* Info konteks — nama prodi untuk non-admin, label role untuk admin */}
+          <div className="text-right hidden sm:block">
+            {role === "admin" ? (
+              <p className="text-sm font-semibold text-white leading-none">Administrator</p>
+            ) : role === "pimpinan" ? (
+              <p className="text-sm font-semibold text-white leading-none">Pimpinan STEI</p>
+            ) : (
+              <>
+                <p className="text-xs text-blue-200 leading-none mb-0.5">Program Studi</p>
+                <p className="text-sm font-semibold text-white leading-none">{programStudi}</p>
+              </>
+            )}
+          </div>
+
+          {/* Avatar dropdown */}
+          <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="w-9 h-9 rounded-full bg-[#f39c12] text-white font-bold text-sm flex items-center justify-center hover:bg-[#e08e0b] transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-1 focus:ring-offset-[#00509d]"
@@ -148,9 +141,7 @@ export default function Navbar({
               <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-1">
                 <div className="px-4 py-2 border-b border-gray-100">
                   <p className="text-xs text-gray-400">Masuk sebagai</p>
-                  <p className="text-sm font-semibold text-gray-700">
-                    {userName}
-                  </p>
+                  <p className="text-sm font-semibold text-gray-700">{userName}</p>
                 </div>
                 <button className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
                   Profil
@@ -170,6 +161,7 @@ export default function Navbar({
             )}
           </div>
         </div>
+
       </div>
     </nav>
   );
