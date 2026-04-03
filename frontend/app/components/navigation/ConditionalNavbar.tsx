@@ -13,6 +13,8 @@ export default function ConditionalNavbar() {
   const prodiName = loading ? "..." : (user?.program_studi?.nama || "Program Studi");
   const fullName = loading ? "..." : (user?.nama || "User");
   const initial = loading ? "" : (user?.nama ? user.nama.charAt(0).toUpperCase() : "?");
+  const role = loading ? "" : (user?.role || "");
 
-  return <Navbar programStudi={prodiName} userName={fullName} userInitial={initial} />;
+  return <Navbar programStudi={prodiName} userName={fullName} userInitial={initial} role={role} />;
 }
+

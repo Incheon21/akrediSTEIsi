@@ -183,8 +183,135 @@ def get_dashboard_prodi_data(db: Session, prodi_id: UUID, tahun: int | None = No
         "evidence_percent": dok_Percent
     }
 
-def get_dashboard_multiprodi_data(db: Session):
+def _get_readiness_status(lkps_percent: int, led_percent: int, simulation_score: float) -> str:
+    if lkps_percent >= 80 and led_percent >= 80 and simulation_score >= 80:
+        return "green"
+    if lkps_percent >= 50 and led_percent >= 50 and simulation_score >= 50:
+        return "yellow"
+    return "red"
+
+
+def get_dashboard_multiprodi_data(db: Session, tahun: int | None = None):
     list_prodi = db.query(ProgramStudi).all()
+    if not list_prodi:
+        return {
+            "fakultas_summary": {
+                "total_prodi": 0,
+                "prodi_green": 0,
+                "prodi_yellow": 0,
+                "prodi_red": 0,
+                "avg_lkps_percent": 0.0,
+                "avg_led_percent": 0.0,
+                "avg_simulation_score": 0.0,
+            },
+            "prodi_list": [],
+            "current_year": tahun or 0,
+            "available_years": [],
+        }
+
+    # Filter prodi berdasarkan tahun jika diberikan
+    if tahun:
+        # Ambil prodi yang punya target di tahun tersebut
+        prodi_with_target = db.query(ProgramStudi).join(TargetAkreditasi).filter(
+            TargetAkreditasi.tahun_akreditasi == tahun
+        ).all()
+        list_prodi = prodi_with_target
+        if not list_prodi:
+            return {
+                "fakultas_summary": {
+                    "total_prodi": 0,
+                    "prodi_green": 0,
+                    "prodi_yellow": 0,
+                    "prodi_red": 0,
+                    "avg_lkps_percent": 0.0,
+                    "avg_led_percent": 0.0,
+                    "avg_simulation_score": 0.0,
+                },
+                "prodi_list": [],
+                "current_year": tahun,
+                "available_years": [tahun],
+            }
+
+    prodi_data_list = []
+    for prodi in list_prodi:
+        try:
+            data = get_dashboard_prodi_data(db, prodi.id, tahun=tahun)
+            prodi_data_list.append(data)
+        except Exception as e:
+            print(f"Error getting data for prodi {prodi.id}: {e}")
+            import traceback
+            traceback.print_exc()
+            continue
+
+    if not prodi_data_list:
+        return {
+            "fakultas_summary": {
+                "total_prodi": 0,
+                "prodi_green": 0,
+                "prodi_yellow": 0,
+                "prodi_red": 0,
+                "avg_lkps_percent": 0.0,
+                "avg_led_percent": 0.0,
+                "avg_simulation_score": 0.0,
+            },
+            "prodi_list": [],
+            "current_year": tahun or 0,
+            "available_years": [],
+        }
+
+    prodi_summary_list = []
+    available_years_set = set()
+    current_years = []
+
+    for prodi, p in zip(list_prodi[:len(prodi_data_list)], prodi_data_list):
+        profile = p["program_studi_profile"]
+        lkps_percent = p.get("lkps_percent", 0)
+        led_percent = p.get("led_percent", 0)
+        evidence_percent = p.get("evidence_percent", 0)
+        simulation_score = float(p.get("score_value", 0))
+        target_score = float(p.get("target_score", 0))
+
+        readiness_status = _get_readiness_status(lkps_percent, led_percent, simulation_score)
+
+        prodi_summary_list.append({
+            "id": str(prodi.id),
+            "name": profile.get("name", ""),
+            "degree": profile.get("degree", ""),
+            "accreditation_status": profile.get("last_accreditation_status", ""),
+            "accreditation_year": profile.get("last_accreditation_year", 0),
+            "lkps_percent": lkps_percent,
+            "led_percent": led_percent,
+            "evidence_percent": evidence_percent,
+            "simulation_score": simulation_score,
+            "target_score": target_score,
+            "readiness_status": readiness_status,
+            "is_active": profile.get("is_active_accreditation", False),
+            "days_remaining": p.get("days_remaining", None),
+        })
+
+        available_years_set.update(p.get("available_years", []))
+        current_years.append(p.get("current_year", 0))
+
+    total_prodi = len(prodi_summary_list)
+    green_count = sum(1 for p in prodi_summary_list if p["readiness_status"] == "green")
+    yellow_count = sum(1 for p in prodi_summary_list if p["readiness_status"] == "yellow")
+    red_count = sum(1 for p in prodi_summary_list if p["readiness_status"] == "red")
+
+    avg_lkps = float(sum(p["lkps_percent"] for p in prodi_summary_list) / total_prodi) if total_prodi > 0 else 0.0
+    avg_led = float(sum(p["led_percent"] for p in prodi_summary_list) / total_prodi) if total_prodi > 0 else 0.0
+    avg_simul = float(sum(p["simulation_score"] for p in prodi_summary_list) / total_prodi) if total_prodi > 0 else 0.0
+
     return {
-        'data_prodi': [get_dashboard_prodi_data(db, prodi.id) for prodi in list_prodi]
+        "fakultas_summary": {
+            "total_prodi": total_prodi,
+            "prodi_green": green_count,
+            "prodi_yellow": yellow_count,
+            "prodi_red": red_count,
+            "avg_lkps_percent": avg_lkps,
+            "avg_led_percent": avg_led,
+            "avg_simulation_score": avg_simul,
+        },
+        "prodi_list": prodi_summary_list,
+        "current_year": tahun or max(current_years) if current_years else 0,
+        "available_years": sorted(available_years_set),
     }

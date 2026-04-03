@@ -23,28 +23,6 @@ export interface CriteriaRow {
   has_evidence: boolean;
 }
 
-export interface DashboardProdiProps {
-  tahunOptions: string[];
-  defaultTahun?: string;
-  lkpsPercent: number;
-  ledPercent: number;
-  evidencePercent: number;
-  criteriaList: CriteriaRow[];
-  recommendationMessages: string[];
-  // Gauge
-  scoreValue: number;
-  targetScore: number;
-  // Early Warning
-  deadline: string;
-  daysRemaining: number;
-  earlyWarnings: string[];
-  onUnduhLKPS?: () => void;
-  onUnduhLED?: () => void;
-  onEditLKPS?: (id: string) => void;
-  onEditLED?: (id: string) => void;
-  onEditEvidence?: (id: string) => void;
-  onAturDeadline?: () => void;
-}
 
 export interface DashboardData {
   program_studi_profile: ProgramStudiProfile;

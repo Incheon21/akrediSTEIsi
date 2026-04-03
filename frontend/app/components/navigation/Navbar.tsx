@@ -1,23 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { apiFetch } from "../../services/api";
 
 interface NavbarProps {
   programStudi?: string;
   userName?: string;
   userInitial?: string;
+  role?: string;
 }
 
 export default function Navbar({
   programStudi = "",
   userName = "",
   userInitial = "",
+  role = "",
 }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [prodiDropdownOpen, setProdiDropdownOpen] = useState(false);
+  const [prodiList, setProdiList] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (role === "admin") {
+      // Fetch list prodi for admin
+      const fetchProdiList = async () => {
+        try {
+          const res = await apiFetch("/api/v1/multiprodi/dashboard");
+          if (res.ok) {
+            const data = await res.json();
+            setProdiList(data.prodi_list.map((p: any) => ({ id: p.id, name: p.name })));
+          }
+        } catch (err) {
+          console.error("Failed to fetch prodi list:", err);
+        }
+      };
+      fetchProdiList();
+    }
+  }, [role]);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -39,36 +62,77 @@ export default function Navbar({
         </div>
 
         <div className="flex items-stretch flex-1 justify-end px-0">
-          <Link
-            href="/prodi/simulasi-skor"
-            className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/simulasi-skor")
-              ? "text-[#f3e412]"
-              : "text-white hover:text-[#f3e412]"
-              }`}
-          >
-            Simulasi Skor
-          </Link>
-          <Link
-            href="/prodi/dashboard-prodi"
-            className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/dashboard-prodi")
-              ? "text-[#f3e412]"
-              : "text-white hover:text-[#f3e412]"
-              }`}
-          >
-            Dashboard Prodi
-          </Link>
+          {role !== "admin" && (
+            <>
+              <Link
+                href="/prodi/simulasi-skor"
+                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/simulasi-skor")
+                  ? "text-[#f3e412]"
+                  : "text-white hover:text-[#f3e412]"
+                  }`}
+              >
+                Simulasi Skor
+              </Link>
+              <Link
+                href="/prodi/dashboard-prodi"
+                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/dashboard-prodi")
+                  ? "text-[#f3e412]"
+                  : "text-white hover:text-[#f3e412]"
+                  }`}
+              >
+                Dashboard Prodi
+              </Link>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-3 px-5 border-l border-[#0060b8]">
-          {/* Program Studi */}
-          <div className="text-right hidden sm:block">
-            <p className="text-xs text-blue-200 leading-none mb-0.5">
-              Program Studi
-            </p>
-            <p className="text-sm font-semibold text-white leading-none">
-              {programStudi}
-            </p>
-          </div>
+          {/* Program Studi or Prodi Selector for Admin */}
+          {role === "admin" ? (
+            <div className="relative hidden sm:block">
+              <button
+                onClick={() => setProdiDropdownOpen(!prodiDropdownOpen)}
+                className="flex items-center gap-2 text-right text-sm font-semibold text-white hover:text-[#f3e412] transition-colors"
+              >
+                <span>Pilih Prodi</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {prodiDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 z-50 max-h-60 overflow-y-auto">
+                  {prodiList.map((prodi) => (
+                    <div key={prodi.id} className="border-b border-gray-100 last:border-b-0">
+                      <div className="px-4 py-2 text-xs text-gray-400">{prodi.name}</div>
+                      <Link
+                        href={`/prodi/dashboard-prodi?id=${prodi.id}`}
+                        className="block px-6 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                        onClick={() => setProdiDropdownOpen(false)}
+                      >
+                        📊 Dashboard Prodi
+                      </Link>
+                      <Link
+                        href={`/prodi/simulasi-skor?id=${prodi.id}`}
+                        className="block px-6 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                        onClick={() => setProdiDropdownOpen(false)}
+                      >
+                        🎯 Simulasi Skor
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-right hidden sm:block">
+              <p className="text-xs text-blue-200 leading-none mb-0.5">
+                Program Studi
+              </p>
+              <p className="text-sm font-semibold text-white leading-none">
+                {programStudi}
+              </p>
+            </div>
+          )}
 
           {/* Avatar Dropdown */}
           <div className="relative">

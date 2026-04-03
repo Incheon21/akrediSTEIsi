@@ -58,6 +58,12 @@ export function useAuth() {
                     program_studi_id: data.program_studi_id,
                     program_studi: data.program_studi,
                 });
+                console.log("useAuth user set:", {
+                    id: data.id,
+                    role: data.role?.name,
+                    program_studi_id: data.program_studi_id,
+                    program_studi: data.program_studi,
+                });
             } catch (err) {
                 console.error(err);
                 setUser(null);

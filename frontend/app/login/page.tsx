@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/app/services/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -36,8 +37,30 @@ export default function LoginPage() {
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("refresh_token", data.refresh_token);
 
-      router.push("/prodi/dashboard-prodi");
-    } catch {
+      const profileRes = await apiFetch("/api/v1/auth/me");
+      if (!profileRes.ok) {
+        throw new Error("Gagal mendapatkan profil setelah login");
+      }
+
+      const profile = await profileRes.json();
+      const role = profile.role?.name ?? "tim_prodi";
+
+      if (role === "admin" || role === "pimpinan") {
+        router.push("/dashboard-multiprodi");
+      } else {
+        const prodiId = profile.program_studi_id;
+        if (prodiId) {
+          router.push(`/prodi/dashboard-prodi?id=${prodiId}`);
+        } else {
+          router.push("/prodi/dashboard-prodi");
+        }
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Tidak dapat terhubung ke server. Coba lagi nanti.");
+      }
       setError("Tidak dapat terhubung ke server. Coba lagi nanti.");
     } finally {
       setLoading(false);

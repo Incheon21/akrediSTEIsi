@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import ProgressBar from "@/app/components/dashboard-prodi/ProgressBar";
 import StatusDot from "@/app/components/dashboard-prodi/StatusDot";
 import GaugeMeter from "@/app/components/dashboard-prodi/GaugeMeter";
@@ -22,14 +23,16 @@ const DashboardProdiPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { user, loading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const prodiIdFromUrl = searchParams.get("id");
 
   // Tutup dropdown saat klik di luar
   useClickOutside(dropdownRef, () => setDropdownOpen(false));
 
   // Fetch dashboard data — re-fetch saat tahun berubah
   useEffect(() => {
-    const prodiId = user?.program_studi_id;
-    console.log("prodiId", prodiId)
+    const prodiId = prodiIdFromUrl || user?.program_studi_id;
+    console.log("prodiId", prodiId, "fromUrl", prodiIdFromUrl, "fromUser", user?.program_studi_id);
 
     if (!prodiId) {
       if (!authLoading) setLoading(false);
@@ -92,7 +95,7 @@ const DashboardProdiPage = () => {
   }
 
   if (!user) return null;
-  if (!user.program_studi_id) {
+  if (!user.program_studi_id && (user.role === "tim_prodi" || user.role === "koordinator")) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#f4f6f8] p-5">
         <div className="bg-white max-w-md w-full rounded-xl shadow-sm border border-orange-100 p-8 text-center text-[#132040]">

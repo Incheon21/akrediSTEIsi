@@ -58,6 +58,8 @@ def seed():
             {"email": "pimpinan@stei.itb.ac.id",     "password": "pimpinan123",    "nama": "Pimpinan User",     "role": "pimpinan", "prodi": None},
             {"email": "koordinator@stei.itb.ac.id",   "password": "koordinator123", "nama": "Koordinator User",  "role": "koordinator", "prodi": "IF"},
             {"email": "timprodi@stei.itb.ac.id",      "password": "timprodi123",    "nama": "Tim Prodi User",    "role": "tim_prodi", "prodi": "IF"},
+            {"email": "koordinator-sti@stei.itb.ac.id", "password": "koordinator123", "nama": "Koordinator STI", "role": "koordinator", "prodi": "STI"},
+            {"email": "timprodi-sti@stei.itb.ac.id",    "password": "timprodi123",    "nama": "Tim Prodi STI",   "role": "tim_prodi", "prodi": "STI"},
         ]
 
         for u in seed_users:
@@ -128,6 +130,17 @@ def seed():
         
         db.commit()
 
+        # Clean up invalid kriteria and indikator
+        valid_kodes = {k["kode"] for k in kriteria_data}
+        all_existing_kriteria = db.query(Kriteria).all()
+        for kr in all_existing_kriteria:
+            if kr.kode not in valid_kodes:
+                # Delete associated indikators first
+                db.query(Indikator).filter(Indikator.kriteria_id == kr.id).delete()
+                db.delete(kr)
+                print(f"Deleted invalid kriteria: {kr.kode}")
+        db.commit()
+
         # Seed Target Akreditasi for IF
         if "IF" in prodis:
             prodi_if = prodis["IF"]
@@ -148,6 +161,27 @@ def seed():
                 print(f"Seeded target akreditasi for IF 2025")
             else:
                 print("Target akreditasi for IF 2025 already exists")
+
+        # Seed Target Akreditasi for STI
+        if "STI" in prodis:
+            prodi_sti = prodis["STI"]
+            existing_target = db.query(TargetAkreditasi).filter(
+                TargetAkreditasi.program_studi_id == prodi_sti.id,
+                TargetAkreditasi.tahun_akreditasi == 2025
+            ).first()
+            if not existing_target:
+                target = TargetAkreditasi(
+                    program_studi_id=prodi_sti.id,
+                    tahun_akreditasi=2025,
+                    target_skor=3.5,
+                    deadline=date.today() + timedelta(days=60),
+                    is_aktif=True
+                )
+                db.add(target)
+                db.commit()
+                print(f"Seeded target akreditasi for STI 2025")
+            else:
+                print("Target akreditasi for STI 2025 already exists")
 
     finally:
         db.close()

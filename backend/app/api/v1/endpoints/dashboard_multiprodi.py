@@ -16,7 +16,8 @@ router = APIRouter(prefix="/multiprodi", tags=["dashboard-multiprodi"])
     summary="Get aggregated dashboard data for all program studi"
 )
 def get_dashboard_prodi(
+    tahun: int | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin", "pimpinan", "koordinator"))
 ) -> dict:
-    return get_dashboard_multiprodi_data(db)
+    return get_dashboard_multiprodi_data(db, tahun=tahun)
