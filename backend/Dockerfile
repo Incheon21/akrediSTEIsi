@@ -19,4 +19,5 @@ RUN uv sync --frozen
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run seeder then start the server directly via CMD to avoid Windows CRLF script issues
+CMD sh -c "uv run python scripts/seed.py && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
