@@ -182,3 +182,9 @@ def get_dashboard_prodi_data(db: Session, prodi_id: UUID, tahun: int | None = No
         "led_percent": ledPercent,
         "evidence_percent": dok_Percent
     }
+
+def get_dashboard_multiprodi_data(db: Session):
+    list_prodi = db.query(ProgramStudi).all()
+    return {
+        'data_prodi': [get_dashboard_prodi_data(db, prodi.id) for prodi in list_prodi]
+    }
