@@ -59,6 +59,16 @@ export default function Navbar({
           >
             Dashboard Prodi
           </Link>
+          <Link
+            href="/akreditasi/lkps"
+            className={`px-6 flex items-center text-sm font-medium transition-all duration-150 ${
+              isActive("/akreditasi/lkps")
+                ? "bg-[#177093] text-white shadow"
+                : "bg-cyan-300 text-black hover:bg-cyan-400"
+            }`}
+          >
+            LKPS Workspace
+          </Link>
         </div>
 
         {/* Right Section: Program Studi + Avatar */}

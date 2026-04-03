@@ -1,6 +1,7 @@
 import app.models  # noqa: F401 - register all models with Base
 from app.core.security import hash_password
 from app.db import Base, SessionLocal, engine
+from app.models.program_studi import ProgramStudi
 from app.models.role import Role
 from app.models.user import User
 
@@ -24,6 +25,24 @@ def seed():
                 print(f"Role already exists: {name}")
             roles[name] = role
 
+        db.commit()
+
+        # Seed program studi
+        prodi_data = [
+            {"kode": "IF", "nama": "Teknik Informatika", "jenjang": "S1", "fakultas": "STEI", "perguruan_tinggi": "Institut Teknologi Bandung"},
+            {"kode": "EL", "nama": "Teknik Elektro", "jenjang": "S1", "fakultas": "STEI", "perguruan_tinggi": "Institut Teknologi Bandung"},
+            {"kode": "TE", "nama": "Teknik Tenaga Listrik", "jenjang": "S1", "fakultas": "STEI", "perguruan_tinggi": "Institut Teknologi Bandung"},
+            {"kode": "TS", "nama": "Teknik Telekomunikasi", "jenjang": "S1", "fakultas": "STEI", "perguruan_tinggi": "Institut Teknologi Bandung"},
+            {"kode": "SI", "nama": "Sistem dan Teknologi Informasi", "jenjang": "S1", "fakultas": "STEI", "perguruan_tinggi": "Institut Teknologi Bandung"},
+        ]
+        for data in prodi_data:
+            existing_ps = db.query(ProgramStudi).filter(ProgramStudi.kode == data["kode"]).first()
+            if existing_ps:
+                print(f"Program studi already exists: {data['nama']}")
+            else:
+                ps = ProgramStudi(**data)
+                db.add(ps)
+                print(f"Seeded program studi: {data['nama']}")
         db.commit()
 
         # Seed admin user
