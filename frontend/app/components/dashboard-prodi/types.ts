@@ -48,6 +48,7 @@ export interface DashboardProdiProps {
 
 export interface DashboardData {
   program_studi_profile: ProgramStudiProfile;
+  target_akreditasi_id: string;
   current_year: number;
   available_years: number[];
   criteria_list: CriteriaRow[];
