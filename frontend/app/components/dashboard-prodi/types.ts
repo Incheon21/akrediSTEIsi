@@ -49,6 +49,8 @@ export interface DashboardProdiProps {
 
 export interface DashboardData {
   program_studi_profile: ProgramStudiProfile;
+  current_year: number;
+  available_years: number[];
   criteria_list: CriteriaRow[];
   recommendation_messages: string[];
   early_warnings: string[];

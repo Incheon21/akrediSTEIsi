@@ -26,6 +26,8 @@ class KriteriaRowSchema(BaseModel):
 
 class DashboardProdiResponse(BaseModel):
     program_studi_profile: ProfilProdiSchema
+    current_year: int
+    available_years: List[int]
     criteria_list: List[KriteriaRowSchema]
     recommendation_messages: List[str]
     early_warnings: List[str]
