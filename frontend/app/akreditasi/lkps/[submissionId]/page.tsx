@@ -41,6 +41,7 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
   const kriteriaFilter = searchParams.get("kriteria");
   const targetId = searchParams.get("target_akreditasi_id");
   const tahun = searchParams.get("tahun");
+  const prodiId = searchParams.get("id");
 
   const sectionLookup = useMemo(() => {
     return Object.fromEntries(LKPS_SECTIONS.map((s) => [s.code, s]));
@@ -278,7 +279,11 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
           <div className="flex justify-between items-end border-b border-gray-300 pb-4">
             <div>
               <button
-                onClick={() => router.push("/prodi/dashboard-prodi")}
+                onClick={() =>
+                  router.push(
+                    `/prodi/dashboard-prodi${prodiId ? `?id=${prodiId}` : ""}`,
+                  )
+                }
                 className="text-sm font-semibold text-[#00509d] hover:text-[#003f7d] transition-colors mb-4 block"
               >
                 ← Kembali ke Dashboard Prodi
@@ -290,7 +295,7 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
                 <button
                   onClick={() => {
                     router.push(
-                      `/prodi/led?target_akreditasi_id=${targetId}&kriteria_kode=${kriteriaFilter}&tahun=${tahun || ""}&lkps_submission_id=${submissionId}`,
+                      `/prodi/led?target_akreditasi_id=${targetId}&kriteria_kode=${kriteriaFilter}&tahun=${tahun || ""}&lkps_submission_id=${submissionId}${prodiId ? `&id=${prodiId}` : ""}`,
                     );
                   }}
                   className="pb-2 text-sm font-semibold text-gray-500 hover:text-[#00509d] transition-colors relative"

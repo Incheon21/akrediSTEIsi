@@ -19,6 +19,7 @@ export default function ProdiLedPage() {
   const kriteriaKode = searchParams.get("kriteria_kode") ?? "";
   const lkpsSubmissionId = searchParams.get("lkps_submission_id") ?? "";
   const tahun = searchParams.get("tahun") ?? "";
+  const prodiId = searchParams.get("id");
 
   const [indikators, setIndikators] = useState<IndicatorResponse[]>([]);
   const [narasis, setNarasis] = useState<Record<string, string>>({});
@@ -248,7 +249,7 @@ export default function ProdiLedPage() {
       await Promise.all(promises);
 
       // Navigate back immediately after save
-      router.push("/prodi/dashboard-prodi");
+      router.push(`/prodi/dashboard-prodi${prodiId ? `?id=${prodiId}` : ""}`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Gagal menyimpan narasi LED.",
@@ -264,7 +265,7 @@ export default function ProdiLedPage() {
       );
       if (!confirmed) return;
     }
-    router.push("/prodi/dashboard-prodi");
+    router.push(`/prodi/dashboard-prodi${prodiId ? `?id=${prodiId}` : ""}`);
   }
 
   if (authLoading || loadingPage) {
@@ -316,7 +317,7 @@ export default function ProdiLedPage() {
                   return;
                 }
                 router.push(
-                  `/akreditasi/lkps/${lkpsSubmissionId}?kriteria=${kriteriaKode}&target_akreditasi_id=${targetId}&tahun=${tahun}`,
+                  `/akreditasi/lkps/${lkpsSubmissionId}?kriteria=${kriteriaKode}&target_akreditasi_id=${targetId}&tahun=${tahun}${prodiId ? `&id=${prodiId}` : ""}`,
                 );
               }}
               className="pb-2 text-sm font-semibold text-gray-500 hover:text-[#00509d] transition-colors relative"

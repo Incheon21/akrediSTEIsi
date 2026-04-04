@@ -299,7 +299,7 @@ export default function DashboardProdiPage() {
                       <button
                         onClick={() =>
                           router.push(
-                            `/akreditasi/lkps/${data.lkps_submission_id}?kriteria=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}`,
+                            `/akreditasi/lkps/${data.lkps_submission_id}?kriteria=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}&id=${prodiIdFromUrl || ""}`,
                           )
                         }
                         className="rounded-md bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100"
@@ -309,7 +309,7 @@ export default function DashboardProdiPage() {
                       <button
                         onClick={() =>
                           router.push(
-                            `/prodi/led?kriteria_kode=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}&lkps_submission_id=${data.lkps_submission_id}`,
+                            `/prodi/led?kriteria_kode=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}&id=${prodiIdFromUrl || ""}&lkps_submission_id=${data.lkps_submission_id}`,
                           )
                         }
                         className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"

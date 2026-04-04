@@ -33,7 +33,8 @@ export default function Navbar({
 
   // Admin sedang di dalam dashboard prodi tertentu
   const isAdminInProdiPage =
-    (role === "admin" || role === "pimpinan") && pathname.includes("/prodi/");
+    (role === "admin" || role === "pimpinan") &&
+    (pathname.includes("/prodi/") || pathname.includes("/akreditasi/"));
 
   const prodiId = searchParams.get("id");
   const prodiQuery = prodiId ? `?id=${prodiId}` : "";
@@ -41,10 +42,13 @@ export default function Navbar({
   return (
     <nav className="w-full bg-[#00509d] shadow-md py-2">
       <div className="flex items-stretch h-14">
-
         {/* Logo */}
         <div className="flex items-center px-5 min-w-[140px] border-r border-[#0060b8]">
-          <img src="/itb-stei-white.svg" alt="STEI ITB" className="h-8 w-auto" />
+          <img
+            src="/itb-stei-white.svg"
+            alt="STEI ITB"
+            className="h-8 w-auto"
+          />
         </div>
 
         {/* Nav links */}
@@ -53,10 +57,11 @@ export default function Navbar({
             <>
               <Link
                 href="/dashboard-multiprodi"
-                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/dashboard-multiprodi")
-                  ? "text-[#f3e412]"
-                  : "text-white hover:text-[#f3e412]"
-                  }`}
+                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${
+                  isActive("/dashboard-multiprodi")
+                    ? "text-[#f3e412]"
+                    : "text-white hover:text-[#f3e412]"
+                }`}
               >
                 Dashboard Multiprodi
               </Link>
@@ -64,22 +69,23 @@ export default function Navbar({
               {/* Link halaman prodi — hanya muncul saat sedang di konteks prodi tertentu */}
               {isAdminInProdiPage && (
                 <>
-
                   <Link
                     href={`/prodi/dashboard-prodi${prodiQuery}`}
-                    className={`px-5 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/dashboard-prodi")
-                      ? "text-[#f3e412]"
-                      : "text-white hover:text-[#f3e412]"
-                      }`}
+                    className={`px-5 flex items-center text-sm font-semibold transition-all duration-150 ${
+                      isActive("/prodi/dashboard-prodi")
+                        ? "text-[#f3e412]"
+                        : "text-white hover:text-[#f3e412]"
+                    }`}
                   >
                     Dashboard Prodi
                   </Link>
                   <Link
                     href={`/prodi/simulasi-skor${prodiQuery}`}
-                    className={`px-5 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/simulasi-skor")
-                      ? "text-[#f3e412]"
-                      : "text-white hover:text-[#f3e412]"
-                      }`}
+                    className={`px-5 flex items-center text-sm font-semibold transition-all duration-150 ${
+                      isActive("/prodi/simulasi-skor")
+                        ? "text-[#f3e412]"
+                        : "text-white hover:text-[#f3e412]"
+                    }`}
                   >
                     Simulasi Skor
                   </Link>
@@ -90,19 +96,21 @@ export default function Navbar({
             <>
               <Link
                 href="/prodi/simulasi-skor"
-                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/simulasi-skor")
-                  ? "text-[#f3e412]"
-                  : "text-white hover:text-[#f3e412]"
-                  }`}
+                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${
+                  isActive("/prodi/simulasi-skor")
+                    ? "text-[#f3e412]"
+                    : "text-white hover:text-[#f3e412]"
+                }`}
               >
                 Simulasi Skor
               </Link>
               <Link
                 href="/prodi/dashboard-prodi"
-                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${isActive("/prodi/dashboard-prodi")
-                  ? "text-[#f3e412]"
-                  : "text-white hover:text-[#f3e412]"
-                  }`}
+                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${
+                  isActive("/prodi/dashboard-prodi")
+                    ? "text-[#f3e412]"
+                    : "text-white hover:text-[#f3e412]"
+                }`}
               >
                 Dashboard Prodi
               </Link>
@@ -112,17 +120,24 @@ export default function Navbar({
 
         {/* Kanan — info prodi + avatar */}
         <div className="flex items-center gap-3 px-5 border-l border-[#0060b8]">
-
           {/* Info konteks — nama prodi untuk non-admin, label role untuk admin */}
           <div className="text-right hidden sm:block">
             {role === "admin" ? (
-              <p className="text-sm font-semibold text-white leading-none">Administrator</p>
+              <p className="text-sm font-semibold text-white leading-none">
+                Administrator
+              </p>
             ) : role === "pimpinan" ? (
-              <p className="text-sm font-semibold text-white leading-none">Pimpinan STEI</p>
+              <p className="text-sm font-semibold text-white leading-none">
+                Pimpinan STEI
+              </p>
             ) : (
               <>
-                <p className="text-xs text-blue-200 leading-none mb-0.5">Program Studi</p>
-                <p className="text-sm font-semibold text-white leading-none">{programStudi}</p>
+                <p className="text-xs text-blue-200 leading-none mb-0.5">
+                  Program Studi
+                </p>
+                <p className="text-sm font-semibold text-white leading-none">
+                  {programStudi}
+                </p>
               </>
             )}
           </div>
@@ -141,7 +156,9 @@ export default function Navbar({
               <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-1">
                 <div className="px-4 py-2 border-b border-gray-100">
                   <p className="text-xs text-gray-400">Masuk sebagai</p>
-                  <p className="text-sm font-semibold text-gray-700">{userName}</p>
+                  <p className="text-sm font-semibold text-gray-700">
+                    {userName}
+                  </p>
                 </div>
                 <button className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
                   Profil
@@ -161,7 +178,6 @@ export default function Navbar({
             )}
           </div>
         </div>
-
       </div>
     </nav>
   );

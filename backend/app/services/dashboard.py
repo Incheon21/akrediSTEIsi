@@ -2,6 +2,7 @@ from datetime import date
 from uuid import UUID
 
 from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.evidence import Evidence, EvidenceIndikator
@@ -127,12 +128,23 @@ def get_dashboard_prodi_data(
             .first()
         )
         if not lkps_submission:
-            lkps_submission = LkpsSubmission(
-                program_studi_id=prodi_id, tahun_ts=current_year, status="draft"
-            )
-            db.add(lkps_submission)
-            db.commit()
-            db.refresh(lkps_submission)
+            try:
+                lkps_submission = LkpsSubmission(
+                    program_studi_id=prodi_id, tahun_ts=current_year, status="draft"
+                )
+                db.add(lkps_submission)
+                db.commit()
+                db.refresh(lkps_submission)
+            except IntegrityError:
+                db.rollback()
+                lkps_submission = (
+                    db.query(LkpsSubmission)
+                    .filter(
+                        LkpsSubmission.program_studi_id == prodi_id,
+                        LkpsSubmission.tahun_ts == current_year,
+                    )
+                    .first()
+                )
 
     target_score = (
         active_target.target_skor
@@ -330,7 +342,9 @@ def get_dashboard_prodi_data(
     }
 
 
-def _get_readiness_status(lkps_percent: int, led_percent: int, simulation_score: float) -> str:
+def _get_readiness_status(
+    lkps_percent: int, led_percent: int, simulation_score: float
+) -> str:
     if lkps_percent >= 80 and led_percent >= 80 and simulation_score >= 80:
         return "green"
     if lkps_percent >= 50 and led_percent >= 50 and simulation_score >= 50:
@@ -359,9 +373,12 @@ def get_dashboard_multiprodi_data(db: Session, tahun: int | None = None):
     # Filter prodi berdasarkan tahun jika diberikan
     if tahun:
         # Ambil prodi yang punya target di tahun tersebut
-        prodi_with_target = db.query(ProgramStudi).join(TargetAkreditasi).filter(
-            TargetAkreditasi.tahun_akreditasi == tahun
-        ).all()
+        prodi_with_target = (
+            db.query(ProgramStudi)
+            .join(TargetAkreditasi)
+            .filter(TargetAkreditasi.tahun_akreditasi == tahun)
+            .all()
+        )
         list_prodi = prodi_with_target
         if not list_prodi:
             return {
@@ -387,6 +404,7 @@ def get_dashboard_multiprodi_data(db: Session, tahun: int | None = None):
         except Exception as e:
             print(f"Error getting data for prodi {prodi.id}: {e}")
             import traceback
+
             traceback.print_exc()
             continue
 
@@ -410,7 +428,7 @@ def get_dashboard_multiprodi_data(db: Session, tahun: int | None = None):
     available_years_set = set()
     current_years = []
 
-    for prodi, p in zip(list_prodi[:len(prodi_data_list)], prodi_data_list):
+    for prodi, p in zip(list_prodi[: len(prodi_data_list)], prodi_data_list):
         profile = p["program_studi_profile"]
         lkps_percent = p.get("lkps_percent", 0)
         led_percent = p.get("led_percent", 0)
@@ -418,35 +436,53 @@ def get_dashboard_multiprodi_data(db: Session, tahun: int | None = None):
         simulation_score = float(p.get("score_value", 0))
         target_score = float(p.get("target_score", 0))
 
-        readiness_status = _get_readiness_status(lkps_percent, led_percent, simulation_score)
+        readiness_status = _get_readiness_status(
+            lkps_percent, led_percent, simulation_score
+        )
 
-        prodi_summary_list.append({
-            "id": str(prodi.id),
-            "name": profile.get("name", ""),
-            "degree": profile.get("degree", ""),
-            "accreditation_status": profile.get("last_accreditation_status", ""),
-            "accreditation_year": profile.get("last_accreditation_year", 0),
-            "lkps_percent": lkps_percent,
-            "led_percent": led_percent,
-            "evidence_percent": evidence_percent,
-            "simulation_score": simulation_score,
-            "target_score": target_score,
-            "readiness_status": readiness_status,
-            "is_active": profile.get("is_active_accreditation", False),
-            "days_remaining": p.get("days_remaining", None),
-        })
+        prodi_summary_list.append(
+            {
+                "id": str(prodi.id),
+                "name": profile.get("name", ""),
+                "degree": profile.get("degree", ""),
+                "accreditation_status": profile.get("last_accreditation_status", ""),
+                "accreditation_year": profile.get("last_accreditation_year", 0),
+                "lkps_percent": lkps_percent,
+                "led_percent": led_percent,
+                "evidence_percent": evidence_percent,
+                "simulation_score": simulation_score,
+                "target_score": target_score,
+                "readiness_status": readiness_status,
+                "is_active": profile.get("is_active_accreditation", False),
+                "days_remaining": p.get("days_remaining", None),
+            }
+        )
 
         available_years_set.update(p.get("available_years", []))
         current_years.append(p.get("current_year", 0))
 
     total_prodi = len(prodi_summary_list)
     green_count = sum(1 for p in prodi_summary_list if p["readiness_status"] == "green")
-    yellow_count = sum(1 for p in prodi_summary_list if p["readiness_status"] == "yellow")
+    yellow_count = sum(
+        1 for p in prodi_summary_list if p["readiness_status"] == "yellow"
+    )
     red_count = sum(1 for p in prodi_summary_list if p["readiness_status"] == "red")
 
-    avg_lkps = float(sum(p["lkps_percent"] for p in prodi_summary_list) / total_prodi) if total_prodi > 0 else 0.0
-    avg_led = float(sum(p["led_percent"] for p in prodi_summary_list) / total_prodi) if total_prodi > 0 else 0.0
-    avg_simul = float(sum(p["simulation_score"] for p in prodi_summary_list) / total_prodi) if total_prodi > 0 else 0.0
+    avg_lkps = (
+        float(sum(p["lkps_percent"] for p in prodi_summary_list) / total_prodi)
+        if total_prodi > 0
+        else 0.0
+    )
+    avg_led = (
+        float(sum(p["led_percent"] for p in prodi_summary_list) / total_prodi)
+        if total_prodi > 0
+        else 0.0
+    )
+    avg_simul = (
+        float(sum(p["simulation_score"] for p in prodi_summary_list) / total_prodi)
+        if total_prodi > 0
+        else 0.0
+    )
 
     return {
         "fakultas_summary": {
