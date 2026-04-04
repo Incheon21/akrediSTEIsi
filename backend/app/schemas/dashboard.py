@@ -28,6 +28,7 @@ class KriteriaRowSchema(BaseModel):
 class DashboardProdiResponse(BaseModel):
     program_studi_profile: ProfilProdiSchema
     target_akreditasi_id: str
+    lkps_submission_id: str
     current_year: int
     available_years: List[int]
     criteria_list: List[KriteriaRowSchema]
