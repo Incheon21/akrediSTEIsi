@@ -22,5 +22,5 @@ EXPOSE 8000
 COPY entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
-# Run seeder then start the entrypoint script which handles migrations and server start
-CMD sh -c "uv run python scripts/seed.py && sh ./entrypoint.sh"
+# Start the entrypoint script which handles migrations, seeding, and server start
+CMD ["sh", "./entrypoint.sh"]

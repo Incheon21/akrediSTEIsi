@@ -12,8 +12,6 @@ from app.models.user import User
 
 
 def seed():
-    Base.metadata.create_all(bind=engine, checkfirst=True)
-
     db = SessionLocal()
     try:
         # Seed roles

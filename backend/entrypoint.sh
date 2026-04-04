@@ -8,5 +8,8 @@ if ! uv run alembic upgrade heads; then
 	uv run alembic upgrade heads
 fi
 
+echo "Running seeder..."
+uv run python scripts/seed.py
+
 echo "Starting server..."
 exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
