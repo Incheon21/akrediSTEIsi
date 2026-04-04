@@ -8,6 +8,7 @@ from app.models.data_lkps import DataLKPS
 from app.models.evidence import Evidence, EvidenceIndikator
 from app.models.indikator import Indikator
 from app.models.kriteria import Kriteria
+from app.models.lkps import LkpsSubmission
 from app.models.narasi_led import NarasiLED
 from app.models.program_studi import ProgramStudi
 from app.models.target_akreditasi import TargetAkreditasi
@@ -42,6 +43,17 @@ def get_dashboard_prodi_data(
 
     aktif_akreditasi = active_target is not None
     current_year = active_target.tahun_akreditasi if active_target else (tahun or 0)
+
+    lkps_submission = None
+    if current_year:
+        lkps_submission = (
+            db.query(LkpsSubmission)
+            .filter(
+                LkpsSubmission.program_studi_id == prodi_id,
+                LkpsSubmission.tahun_ts == current_year,
+            )
+            .first()
+        )
 
     target_score = (
         active_target.target_skor
@@ -228,6 +240,7 @@ def get_dashboard_prodi_data(
             "is_active_accreditation": aktif_akreditasi,
         },
         "target_akreditasi_id": str(active_target.id) if active_target else "",
+        "lkps_submission_id": str(lkps_submission.id) if lkps_submission else "",
         "current_year": current_year,
         "available_years": available_years,
         "criteria_list": kriteria_list_response,

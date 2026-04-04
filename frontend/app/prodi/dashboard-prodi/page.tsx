@@ -66,9 +66,32 @@ const DashboardProdiPage = () => {
   }, [user, tahun]); // ← tahun sebagai dependency
 
   // TODO: ganti alert dengan toast notification
-  const onUnduhLKPS = () => alert("Unduh LKPS coming soon...");
+  const onUnduhLKPS = async () => {
+    if (!dashboardData?.lkps_submission_id) {
+      alert("Belum ada submission LKPS untuk siklus ini.");
+      return;
+    }
+    try {
+      const { downloadLkpsWorkbook } = await import("@/lib/api/lkps");
+      await downloadLkpsWorkbook(dashboardData.lkps_submission_id);
+    } catch (err) {
+      alert(
+        "Gagal mengunduh LKPS: " +
+          (err instanceof Error ? err.message : String(err)),
+      );
+    }
+  };
   const onUnduhLED = () => alert("Unduh LED coming soon...");
-  const onInputLKPS = (id: string) => alert(`Input LKPS ${id} coming soon...`);
+  const onInputLKPS = (id: string) => {
+    if (!dashboardData?.lkps_submission_id) {
+      alert(
+        "Submission LKPS belum dibuat untuk siklus ini. Silakan buat di halaman LKPS terlebih dahulu.",
+      );
+      router.push("/akreditasi/lkps");
+      return;
+    }
+    router.push(`/akreditasi/lkps/${dashboardData.lkps_submission_id}`);
+  };
   const onInputLED = (id: string) => {
     // Note: Requires target_akreditasi_id to be returned in dashboardData
     // If dashboardData doesn't have target_akreditasi_id, backend endpoint needs to be updated
