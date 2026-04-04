@@ -54,6 +54,13 @@ def get_dashboard_prodi_data(
             )
             .first()
         )
+        if not lkps_submission:
+            lkps_submission = LkpsSubmission(
+                program_studi_id=prodi_id, tahun_ts=current_year, status="draft"
+            )
+            db.add(lkps_submission)
+            db.commit()
+            db.refresh(lkps_submission)
 
     target_score = (
         active_target.target_skor

@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import {
   createSectionRecord,
@@ -10,7 +11,11 @@ import {
   updateSectionRecord,
 } from "@/lib/api/lkps";
 import { LKPS_SECTIONS } from "@/constants/lkps-sections";
-import type { FieldDefinition, SectionDefinition, SectionRecord } from "@/types/lkps";
+import type {
+  FieldDefinition,
+  SectionDefinition,
+  SectionRecord,
+} from "@/types/lkps";
 
 interface WorkspaceParams {
   params: Promise<{ submissionId: string }>;
@@ -31,6 +36,8 @@ const spanClassMap: Record<number, string> = {
 
 export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
   const { submissionId } = use(params);
+  const searchParams = useSearchParams();
+  const kriteriaFilter = searchParams.get("kriteria");
 
   const sectionLookup = useMemo(() => {
     return Object.fromEntries(LKPS_SECTIONS.map((s) => [s.code, s]));
@@ -39,24 +46,43 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
   const groupedSections = useMemo(() => {
     const groups = new Map<string, SectionDefinition[]>();
     LKPS_SECTIONS.forEach((s) => {
+      if (kriteriaFilter) {
+        const filterNumber = kriteriaFilter.replace(/\D/g, "");
+        if (!s.group.includes(`Kriteria ${filterNumber}`)) return;
+      }
       const list = groups.get(s.group) ?? [];
       list.push(s);
       groups.set(s.group, list);
     });
     return Array.from(groups.entries());
-  }, []);
+  }, [kriteriaFilter]);
 
-  const firstEditable = useMemo(
-    () => LKPS_SECTIONS.find((s) => s.mode === "records") ?? LKPS_SECTIONS[0],
-    [],
+  const firstEditable = useMemo(() => {
+    if (groupedSections.length > 0 && groupedSections[0][1].length > 0) {
+      return (
+        groupedSections[0][1].find((s) => s.mode === "records") ??
+        groupedSections[0][1][0]
+      );
+    }
+    return LKPS_SECTIONS.find((s) => s.mode === "records") ?? LKPS_SECTIONS[0];
+  }, [groupedSections]);
+
+  const [activeSectionCode, setActiveSectionCode] = useState<string>(
+    firstEditable.code,
   );
 
-  const [activeSectionCode, setActiveSectionCode] = useState<string>(firstEditable.code);
-  const [recordsBySection, setRecordsBySection] = useState<SectionRecordsState>(() => {
-    const initial: SectionRecordsState = {};
-    LKPS_SECTIONS.forEach((s) => { initial[s.code] = []; });
-    return initial;
-  });
+  useEffect(() => {
+    setActiveSectionCode(firstEditable.code);
+  }, [firstEditable.code]);
+  const [recordsBySection, setRecordsBySection] = useState<SectionRecordsState>(
+    () => {
+      const initial: SectionRecordsState = {};
+      LKPS_SECTIONS.forEach((s) => {
+        initial[s.code] = [];
+      });
+      return initial;
+    },
+  );
 
   // Loading / saving / error state
   const [loadingSection, setLoadingSection] = useState<string | null>(null);
@@ -89,7 +115,9 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
           [code]: rows as PersistedRecord[],
         }));
       } catch (err) {
-        setSectionError(err instanceof Error ? err.message : "Gagal memuat data seksi.");
+        setSectionError(
+          err instanceof Error ? err.message : "Gagal memuat data seksi.",
+        );
       } finally {
         setLoadingSection(null);
       }
@@ -112,13 +140,19 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
       const newRecord = createEmptyRecord(section);
       setSavingIndex(-1); // -1 = new row being saved
       try {
-        const saved = await createSectionRecord(submissionId, section.code, newRecord);
+        const saved = await createSectionRecord(
+          submissionId,
+          section.code,
+          newRecord,
+        );
         setRecordsBySection((prev) => ({
           ...prev,
           [section.code]: [...prev[section.code], saved as PersistedRecord],
         }));
       } catch (err) {
-        setSectionError(err instanceof Error ? err.message : "Gagal menambah baris.");
+        setSectionError(
+          err instanceof Error ? err.message : "Gagal menambah baris.",
+        );
       } finally {
         setSavingIndex(null);
       }
@@ -132,11 +166,19 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const handleFieldChange = useCallback(
-    (sectionCode: string, recordIndex: number, fieldKey: string, value: unknown) => {
+    (
+      sectionCode: string,
+      recordIndex: number,
+      fieldKey: string,
+      value: unknown,
+    ) => {
       // Optimistic local update first
       setRecordsBySection((prev) => {
         const sectionRecords = prev[sectionCode] ?? [];
-        const updatedRecord = { ...sectionRecords[recordIndex], [fieldKey]: value };
+        const updatedRecord = {
+          ...sectionRecords[recordIndex],
+          [fieldKey]: value,
+        };
         const nextRecords = [...sectionRecords];
         nextRecords[recordIndex] = updatedRecord as PersistedRecord;
         return { ...prev, [sectionCode]: nextRecords };
@@ -149,8 +191,15 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
         setRecordsBySection((prev) => {
           const record = prev[sectionCode]?.[recordIndex];
           if (!record?.id) return prev;
-          updateSectionRecord(submissionId, sectionCode, record.id, record).catch((err) => {
-            setSectionError(err instanceof Error ? err.message : "Gagal menyimpan perubahan.");
+          updateSectionRecord(
+            submissionId,
+            sectionCode,
+            record.id,
+            record,
+          ).catch((err) => {
+            setSectionError(
+              err instanceof Error ? err.message : "Gagal menyimpan perubahan.",
+            );
           });
           return prev;
         });
@@ -173,11 +222,15 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
           await deleteSectionRecord(submissionId, sectionCode, record.id);
         }
         setRecordsBySection((prev) => {
-          const nextRecords = (prev[sectionCode] ?? []).filter((_, idx) => idx !== recordIndex);
+          const nextRecords = (prev[sectionCode] ?? []).filter(
+            (_, idx) => idx !== recordIndex,
+          );
           return { ...prev, [sectionCode]: nextRecords };
         });
       } catch (err) {
-        setSectionError(err instanceof Error ? err.message : "Gagal menghapus baris.");
+        setSectionError(
+          err instanceof Error ? err.message : "Gagal menghapus baris.",
+        );
       } finally {
         setSavingIndex(null);
       }
@@ -202,13 +255,18 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
       link.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setSectionError(err instanceof Error ? err.message : "Gagal mengekspor workbook.");
+      setSectionError(
+        err instanceof Error ? err.message : "Gagal mengekspor workbook.",
+      );
     } finally {
       setExporting(false);
     }
   }, [submissionId]);
 
-  const totalRows = Object.values(recordsBySection).reduce((acc, rows) => acc + rows.length, 0);
+  const totalRows = Object.values(recordsBySection).reduce(
+    (acc, rows) => acc + rows.length,
+    0,
+  );
 
   return (
     <main className="min-h-screen bg-[#f4f6f8] px-4 py-8 text-[var(--accent-ink)] md:px-8">
@@ -218,8 +276,12 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
         ---------------------------------------------------------------- */}
         <aside className="lg:w-72">
           <div className="sticky top-6 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-primary)] p-5 shadow-[var(--shadow-soft)]">
-            <p className="text-xs uppercase tracking-[0.3em] text-[#00509d]">Submission</p>
-            <h2 className="mt-2 truncate text-lg font-semibold text-[var(--accent-ink)]">{submissionId}</h2>
+            <p className="text-xs uppercase tracking-[0.3em] text-[#00509d]">
+              Submission
+            </p>
+            <h2 className="mt-2 truncate text-lg font-semibold text-[var(--accent-ink)]">
+              {submissionId}
+            </h2>
 
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-[var(--surface-muted)]/70 px-3 py-2 text-xs font-semibold text-[var(--accent-ink)]">
               <span>Total baris tersimpan</span>
@@ -238,11 +300,14 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
             <div className="mt-6 space-y-5">
               {groupedSections.map(([groupName, sections]) => (
                 <div key={groupName}>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent-ink)]/60">{groupName}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent-ink)]/60">
+                    {groupName}
+                  </p>
                   <div className="mt-2 space-y-1.5">
                     {sections.map((section) => {
                       const isActive = section.code === activeSectionCode;
-                      const recordCount = recordsBySection[section.code]?.length ?? 0;
+                      const recordCount =
+                        recordsBySection[section.code]?.length ?? 0;
                       return (
                         <button
                           key={section.code}
@@ -250,11 +315,13 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
                           onClick={() => setActiveSectionCode(section.code)}
                           className={`flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-left text-sm transition ${
                             isActive
-                                ? "border-[#00509d] bg-[#eef4fb] text-[var(--accent-ink)]"
+                              ? "border-[#00509d] bg-[#eef4fb] text-[var(--accent-ink)]"
                               : "border-transparent bg-transparent text-[var(--accent-ink)]/70 hover:bg-white/40"
                           }`}
                         >
-                          <span className="pr-2 font-medium">{section.title}</span>
+                          <span className="pr-2 font-medium">
+                            {section.title}
+                          </span>
                           {section.mode === "records" && (
                             <span className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs font-semibold text-[var(--accent-ink)]/80">
                               {recordCount}
@@ -276,10 +343,16 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
         <section className="flex-1 rounded-[32px] border border-[var(--border-soft)] bg-[var(--surface-primary)] p-6 shadow-[var(--shadow-soft)] md:p-8">
           <header className="flex flex-col gap-4 border-b border-[var(--border-soft)] pb-6 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[#00509d]">{activeSection.sheetLabel}</p>
-              <h1 className="mt-2 text-3xl font-semibold text-[var(--accent-ink)]">{activeSection.title}</h1>
+              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[#00509d]">
+                {activeSection.sheetLabel}
+              </p>
+              <h1 className="mt-2 text-3xl font-semibold text-[var(--accent-ink)]">
+                {activeSection.title}
+              </h1>
               {activeSection.purpose && (
-                <p className="mt-2 max-w-2xl text-sm text-[var(--accent-ink)]/80">{activeSection.purpose}</p>
+                <p className="mt-2 max-w-2xl text-sm text-[var(--accent-ink)]/80">
+                  {activeSection.purpose}
+                </p>
               )}
             </div>
             {activeSection.mode === "records" && (
@@ -305,7 +378,10 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
 
           {activeSection.mode === "static" ? (
             <div className="mt-6 rounded-3xl border border-dashed border-[var(--border-soft)] bg-white/70 p-6 text-sm text-[var(--accent-ink)]/80">
-              <p>{activeSection.note ?? "Seksi ini bersifat statis dan mengikuti master data."}</p>
+              <p>
+                {activeSection.note ??
+                  "Seksi ini bersifat statis dan mengikuti master data."}
+              </p>
             </div>
           ) : (
             <div className="mt-6 space-y-6">
@@ -317,19 +393,27 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
 
               {activeSection.pinnedValues && (
                 <div className="flex flex-wrap gap-2 text-xs text-[var(--accent-ink)]">
-                  {Object.entries(activeSection.pinnedValues).map(([key, value]) => (
-                    <span key={key} className="rounded-full bg-[var(--surface-muted)] px-3 py-1 font-semibold">
-                      {key}: {String(value)}
-                    </span>
-                  ))}
+                  {Object.entries(activeSection.pinnedValues).map(
+                    ([key, value]) => (
+                      <span
+                        key={key}
+                        className="rounded-full bg-[var(--surface-muted)] px-3 py-1 font-semibold"
+                      >
+                        {key}: {String(value)}
+                      </span>
+                    ),
+                  )}
                 </div>
               )}
 
               {loadingSection === activeSectionCode ? (
-                <p className="py-10 text-center text-sm text-[var(--accent-ink)]/60">Memuat data seksi...</p>
+                <p className="py-10 text-center text-sm text-[var(--accent-ink)]/60">
+                  Memuat data seksi...
+                </p>
               ) : activeRecords.length === 0 ? (
                 <p className="rounded-3xl border border-dashed border-[var(--border-soft)] bg-white/60 px-4 py-10 text-center text-sm text-[var(--accent-ink)]/70">
-                  Belum ada baris data. Klik &quot;Tambah baris&quot; untuk mulai mengisi tabel LKPS.
+                  Belum ada baris data. Klik &quot;Tambah baris&quot; untuk
+                  mulai mengisi tabel LKPS.
                 </p>
               ) : (
                 <div className="space-y-5">
@@ -340,8 +424,17 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
                       section={activeSection}
                       record={record}
                       saving={savingIndex === index}
-                      onFieldChange={(fieldKey, value) => handleFieldChange(activeSection.code, index, fieldKey, value)}
-                      onRemove={() => handleRemoveRecord(activeSection.code, index)}
+                      onFieldChange={(fieldKey, value) =>
+                        handleFieldChange(
+                          activeSection.code,
+                          index,
+                          fieldKey,
+                          value,
+                        )
+                      }
+                      onRemove={() =>
+                        handleRemoveRecord(activeSection.code, index)
+                      }
                     />
                   ))}
                 </div>
@@ -388,7 +481,9 @@ function RecordCard({
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {section.fields.map((field) => {
-          const disabled = Boolean(section.pinnedValues && field.key in section.pinnedValues);
+          const disabled = Boolean(
+            section.pinnedValues && field.key in section.pinnedValues,
+          );
           return (
             <FieldInput
               key={field.key}
@@ -420,7 +515,8 @@ function FieldInput({
   onChange: (value: unknown) => void;
 }) {
   const spanClass = spanClassMap[field.span ?? 1] ?? "md:col-span-2";
-  const baseLabel = "mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--accent-ink)]/60";
+  const baseLabel =
+    "mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--accent-ink)]/60";
   const baseInput =
     "w-full rounded-2xl border border-[var(--border-soft)] bg-white px-3 py-2 text-sm text-[var(--accent-ink)] focus:border-[#00509d] focus:outline-none disabled:opacity-60";
 
@@ -473,19 +569,33 @@ function FieldInput({
             disabled={disabled}
             className="h-4 w-4"
           />
-          <span className="text-sm text-[var(--accent-ink)]">{Boolean(value) ? "Ya" : "Tidak"}</span>
+          <span className="text-sm text-[var(--accent-ink)]">
+            {Boolean(value) ? "Ya" : "Tidak"}
+          </span>
         </div>
       </div>
     );
   }
 
-  const isNumberField = field.type === "integer" || field.type === "decimal" || field.type === "number";
-  const inputType = field.type === "date" ? "date" : isNumberField ? "number" : "text";
-  const step = field.step ?? (field.type === "integer" ? 1 : field.type === "decimal" ? 0.01 : undefined);
+  const isNumberField =
+    field.type === "integer" ||
+    field.type === "decimal" ||
+    field.type === "number";
+  const inputType =
+    field.type === "date" ? "date" : isNumberField ? "number" : "text";
+  const step =
+    field.step ??
+    (field.type === "integer"
+      ? 1
+      : field.type === "decimal"
+        ? 0.01
+        : undefined);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (field.type === "integer") {
-      onChange(e.target.value === "" ? "" : Number.parseInt(e.target.value, 10));
+      onChange(
+        e.target.value === "" ? "" : Number.parseInt(e.target.value, 10),
+      );
     } else if (field.type === "decimal" || field.type === "number") {
       onChange(e.target.value === "" ? "" : Number(e.target.value));
     } else {
@@ -498,7 +608,13 @@ function FieldInput({
       <label className={baseLabel}>{field.label}</label>
       <input
         type={inputType}
-        value={value === undefined || value === null ? "" : typeof value === "number" ? value : (value as string)}
+        value={
+          value === undefined || value === null
+            ? ""
+            : typeof value === "number"
+              ? value
+              : (value as string)
+        }
         onChange={handleChange}
         disabled={disabled}
         placeholder={field.placeholder}

@@ -90,7 +90,9 @@ const DashboardProdiPage = () => {
       router.push("/akreditasi/lkps");
       return;
     }
-    router.push(`/akreditasi/lkps/${dashboardData.lkps_submission_id}`);
+    router.push(
+      `/akreditasi/lkps/${dashboardData.lkps_submission_id}?kriteria=${id}`,
+    );
   };
   const onInputLED = (id: string) => {
     // Note: Requires target_akreditasi_id to be returned in dashboardData
