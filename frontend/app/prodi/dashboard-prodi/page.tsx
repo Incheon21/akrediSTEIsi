@@ -90,8 +90,9 @@ const DashboardProdiPage = () => {
       router.push("/akreditasi/lkps");
       return;
     }
+    const tahunAktif = tahun ? Number(tahun) : current_year;
     router.push(
-      `/akreditasi/lkps/${dashboardData.lkps_submission_id}?kriteria=${id}`,
+      `/akreditasi/lkps/${dashboardData.lkps_submission_id}?kriteria=${id}&target_akreditasi_id=${dashboardData.target_akreditasi_id}&tahun=${tahunAktif}`,
     );
   };
   const onInputLED = (id: string) => {
@@ -105,7 +106,7 @@ const DashboardProdiPage = () => {
     const tahunAktif = tahun ? Number(tahun) : current_year;
 
     router.push(
-      `/prodi/led?target_akreditasi_id=${dashboardData.target_akreditasi_id}&kriteria_kode=${id}&tahun=${tahunAktif}`,
+      `/prodi/led?target_akreditasi_id=${dashboardData.target_akreditasi_id}&kriteria_kode=${id}&tahun=${tahunAktif}&lkps_submission_id=${dashboardData.lkps_submission_id || ""}`,
     );
   };
   const onAturDeadline = () => alert("Atur Deadline coming soon...");

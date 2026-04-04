@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 import {
   createSectionRecord,
@@ -37,7 +37,10 @@ const spanClassMap: Record<number, string> = {
 export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
   const { submissionId } = use(params);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const kriteriaFilter = searchParams.get("kriteria");
+  const targetId = searchParams.get("target_akreditasi_id");
+  const tahun = searchParams.get("tahun");
 
   const sectionLookup = useMemo(() => {
     return Object.fromEntries(LKPS_SECTIONS.map((s) => [s.code, s]));
@@ -270,6 +273,36 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
 
   return (
     <main className="min-h-screen bg-[#f4f6f8] px-4 py-8 text-[var(--accent-ink)] md:px-8">
+      {kriteriaFilter && targetId && (
+        <div className="mx-auto max-w-7xl mb-6">
+          <div className="flex justify-between items-end border-b border-gray-300 pb-4">
+            <div>
+              <button
+                onClick={() => router.push("/prodi/dashboard-prodi")}
+                className="text-sm font-semibold text-[#00509d] hover:text-[#003f7d] transition-colors mb-4 block"
+              >
+                ← Kembali ke Dashboard Prodi
+              </button>
+              <div className="flex gap-6 mt-2">
+                <button className="pb-2 text-sm font-semibold text-[#00509d] border-b-2 border-[#00509d] relative top-[1px]">
+                  Data LKPS
+                </button>
+                <button
+                  onClick={() => {
+                    router.push(
+                      `/prodi/led?target_akreditasi_id=${targetId}&kriteria_kode=${kriteriaFilter}&tahun=${tahun || ""}&lkps_submission_id=${submissionId}`,
+                    );
+                  }}
+                  className="pb-2 text-sm font-semibold text-gray-500 hover:text-[#00509d] transition-colors relative"
+                >
+                  Narasi LED
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto flex max-w-7xl flex-col gap-6 lg:flex-row">
         {/* ----------------------------------------------------------------
             Sidebar

@@ -17,6 +17,8 @@ export default function ProdiLedPage() {
 
   const targetId = searchParams.get("target_akreditasi_id") ?? "";
   const kriteriaKode = searchParams.get("kriteria_kode") ?? "";
+  const lkpsSubmissionId = searchParams.get("lkps_submission_id") ?? "";
+  const tahun = searchParams.get("tahun") ?? "";
 
   const [indikators, setIndikators] = useState<IndicatorResponse[]>([]);
   const [narasis, setNarasis] = useState<Record<string, string>>({});
@@ -297,13 +299,35 @@ export default function ProdiLedPage() {
 
   return (
     <div className="p-6 px-10 bg-[#f4f6f8] min-h-screen">
-      <div className="mb-5">
-        <button
-          onClick={goBack}
-          className="text-sm font-semibold text-[#00509d] hover:text-[#003f7d] transition-colors"
-        >
-          ← Kembali ke Dashboard Prodi
-        </button>
+      <div className="mb-5 flex justify-between items-end border-b border-gray-200 pb-4">
+        <div>
+          <button
+            onClick={goBack}
+            className="text-sm font-semibold text-[#00509d] hover:text-[#003f7d] transition-colors mb-4 block"
+          >
+            ← Kembali ke Dashboard Prodi
+          </button>
+
+          <div className="flex gap-6 mt-2">
+            <button
+              onClick={() => {
+                if (!lkpsSubmissionId) {
+                  alert("Submission LKPS belum tersedia untuk siklus ini.");
+                  return;
+                }
+                router.push(
+                  `/akreditasi/lkps/${lkpsSubmissionId}?kriteria=${kriteriaKode}&target_akreditasi_id=${targetId}&tahun=${tahun}`,
+                );
+              }}
+              className="pb-2 text-sm font-semibold text-gray-500 hover:text-[#00509d] transition-colors relative"
+            >
+              Data LKPS
+            </button>
+            <button className="pb-2 text-sm font-semibold text-[#00509d] border-b-2 border-[#00509d] relative top-[1px]">
+              Narasi LED
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-5">
