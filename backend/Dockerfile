@@ -19,5 +19,8 @@ RUN uv sync --frozen
 
 EXPOSE 8000
 
-# Run seeder then start the server directly via CMD to avoid Windows CRLF script issues
-CMD sh -c "uv run python scripts/seed.py && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+COPY entrypoint.sh ./
+RUN chmod +x entrypoint.sh
+
+# Run seeder then start the entrypoint script which handles migrations and server start
+CMD sh -c "uv run python scripts/seed.py && sh ./entrypoint.sh"

@@ -39,7 +39,10 @@ def get_current_user(
     if payload.get("type") != "access":
         raise credentials_exception
 
-    user_id: str | None = json.loads(payload.get("sub")).get("user_id")
+    try:
+        user_id: str | None = json.loads(payload.get("sub")).get("user_id")
+    except (json.JSONDecodeError, TypeError, AttributeError):
+        raise credentials_exception
     if user_id is None:
         raise credentials_exception
 

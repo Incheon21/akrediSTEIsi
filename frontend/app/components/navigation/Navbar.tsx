@@ -57,6 +57,16 @@ export default function Navbar({
           >
             Dashboard Prodi
           </Link>
+          <Link
+            href="/akreditasi/lkps"
+            className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${
+              isActive("/akreditasi/lkps")
+                ? "text-[#f3e412]"
+                : "text-white hover:text-[#f3e412]"
+            }`}
+          >
+            LKPS Workspace
+          </Link>
         </div>
 
         <div className="flex items-center gap-3 px-5 border-l border-[#0060b8]">
