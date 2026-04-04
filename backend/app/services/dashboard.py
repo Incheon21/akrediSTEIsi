@@ -4,14 +4,86 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.models.data_lkps import DataLKPS
 from app.models.evidence import Evidence, EvidenceIndikator
 from app.models.indikator import Indikator
 from app.models.kriteria import Kriteria
-from app.models.lkps import LkpsSubmission
+from app.models.lkps import (
+    LkpsBebanKerjaDosen,
+    LkpsCapstoneDesign,
+    LkpsDosenProfil,
+    LkpsIntegrasiPenelitian,
+    LkpsIpkLulusan,
+    LkpsK3lDokumen,
+    LkpsK3lFasilitas,
+    LkpsKepuasanPengguna,
+    LkpsKerjasama,
+    LkpsKesesuaianKerja,
+    LkpsKinerjaDtps,
+    LkpsKurikulum,
+    LkpsLuaranPenelitian,
+    LkpsMahasiswaAktif,
+    LkpsMasaStudi,
+    LkpsMkBasicScience,
+    LkpsPembimbingLapangan,
+    LkpsPenelitianMahasiswa,
+    LkpsPenelitianSummary,
+    LkpsPenggunaanDana,
+    LkpsPkmSummary,
+    LkpsPrasarana,
+    LkpsPrestasiMahasiswa,
+    LkpsProdukJasa,
+    LkpsPublikasiIlmiah,
+    LkpsRekognisiDtps,
+    LkpsSitasiDtps,
+    LkpsSpmiDokumen,
+    LkpsSpmiPelaksanaan,
+    LkpsSubmission,
+    LkpsTempatKerja,
+    LkpsTenagaKependidikan,
+    LkpsVmts,
+    LkpsWaktuTunggu,
+)
 from app.models.narasi_led import NarasiLED
 from app.models.program_studi import ProgramStudi
 from app.models.target_akreditasi import TargetAkreditasi
+
+KRITERIA_LKPS_MODELS = {
+    "C1": [LkpsVmts],
+    "C2": [LkpsKerjasama, LkpsPenggunaanDana],
+    "C3": [
+        LkpsKurikulum,
+        LkpsIntegrasiPenelitian,
+        LkpsMkBasicScience,
+        LkpsCapstoneDesign,
+        LkpsPenelitianSummary,
+        LkpsPkmSummary,
+    ],
+    "C4": [
+        LkpsDosenProfil,
+        LkpsTenagaKependidikan,
+        LkpsBebanKerjaDosen,
+        LkpsPublikasiIlmiah,
+        LkpsLuaranPenelitian,
+        LkpsProdukJasa,
+        LkpsKinerjaDtps,
+        LkpsSitasiDtps,
+        LkpsRekognisiDtps,
+        LkpsPembimbingLapangan,
+    ],
+    "C5": [LkpsPrasarana, LkpsK3lDokumen, LkpsK3lFasilitas],
+    "C6": [
+        LkpsMahasiswaAktif,
+        LkpsIpkLulusan,
+        LkpsPrestasiMahasiswa,
+        LkpsMasaStudi,
+        LkpsWaktuTunggu,
+        LkpsKesesuaianKerja,
+        LkpsTempatKerja,
+        LkpsKepuasanPengguna,
+        LkpsPenelitianMahasiswa,
+    ],
+    "C7": [LkpsSpmiDokumen, LkpsSpmiPelaksanaan],
+}
 
 
 def get_dashboard_prodi_data(
@@ -86,16 +158,18 @@ def get_dashboard_prodi_data(
         if active_target:
             ind_ids = [ind.id for ind in indikators]
             if ind_ids:
-                # Check LKPS
-                lkps_count = (
-                    db.query(DataLKPS)
-                    .filter(
-                        DataLKPS.target_akreditasi_id == active_target.id,
-                        DataLKPS.indikator_id.in_(ind_ids),
-                    )
-                    .count()
-                )
-                lkps_ada = lkps_count > 0
+                # Check LKPS by querying actual tables
+                lkps_ada = False
+                if lkps_submission:
+                    models = KRITERIA_LKPS_MODELS.get(k.kode, [])
+                    for model in models:
+                        if (
+                            db.query(model)
+                            .filter(model.submission_id == lkps_submission.id)
+                            .first()
+                        ):
+                            lkps_ada = True
+                            break
 
                 # Check Evidence via junction table
                 evid_count = (
@@ -127,15 +201,7 @@ def get_dashboard_prodi_data(
             fulfilled_count = 0
             for ind in indikators:
                 # indikator "selesai dikerjakan" jika sudah diberi Evidence, atau ada isian LKPS / LED
-                has_lkps = (
-                    db.query(DataLKPS)
-                    .filter(
-                        DataLKPS.target_akreditasi_id == active_target.id,
-                        DataLKPS.indikator_id == ind.id,
-                    )
-                    .first()
-                    is not None
-                )
+                has_lkps = lkps_ada
 
                 has_led = (
                     db.query(NarasiLED)
