@@ -85,6 +85,7 @@ def admin_user(db, seeded_roles):
         db.refresh(user)
     return user
 
+
 @pytest.fixture()
 def pimpinan_user(db, seeded_roles):
     """Create and return a test admin user."""
@@ -100,6 +101,7 @@ def pimpinan_user(db, seeded_roles):
         db.commit()
         db.refresh(user)
     return user
+
 
 @pytest.fixture()
 def tim_prodi_user(db, seeded_roles):
@@ -127,6 +129,7 @@ def admin_token(client, admin_user):
     )
     return response.json()["access_token"]
 
+
 @pytest.fixture()
 def pimpinan_token(client, pimpinan_user):
     """Return a valid access token for the pimpinan user."""
@@ -135,6 +138,7 @@ def pimpinan_token(client, pimpinan_user):
         json={"email": "pimpinan@test.com", "password": "testpassword123"},
     )
     return response.json()["access_token"]
+
 
 @pytest.fixture()
 def tim_prodi_token(client, tim_prodi_user):
@@ -145,6 +149,7 @@ def tim_prodi_token(client, tim_prodi_user):
     )
     return response.json()["access_token"]
 
+
 @pytest.fixture
 def mock_dashboard_prodi_response():
     return {
@@ -153,8 +158,10 @@ def mock_dashboard_prodi_response():
             "degree": "S1",
             "last_accreditation_status": "A",
             "last_accreditation_year": 2022,
-            "is_active_accreditation": True
+            "is_active_accreditation": True,
         },
+        "target_akreditasi_id": "dummy-target-id",
+        "lkps_submission_id": "dummy-lkps-id",
         "current_year": 2025,
         "available_years": [2025],
         "criteria_list": [],
@@ -166,34 +173,40 @@ def mock_dashboard_prodi_response():
         "days_remaining": 10,
         "lkps_percent": 0,
         "led_percent": 0,
-        "evidence_percent": 0
+        "evidence_percent": 0,
     }
 
 
 @pytest.fixture
 def mock_dashboard_multi_response():
     return {
-        "data_prodi": [
+        "fakultas_summary": {
+            "total_prodi": 1,
+            "prodi_green": 0,
+            "prodi_yellow": 0,
+            "prodi_red": 1,
+            "avg_lkps_percent": 0.0,
+            "avg_led_percent": 0.0,
+            "avg_simulation_score": 0.0,
+        },
+        "prodi_list": [
             {
-                "program_studi_profile": {
-                    "name": "Informatika",
-                    "degree": "S1",
-                    "last_accreditation_status": "A",
-                    "last_accreditation_year": 2022,
-                    "is_active_accreditation": True
-                },
-                "current_year": 2025,
-                "available_years": [2025],
-                "criteria_list": [],
-                "recommendation_messages": ["Test rekomendasi"],
-                "early_warnings": [],
-                "score_value": 0.0,
-                "target_score": 3.5,
-                "deadline": "01 Januari 2025",
-                "days_remaining": 10,
+                "id": "dummy-prodi-id",
+                "name": "Informatika",
+                "degree": "S1",
+                "accreditation_status": "A",
+                "accreditation_year": 2022,
                 "lkps_percent": 0,
                 "led_percent": 0,
-                "evidence_percent": 0
+                "evidence_percent": 0,
+                "simulation_score": 0.0,
+                "target_score": 3.5,
+                "readiness_status": "red",
+                "is_active": True,
+                "days_remaining": 10,
             }
-        ]
+        ],
+        "current_year": 2025,
+        "available_years": [2025],
+        "data_prodi": [1],
     }
