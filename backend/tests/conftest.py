@@ -85,6 +85,21 @@ def admin_user(db, seeded_roles):
         db.refresh(user)
     return user
 
+@pytest.fixture()
+def pimpinan_user(db, seeded_roles):
+    """Create and return a test admin user."""
+    user = db.query(User).filter(User.email == "pimpinan@test.com").first()
+    if not user:
+        user = User(
+            email="pimpinan@test.com",
+            hashed_password=hash_password("testpassword123"),
+            nama="test pimpinan",
+            role_id=seeded_roles["pimpinan"].id,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    return user
 
 @pytest.fixture()
 def tim_prodi_user(db, seeded_roles):
@@ -112,6 +127,14 @@ def admin_token(client, admin_user):
     )
     return response.json()["access_token"]
 
+@pytest.fixture()
+def pimpinan_token(client, pimpinan_user):
+    """Return a valid access token for the pimpinan user."""
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "pimpinan@test.com", "password": "testpassword123"},
+    )
+    return response.json()["access_token"]
 
 @pytest.fixture()
 def tim_prodi_token(client, tim_prodi_user):
@@ -121,3 +144,56 @@ def tim_prodi_token(client, tim_prodi_user):
         json={"email": "timprodi@test.com", "password": "testpassword123"},
     )
     return response.json()["access_token"]
+
+@pytest.fixture
+def mock_dashboard_prodi_response():
+    return {
+        "program_studi_profile": {
+            "name": "Informatika",
+            "degree": "S1",
+            "last_accreditation_status": "A",
+            "last_accreditation_year": 2022,
+            "is_active_accreditation": True
+        },
+        "current_year": 2025,
+        "available_years": [2025],
+        "criteria_list": [],
+        "recommendation_messages": ["Test rekomendasi"],
+        "early_warnings": [],
+        "score_value": 0.0,
+        "target_score": 3.5,
+        "deadline": "01 Januari 2025",
+        "days_remaining": 10,
+        "lkps_percent": 0,
+        "led_percent": 0,
+        "evidence_percent": 0
+    }
+
+
+@pytest.fixture
+def mock_dashboard_multi_response():
+    return {
+        "data_prodi": [
+            {
+                "program_studi_profile": {
+                    "name": "Informatika",
+                    "degree": "S1",
+                    "last_accreditation_status": "A",
+                    "last_accreditation_year": 2022,
+                    "is_active_accreditation": True
+                },
+                "current_year": 2025,
+                "available_years": [2025],
+                "criteria_list": [],
+                "recommendation_messages": ["Test rekomendasi"],
+                "early_warnings": [],
+                "score_value": 0.0,
+                "target_score": 3.5,
+                "deadline": "01 Januari 2025",
+                "days_remaining": 10,
+                "lkps_percent": 0,
+                "led_percent": 0,
+                "evidence_percent": 0
+            }
+        ]
+    }
