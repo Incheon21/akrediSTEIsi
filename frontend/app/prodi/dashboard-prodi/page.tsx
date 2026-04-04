@@ -309,7 +309,7 @@ export default function DashboardProdiPage() {
                       <button
                         onClick={() =>
                           router.push(
-                            `/prodi/led?kriteria=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}&lkps_submission_id=${data.lkps_submission_id}`,
+                            `/prodi/led?kriteria_kode=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}&lkps_submission_id=${data.lkps_submission_id}`,
                           )
                         }
                         className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
