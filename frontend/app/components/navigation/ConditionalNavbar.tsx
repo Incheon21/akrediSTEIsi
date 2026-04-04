@@ -6,13 +6,15 @@ import { useAuth } from "../../hooks/useAuth";
 
 export default function ConditionalNavbar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   if (pathname === "/login") return null;
 
-  const prodiName = user?.program_studi?.nama || "Program Studi";
-  const fullName = user?.nama || "Admin";
-  const initial = user?.nama ? user.nama.charAt(0).toUpperCase() : "A";
+  const prodiName = loading ? "..." : (user?.program_studi?.nama || "");
+  const fullName = loading ? "..." : (user?.nama || "User");
+  const initial = loading ? "" : (user?.nama ? user.nama.charAt(0).toUpperCase() : "?");
+  const role = loading ? "" : (user?.role || "");
 
-  return <Navbar programStudi={prodiName} userName={fullName} userInitial={initial} />;
+  return <Navbar programStudi={prodiName} userName={fullName} userInitial={initial} role={role} />;
 }
+

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { apiFetch } from "@/app/services/api";
 
 interface AuthUser {
@@ -17,6 +17,7 @@ interface AuthUser {
 
 export function useAuth() {
     const router = useRouter();
+    const pathname = usePathname();
     const [user, setUser] = useState<AuthUser | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -25,14 +26,22 @@ export function useAuth() {
             try {
                 const token = localStorage.getItem("access_token");
                 if (!token) {
-                    router.push("/login");
+                    if (pathname !== "/login") {
+                        router.push("/login");
+                    }
+                    setLoading(false);
                     return;
                 }
 
+                setLoading(true);
                 const res = await apiFetch("/api/v1/auth/me");
+                
                 if (res.status === 401) {
                     localStorage.removeItem("access_token");
-                    router.push("/login");
+                    if (pathname !== "/login") {
+                        router.push("/login");
+                    }
+                    setUser(null);
                     return;
                 }
 
@@ -49,15 +58,22 @@ export function useAuth() {
                     program_studi_id: data.program_studi_id,
                     program_studi: data.program_studi,
                 });
+                console.log("useAuth user set:", {
+                    id: data.id,
+                    role: data.role?.name,
+                    program_studi_id: data.program_studi_id,
+                    program_studi: data.program_studi,
+                });
             } catch (err) {
                 console.error(err);
+                setUser(null);
             } finally {
                 setLoading(false);
             }
         }
 
         fetchUser();
-    }, [router]);
+    }, [router, pathname]);
 
     return { user, loading };
 }

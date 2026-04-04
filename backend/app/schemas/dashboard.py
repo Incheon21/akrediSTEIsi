@@ -44,6 +44,34 @@ class DashboardProdiResponse(BaseModel):
     led_percent: int
     evidence_percent: int
 
+class FakultasSummarySchema(BaseModel):
+    total_prodi: int
+    prodi_green: int
+    prodi_yellow: int
+    prodi_red: int
+    avg_lkps_percent: float
+    avg_led_percent: float
+    avg_simulation_score: float
+
+
+class ProdiSummarySchema(BaseModel):
+    id: str
+    name: str
+    degree: str
+    accreditation_status: str
+    accreditation_year: int
+    lkps_percent: int
+    led_percent: int
+    evidence_percent: int
+    simulation_score: float
+    target_score: float
+    readiness_status: str
+    is_active: bool
+    days_remaining: Optional[int] = None
+
 
 class DashboardMultiProdiResponse(BaseModel):
-    data_prodi: List[DashboardProdiResponse]
+    fakultas_summary: FakultasSummarySchema
+    prodi_list: List[ProdiSummarySchema]
+    current_year: int
+    available_years: List[int]
