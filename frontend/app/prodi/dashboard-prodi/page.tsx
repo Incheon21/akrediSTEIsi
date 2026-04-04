@@ -251,7 +251,7 @@ export default function DashboardProdiPage() {
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center justify-center">
             <GaugeMeter
-              value={data.score_value}
+              score={data.score_value}
               max={4.0}
               target={data.target_score}
               title="Simulasi Skor"
