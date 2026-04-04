@@ -98,6 +98,18 @@ export default function DashboardProdiPage() {
   }
 
   const role = user?.role?.name || "tim_prodi";
+  const onUnduhLKPS = async () => {
+    if (!data?.lkps_submission_id) {
+      alert("Belum ada submission LKPS untuk siklus ini.");
+      return;
+    }
+    try {
+      const { downloadLkpsWorkbook } = await import("@/lib/api/lkps");
+      await downloadLkpsWorkbook(data.lkps_submission_id);
+    } catch (err) {
+      alert("Gagal mengunduh LKPS: " + (err instanceof Error ? err.message : String(err)));
+    }
+  };
   const editAllowed = canEdit(role);
 
   return (
@@ -115,6 +127,13 @@ export default function DashboardProdiPage() {
             </p>
           </div>
 
+          <div className="flex items-center gap-3">
+          <button
+            onClick={onUnduhLKPS}
+            className="inline-flex h-full items-center justify-center rounded-lg bg-[#00509d] px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-[#003f7d] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Unduh LKPS
+          </button>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -157,6 +176,7 @@ export default function DashboardProdiPage() {
               </div>
             )}
           </div>
+        </div>
         </header>
 
         {/* Warnings & Recommendations */}

@@ -13,7 +13,7 @@ const COLOR_MAP = {
 };
 
 export default function SimulasiChart({ prodiList }: Props) {
-    const maxScore = 400; // skor maksimal IABEE
+    const maxScore = 4.0; // skor maksimal IABEE
 
     // Nama prodi disingkat agar muat di bar chart
     const shortened = (name: string) =>
