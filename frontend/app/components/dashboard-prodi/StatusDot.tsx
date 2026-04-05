@@ -7,9 +7,9 @@ const STATUS_COLORS: Record<StatusColor, string> = {
   orange: "bg-orange-400",
 };
 
-const StatusDot = ({ color, label }: { color: StatusColor; label: string }) => (
+const StatusDot = ({ status, label }: { status: StatusColor; label: string }) => (
   <div className="flex items-center gap-2">
-    <span className={`w-4 h-4 rounded-full inline-block ${STATUS_COLORS[color]}`} />
+    <span className={`w-4 h-4 rounded-full inline-block ${STATUS_COLORS[status]}`} />
     <span className="text-sm text-gray-600">{label}</span>
   </div>
 );
