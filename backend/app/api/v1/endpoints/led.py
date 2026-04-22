@@ -1,12 +1,14 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models.user import User
 from app.schemas.led import LEDResponse, LEDSaveRequest, LEDSaveResponse
 from app.services.led import get_led_narasi, upsert_led_narasi
+from app.services.led_exporter import generate_led_document
 from app.utils.dependencies import get_current_user, require_role
 
 router = APIRouter(prefix="/led", tags=["led"])
@@ -69,3 +71,30 @@ def get_narasi_led(
         current_user=current_user,
     )
     return LEDResponse.model_validate(result)
+
+
+@router.get(
+    "/export/{target_akreditasi_id}",
+    summary="Export LED as Word Document",
+    dependencies=[
+        Depends(require_role("tim_prodi", "admin", "koordinator", "pimpinan"))
+    ],
+)
+def export_led_word(
+    target_akreditasi_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Generate dan unduh narasi laporan LED (Word) sesuai format baku LAM INFOKOM (T-42).
+    """
+    file_stream = generate_led_document(db, target_akreditasi_id)
+
+    filename = f"Laporan_LED_{target_akreditasi_id}.docx"
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+
+    return StreamingResponse(
+        file_stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers=headers,
+    )
