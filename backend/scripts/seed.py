@@ -117,11 +117,46 @@ def seed():
                 "prodi": "IF",
             },
             {
-                "email": "timprodi@stei.itb.ac.id",
-                "password": "timprodi123",
+                "email": "timprodiIF@stei.itb.ac.id",
+                "password": "timprodiIF123",
                 "nama": "Tim Prodi User",
                 "role": "tim_prodi",
                 "prodi": "IF",
+            },
+            {
+                "email": "timprodiEL@stei.itb.ac.id",
+                "password": "timprodiEL123",
+                "nama": "Tim Prodi EL",
+                "role": "tim_prodi",
+                "prodi": "EL",
+            },
+            {
+                "email": "timprodiTE@stei.itb.ac.id",
+                "password": "timprodiTE123",
+                "nama": "Tim Prodi TE",
+                "role": "tim_prodi",
+                "prodi": "TE",
+            },
+            {
+                "email": "timprodiTS@stei.itb.ac.id",
+                "password": "timprodiTS123",
+                "nama": "Tim Prodi TS",
+                "role": "tim_prodi",
+                "prodi": "TS",
+            },
+            {
+                "email": "timprodiSI@stei.itb.ac.id",
+                "password": "timprodiSI123",
+                "nama": "Tim Prodi SI",
+                "role": "tim_prodi",
+                "prodi": "SI",
+            },
+            {
+                "email": "timprodiSTI@stei.itb.ac.id",
+                "password": "timprodiSTI123",
+                "nama": "Tim Prodi STI",
+                "role": "tim_prodi",
+                "prodi": "STI",
             },
         ]
 
