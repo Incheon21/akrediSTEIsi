@@ -89,6 +89,16 @@ export default function Navbar({
                   >
                     Simulasi Skor
                   </Link>
+                  <Link
+                    href={`/prodi/evidence${prodiQuery}`}
+                    className={`px-5 flex items-center text-sm font-semibold transition-all duration-150 ${
+                      isActive("/prodi/evidence")
+                        ? "text-[#f3e412]"
+                        : "text-white hover:text-[#f3e412]"
+                    }`}
+                  >
+                    Evidence
+                  </Link>
                 </>
               )}
             </>
@@ -113,6 +123,16 @@ export default function Navbar({
                 }`}
               >
                 Dashboard Prodi
+              </Link>
+              <Link
+                href="/prodi/evidence"
+                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${
+                  isActive("/prodi/evidence")
+                    ? "text-[#f3e412]"
+                    : "text-white hover:text-[#f3e412]"
+                }`}
+              >
+                Evidence
               </Link>
             </>
           )}

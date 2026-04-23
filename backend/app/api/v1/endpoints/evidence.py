@@ -45,6 +45,7 @@ def upload_evidence_endpoint(
         deskripsi=deskripsi,
         is_global=is_global,
         uploaded_by=current_user.id,
+        program_studi_id=current_user.program_studi_id,
     )
 
 
@@ -61,8 +62,15 @@ def read_evidence_list(
 ):
     """
     Retrieve a list of evidence metadata.
+    Filters by the current user's prodi (shows global + prodi-specific evidence).
+    Admins and pimpinan (no prodi) see all evidence.
     """
-    return get_evidence_list(db=db, skip=skip, limit=limit)
+    return get_evidence_list(
+        db=db,
+        skip=skip,
+        limit=limit,
+        program_studi_id=current_user.program_studi_id,
+    )
 
 
 @router.get(

@@ -7,7 +7,7 @@ from typing import List, Optional
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.models.evidence import Evidence
+from app.models.evidence import Evidence, EvidenceProdi
 
 # Define storage directory path relative to the backend root
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -38,9 +38,12 @@ def upload_evidence(
     deskripsi: Optional[str] = None,
     is_global: bool = False,
     uploaded_by: Optional[uuid.UUID] = None,
+    program_studi_id: Optional[uuid.UUID] = None,
 ) -> Evidence:
     """
     Handles saving the file to local disk and creating the database record.
+    When is_global=False and program_studi_id is provided, auto-links the evidence
+    to that specific prodi via the EvidenceProdi junction table.
     """
     ensure_storage_dir_exists()
 
@@ -84,6 +87,15 @@ def upload_evidence(
     )
 
     db.add(db_evidence)
+    db.flush()  # flush so db_evidence.id is available for junction table
+
+    # Auto-link to prodi when not global
+    if not is_global and program_studi_id:
+        db.add(EvidenceProdi(
+            evidence_id=db_evidence.id,
+            prodi_id=program_studi_id,
+        ))
+
     db.commit()
     db.refresh(db_evidence)
 
@@ -95,8 +107,38 @@ def get_evidence_by_id(db: Session, evidence_id: uuid.UUID) -> Optional[Evidence
     return db.query(Evidence).filter(Evidence.id == evidence_id).first()
 
 
-def get_evidence_list(db: Session, skip: int = 0, limit: int = 100) -> List[Evidence]:
-    """Retrieve a list of evidence records."""
+def get_evidence_list(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    program_studi_id: Optional[uuid.UUID] = None,
+) -> List[Evidence]:
+    """
+    Retrieve a list of evidence records.
+    If program_studi_id is provided, returns:
+      - All global evidence (is_global=True)
+      - Plus evidence linked to that specific prodi via EvidenceProdi
+    If no program_studi_id, returns all evidence (admin view).
+    """
+    if program_studi_id:
+        from sqlalchemy import or_
+        linked_ids = (
+            db.query(EvidenceProdi.evidence_id)
+            .filter(EvidenceProdi.prodi_id == program_studi_id)
+            .subquery()
+        )
+        return (
+            db.query(Evidence)
+            .filter(
+                or_(
+                    Evidence.is_global == True,
+                    Evidence.id.in_(linked_ids),
+                )
+            )
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
     return db.query(Evidence).offset(skip).limit(limit).all()
 
 

@@ -1,4 +1,5 @@
 import io
+import re
 from pathlib import Path
 from uuid import UUID
 
@@ -72,12 +73,16 @@ def generate_led_document(db: Session, target_akreditasi_id: UUID) -> io.BytesIO
         "narasi": narasi_dict,
     }
 
-    # Expose top-level narasi_* keys so {{ narasi_C_1_1 }} style tags work directly
-    # e.g. kode "C.1.1" → context key "narasi_C_1_1"
+    # Expose top-level narasi_* keys so both {{ narasi_C1_1 }} and {{ narasi_C_1_1 }} work.
+    # Seed kode format is "C1.1" → safe_code "C1_1" → also generate split "C_1_1" via regex.
     for safe_code, teks in narasi_dict.items():
         # Only add the safe (dot/dash-free) versions as top-level keys
         if "." not in safe_code and "-" not in safe_code:
             context[f"narasi_{safe_code}"] = teks
+            # Also add letter-digit split variant: "C1_1" → "C_1_1"
+            split_code = re.sub(r'([A-Za-z])([0-9])', r'\1_\2', safe_code)
+            if split_code != safe_code:
+                context[f"narasi_{split_code}"] = teks
 
     # 4. Validasi file template
     if not TEMPLATE_PATH.exists():
