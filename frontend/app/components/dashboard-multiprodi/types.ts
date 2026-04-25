@@ -12,6 +12,7 @@ export interface ProdiSummary {
     readiness_status: "green" | "yellow" | "red";
     is_active: boolean;
     days_remaining: number | null;
+    prodi_status: string;
 }
 
 export interface FakultasSummary {

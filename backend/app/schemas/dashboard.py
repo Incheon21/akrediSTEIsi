@@ -10,6 +10,7 @@ class ProfilProdiSchema(BaseModel):
     last_accreditation_status: str
     last_accreditation_year: int
     is_active_accreditation: bool
+    prodi_status: str
 
 
 class KriteriaRowSchema(BaseModel):
@@ -68,6 +69,7 @@ class ProdiSummarySchema(BaseModel):
     readiness_status: str
     is_active: bool
     days_remaining: Optional[int] = None
+    prodi_status: str
 
 
 class DashboardMultiProdiResponse(BaseModel):
@@ -75,3 +77,8 @@ class DashboardMultiProdiResponse(BaseModel):
     prodi_list: List[ProdiSummarySchema]
     current_year: int
     available_years: List[int]
+
+class ToggleTargetRequest(BaseModel):
+    program_studi_id: UUID
+    tahun: int
+    is_aktif: bool
