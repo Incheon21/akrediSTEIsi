@@ -322,7 +322,7 @@ export default function DashboardProdiPage() {
           )}
 
         {/* Overview Cards */}
-        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="text-sm font-medium text-slate-500">
               Progress LKPS
@@ -343,17 +343,7 @@ export default function DashboardProdiPage() {
               </p>
             </div>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-slate-500">
-              Progress Dokumen Pendukung
-            </h3>
-            <div className="mt-4">
-              <ProgressBar progress={data.evidence_percent} />
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {data.evidence_percent}%
-              </p>
-            </div>
-          </div>
+
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center justify-center">
             <GaugeMeter
               score={data.score_value}
