@@ -1,4 +1,14 @@
-"""Section 1 mapper – Visi Misi Tujuan Strategi (sheet '1')."""
+"""Section 1 mapper – Visi Misi Tujuan Strategi (sheet '1').
+
+Template row layout (fixed by BAN-PT):
+  Row 7-8   → VMTS PT        (2 slots)
+  Row 9-10  → VMTS UPPS      (2 slots)
+  Row 11-20 → Visi Keilmuan PS (10 slots)
+
+Each jenis_vmts group is written sequentially starting from its section's
+first row.  The 'no' field in the DB is just a UI counter — it is NOT used
+to pick the Excel row.
+"""
 
 from __future__ import annotations
 
@@ -7,9 +17,12 @@ from sqlalchemy import select
 from app.models.lkps import LkpsVmts
 from .base import BaseMapper
 
-# Template rows 7-15 are pre-numbered 1-9 with some jenis labels already locked.
-# We only write cols C (pernyataan), D (no_sk), E (link_dokumen).
-_NO_TO_ROW = {1: 7, 2: 8, 3: 9, 4: 10, 5: 11, 6: 12, 7: 13, 8: 14, 9: 15}
+# First data row and max slots for each jenis_vmts section
+_SECTION: dict[str, tuple[int, int]] = {
+    "VMTS PT":          (7,  2),
+    "VMTS UPPS":        (9,  2),
+    "Visi Keilmuan PS": (11, 10),
+}
 
 
 class Section1Mapper(BaseMapper):
@@ -24,10 +37,20 @@ class Section1Mapper(BaseMapper):
             .scalars()
             .all()
         )
+
+        # Track how many rows have been written per jenis section
+        counters: dict[str, int] = {}
         for rec in records:
-            row = _NO_TO_ROW.get(rec.no)
-            if row is None:
+            section = _SECTION.get(rec.jenis_vmts)
+            if section is None:
                 continue
+            first_row, max_slots = section
+            idx = counters.get(rec.jenis_vmts, 0)
+            if idx >= max_slots:
+                continue  # template has no more rows for this type
+            row = first_row + idx
+            counters[rec.jenis_vmts] = idx + 1
+
             self.safe_write(ws, f"C{row}", rec.pernyataan)
             self.safe_write(ws, f"D{row}", rec.no_sk)
             self.safe_write(ws, f"E{row}", rec.link_dokumen)

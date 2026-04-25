@@ -23,11 +23,14 @@ from .base import BaseMapper
 # IPK rows: periode → row number in sheet 6b
 _IPK_ROW = {"TS-2": 6, "TS-1": 7, "TS": 8}
 
-# Waktu tunggu: tahun_lulus → row (per sub-section starting offsets are handled per jenis_program)
-# For S1/S2/S3 (most common): rows 7, 8, 9 (row 9 = formula total)
-_WT_PERIODE_ROW = {"TS-2": 7, "TS-1": 8}
+# 6f1: waktu tunggu per-jenis_program section first data row
+_WT_SECTION_START: dict[str, int] = {
+    "D1":  7, "D2": 15, "D3": 23,
+    "S1": 31, "S1Tr": 39, "PPI": 47,
+}
+_WT_TAHUN_OFFSET = {"TS-2": 0, "TS-1": 1}
 
-# Kesesuaian kerja & tempat kerja rows
+# Kesesuaian kerja (6f2) & tempat kerja (6g1) — single shared section, rows 7-8
 _LULUSAN_ROW = {"TS-2": 7, "TS-1": 8}
 
 # Kepuasan pengguna fixed-row items (rows 7-13 standard items)
@@ -60,7 +63,25 @@ _PUBLIKASI_ROW_VOKASI: dict[str, int] = {
 }
 
 _LUARAN_START: dict[str, int] = {
-    "6e3-1": 12, "6e3-2": 8, "6e3-3": 16, "6e3-4": 8,
+    "6e3-1": 12, "6e3-2": 8, "6e3-3": 18, "6e3-4": 8,
+}
+
+
+# 6d: per-jenis_program row offsets (first data row) and year labels in order
+_MASA_STUDI_SECTIONS: dict[str, tuple[int, list[str], list[str]]] = {
+    # jenis_program: (first_data_row, tahun_masuk_labels, data_cols)
+    "D1":   (7,  ["TS-1", "TS"],                              ["B", "C", "D", "E"]),
+    "D2":   (14, ["TS-3", "TS-2", "TS-1", "TS"],             ["B", "C", "D", "E"]),
+    "D3":   (23, ["TS-5", "TS-4", "TS-3", "TS-2", "TS-1", "TS"], ["B", "C", "D", "E"]),
+    "S1":   (34, ["TS-7", "TS-6", "TS-5", "TS-4", "TS-3", "TS-2", "TS-1", "TS"],
+                 ["B", "C", "D", "E", "F"]),
+    "S1Tr": (34, ["TS-7", "TS-6", "TS-5", "TS-4", "TS-3", "TS-2", "TS-1", "TS"],
+                 ["B", "C", "D", "E", "F"]),
+    "S2":   (47, ["TS-3", "TS-2", "TS-1", "TS"],             ["B", "C", "D", "E"]),
+    "S2Tr": (47, ["TS-3", "TS-2", "TS-1", "TS"],             ["B", "C", "D", "E"]),
+    "S3":   (56, ["TS-5", "TS-4", "TS-3", "TS-2", "TS-1", "TS"], ["B", "C", "D", "E"]),
+    "S3Tr": (56, ["TS-5", "TS-4", "TS-3", "TS-2", "TS-1", "TS"], ["B", "C", "D", "E"]),
+    "PPI":  (67, ["TS-2", "TS-1", "TS"],                     ["B", "C", "D", "E"]),
 }
 
 
@@ -69,6 +90,7 @@ class Section6Mapper(BaseMapper):
         self._fill_mahasiswa_aktif()
         self._fill_ipk()
         self._fill_prestasi()
+        self._fill_masa_studi()
         self._fill_publikasi_mahasiswa()
         self._fill_luaran_mahasiswa()
         self._fill_produk_jasa_mahasiswa()
@@ -145,9 +167,36 @@ class Section6Mapper(BaseMapper):
                 self.write_tingkat_check(ws, row, rec.tingkat, "F", "E", "D")
                 self.safe_write(ws, f"G{row}", rec.prestasi_dicapai)
 
+    def _fill_masa_studi(self) -> None:
+        ws = self.wb["6d"]
+        records = (
+            self.db.execute(
+                select(LkpsMasaStudi)
+                .where(LkpsMasaStudi.submission_id == self.submission.id)
+            )
+            .scalars().all()
+        )
+        for rec in records:
+            section = _MASA_STUDI_SECTIONS.get(rec.jenis_program)
+            if section is None:
+                continue
+            first_row, tahun_labels, cols = section
+            try:
+                offset = tahun_labels.index(rec.tahun_masuk)
+            except ValueError:
+                continue
+            row = first_row + offset
+            self.safe_write(ws, f"B{row}", rec.jumlah_masuk)
+            self.safe_write(ws, f"C{row}", rec.jumlah_lulus_tepat_waktu)
+            self.safe_write(ws, f"D{row}", rec.jumlah_lulus_terlambat)
+            self.safe_write(ws, f"E{row}", rec.jumlah_tidak_lulus)
+            # S1/S1Tr has an extra column F for the widest MS bucket — already 5 cols in that section
+
     def _fill_publikasi_mahasiswa(self) -> None:
-        self._write_pub_rows("6e1", _PUBLIKASI_ROW_AKADEMIK, "mahasiswa", "akademik")
-        self._write_pub_rows("6e2", _PUBLIKASI_ROW_VOKASI,   "mahasiswa", "vokasi")
+        if self.sheet_applies("6e1"):
+            self._write_pub_rows("6e1", _PUBLIKASI_ROW_AKADEMIK, "mahasiswa", "akademik")
+        if self.sheet_applies("6e2"):
+            self._write_pub_rows("6e2", _PUBLIKASI_ROW_VOKASI,   "mahasiswa", "vokasi")
 
     def _write_pub_rows(
         self, sheet_name: str, row_map: dict[str, int],
@@ -208,6 +257,8 @@ class Section6Mapper(BaseMapper):
                     self.safe_write(ws, f"D{row}", rec.nomor_isbn)
 
     def _fill_produk_jasa_mahasiswa(self) -> None:
+        if not self.sheet_applies("6e4"):
+            return
         ws = self.wb["6e4"]
         records = (
             self.db.execute(
@@ -236,10 +287,11 @@ class Section6Mapper(BaseMapper):
             .scalars().all()
         )
         for rec in records:
-            row = _WT_PERIODE_ROW.get(rec.tahun_lulus)
-            if row is None:
+            section_start = _WT_SECTION_START.get(rec.jenis_program)
+            offset = _WT_TAHUN_OFFSET.get(rec.tahun_lulus)
+            if section_start is None or offset is None:
                 continue
-            # Row 9 = FORMULA total — never written
+            row = section_start + offset
             self.safe_write(ws, f"B{row}", rec.jumlah_lulusan)
             self.safe_write(ws, f"C{row}", rec.jumlah_terlacak)
             self.safe_write(ws, f"D{row}", rec.jumlah_dipesan_sebelum_lulus)
@@ -313,6 +365,8 @@ class Section6Mapper(BaseMapper):
             "pkm":             ("6i",  6),
         }
         for jenis, (sheet_name, start_row) in _sheet_map.items():
+            if not self.sheet_applies(sheet_name):
+                continue
             ws = self.wb[sheet_name]
             records = (
                 self.db.execute(

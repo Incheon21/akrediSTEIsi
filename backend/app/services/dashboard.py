@@ -163,26 +163,26 @@ def get_dashboard_prodi_data(
     for k in all_kriteria:
         indikators = db.query(Indikator).filter(Indikator.kriteria_id == k.id).all()
 
-        lkps_ada = False
-        led_ada = False
+        lkps_progress = 0
+        led_progress = 0
         has_evidence = False
 
         if active_target:
             ind_ids = [ind.id for ind in indikators]
-            if ind_ids:
-                # Check LKPS by querying actual tables
-                lkps_ada = False
-                if lkps_submission:
-                    models = KRITERIA_LKPS_MODELS.get(k.kode, [])
-                    for model in models:
-                        if (
-                            db.query(model)
-                            .filter(model.submission_id == lkps_submission.id)
-                            .first()
-                        ):
-                            lkps_ada = True
-                            break
 
+            # LKPS progress: fraction of sections for this criteria that have ≥1 row
+            models = KRITERIA_LKPS_MODELS.get(k.kode, [])
+            if lkps_submission and models:
+                sections_with_data = sum(
+                    1
+                    for model in models
+                    if db.query(model)
+                    .filter(model.submission_id == lkps_submission.id)
+                    .first()
+                )
+                lkps_progress = int((sections_with_data / len(models)) * 100)
+
+            if ind_ids:
                 # Check Evidence via junction table
                 evid_count = (
                     db.query(EvidenceIndikator)
@@ -194,8 +194,8 @@ def get_dashboard_prodi_data(
                 )
                 has_evidence = evid_count > 0
 
-                # Check LED
-                led_count = (
+                # LED progress: fraction of indikators that have a narasi
+                led_filled = (
                     db.query(NarasiLED)
                     .filter(
                         NarasiLED.target_akreditasi_id == active_target.id,
@@ -203,33 +203,14 @@ def get_dashboard_prodi_data(
                     )
                     .count()
                 )
-                led_ada = led_count > 0
+                total_indikators = len(ind_ids)
+                led_progress = int((led_filled / total_indikators) * 100) if total_indikators > 0 else 0
 
-        # Status & Progress score per kriteria
-        total_indicators = len(indikators)
-        progress_score = 0
+        lkps_ada = lkps_progress > 0
+        led_ada = led_progress > 0
 
-        if total_indicators > 0 and active_target:
-            fulfilled_count = 0
-            for ind in indikators:
-                # indikator "selesai dikerjakan" jika sudah diberi Evidence, atau ada isian LKPS / LED
-                has_lkps = lkps_ada
-
-                has_led = (
-                    db.query(NarasiLED)
-                    .filter(
-                        NarasiLED.target_akreditasi_id == active_target.id,
-                        NarasiLED.indikator_id == ind.id,
-                    )
-                    .first()
-                    is not None
-                )
-
-                # minimal led dan lkps ada
-                if has_lkps and has_led:
-                    fulfilled_count += 1
-
-            progress_score = int((fulfilled_count / total_indicators) * 100)
+        # Overall progress per criteria = average of LKPS and LED progress
+        progress_score = (lkps_progress + led_progress) // 2
 
         k_status = (
             "green"
@@ -242,9 +223,6 @@ def get_dashboard_prodi_data(
             else ("Cukup" if progress_score >= 50 else "Buruk")
         )
 
-        has_formula = any(ind.tipe_input == "formula" for ind in indikators)
-        has_manual = any(ind.tipe_input == "manual" for ind in indikators)
-
         kriteria_list_response.append(
             {
                 "id": k.kode.lower(),
@@ -252,6 +230,8 @@ def get_dashboard_prodi_data(
                 "status": k_status,
                 "status_label": k_status_label,
                 "progress": progress_score,
+                "lkps_progress": lkps_progress,
+                "led_progress": led_progress,
                 "has_lkps": True,
                 "lkps_available": lkps_ada,
                 "has_led": True,
@@ -281,34 +261,34 @@ def get_dashboard_prodi_data(
             "Siklus akreditasi belum aktif. Hubungi Koordinator untuk mengaktifkan siklus baru."
         )
     else:
-        # Check criteria completeness
         for k_resp in kriteria_list_response:
             if k_resp["progress"] < 100:
                 kr_name = k_resp["name"].split(" ")[-1].strip("()")
-                # Give specific recommendation based on which doc is missing
                 if not k_resp["lkps_available"] and not k_resp["led_available"]:
                     pesan_rekomendasi.append(
                         f"Segera unggah data LKPS dan rumuskan Narasi LED pada kriteria {kr_name}."
                     )
-                elif not k_resp["lkps_available"]:
+                elif k_resp["lkps_progress"] < 100:
                     pesan_rekomendasi.append(
                         f"Data LKPS belum lengkap untuk kriteria {kr_name}."
                     )
-                elif not k_resp["led_available"]:
+                elif k_resp["led_progress"] < 100:
                     pesan_rekomendasi.append(
                         f"Narasi kualitatif LED belum selesai pada kriteria {kr_name}."
                     )
 
-    # 5. Calculate overall progress percentages
+    # 5. Calculate overall progress percentages as average of per-criteria progress
     total_criteria = len(kriteria_list_response) if kriteria_list_response else 1
-    lkps_completed_count = sum(1 for k in kriteria_list_response if k["lkps_available"])
-    led_completed_count = sum(1 for k in kriteria_list_response if k["led_available"])
     evidence_completed_count = sum(
         1 for k in kriteria_list_response if k["has_evidence"]
     )
 
-    lkpsPercent = int((lkps_completed_count / total_criteria) * 100)
-    ledPercent = int((led_completed_count / total_criteria) * 100)
+    lkpsPercent = int(
+        sum(k["lkps_progress"] for k in kriteria_list_response) / total_criteria
+    )
+    ledPercent = int(
+        sum(k["led_progress"] for k in kriteria_list_response) / total_criteria
+    )
     dok_Percent = int((evidence_completed_count / total_criteria) * 100)
 
     if not aktif_akreditasi:

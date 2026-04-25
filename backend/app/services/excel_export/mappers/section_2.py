@@ -7,8 +7,12 @@ from sqlalchemy import select
 from app.models.lkps import LkpsKerjasama, LkpsPenggunaanDana
 from .base import BaseMapper
 
-# Data rows in 2a1/2a2/2a3 start at row 13.
-_KERJASAMA_DATA_START = 13
+# Data rows start at different rows per sheet: 2a1→13, 2a2/2a3→12
+_KERJASAMA_DATA_START = {
+    "2a1": 13,
+    "2a2": 12,
+    "2a3": 12,
+}
 
 # jenis → sheet name
 _JENIS_SHEET = {
@@ -58,7 +62,7 @@ class Section2Mapper(BaseMapper):
                 .all()
             )
             for i, rec in enumerate(records):
-                row = _KERJASAMA_DATA_START + i
+                row = _KERJASAMA_DATA_START[sheet_name] + i
                 self.safe_write(ws, f"B{row}", rec.lembaga_mitra)
                 # Tingkat → write CHECK to exactly one of cols C/D/E
                 self.write_tingkat_check(ws, row, rec.tingkat, "C", "D", "E")

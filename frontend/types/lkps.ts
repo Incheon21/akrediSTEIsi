@@ -63,6 +63,16 @@ export interface SectionDefinition {
   pinnedValues?: Record<string, string | number | boolean>;
   fields: FieldDefinition[];
   note?: string;
+  /** If set, only these jenjang codes may fill this section. Omit = universal. */
+  applicableFor?: string[];
+  /**
+   * Fixed template rows. When present the section is rendered in "fixed" mode:
+   * rows are pre-seeded from the template (merged with DB values), no add/delete.
+   * Each object must contain the labelKey field used to match DB records.
+   */
+  templateRows?: Record<string, string | number>[];
+  /** The field key that identifies a fixed row (e.g. "kode", "kode_sumber", "jenis_dokumen"). */
+  labelKey?: string;
 }
 
 export type SectionRecord = Record<string, unknown>;

@@ -16,6 +16,8 @@ export interface CriteriaRow {
   status: StatusColor;
   status_label: string;
   progress: number;
+  lkps_progress: number;
+  led_progress: number;
   has_lkps: boolean;
   lkps_available: boolean;
   has_led: boolean;

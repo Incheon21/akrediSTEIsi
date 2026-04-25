@@ -18,6 +18,8 @@ class KriteriaRowSchema(BaseModel):
     status: str
     status_label: str
     progress: int
+    lkps_progress: int = 0
+    led_progress: int = 0
     has_lkps: bool
     lkps_available: bool
     has_led: bool

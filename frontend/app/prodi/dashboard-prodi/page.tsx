@@ -390,9 +390,32 @@ export default function DashboardProdiPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-1 items-center justify-end space-x-4">
-                    <div className="w-32 hidden md:block">
-                      <ProgressBar progress={kriteria.progress} />
+                  <div className="flex flex-1 items-center justify-end">
+                    <div className="hidden md:flex flex-col gap-1.5 w-48">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 w-8 shrink-0">LKPS</span>
+                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-2 bg-[#00509d] rounded-full transition-all duration-500"
+                            style={{ width: `${kriteria.lkps_progress ?? 0}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-semibold text-gray-600 w-7 text-right">
+                          {kriteria.lkps_progress ?? 0}%
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 w-8 shrink-0">LED</span>
+                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-2 bg-green-600 rounded-full transition-all duration-500"
+                            style={{ width: `${kriteria.led_progress ?? 0}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-semibold text-gray-600 w-7 text-right">
+                          {kriteria.led_progress ?? 0}%
+                        </span>
+                      </div>
                     </div>
                   </div>
 

@@ -7,6 +7,14 @@ from sqlalchemy import select
 from app.models.lkps import LkpsSpmiDokumen, LkpsSpmiPelaksanaan
 from .base import BaseMapper
 
+# 7a: 4 fixed pre-labeled rows — route by jenis_dokumen so order doesn't matter
+_SPMI_DOK_ROW = {
+    "Kebijakan SPMI":       5,
+    "Pedoman penerapan siklus PPEPP standar pendidikan tinggi dalam SPMI": 6,
+    "Standar dan/atau kriteria, norma, acuan mutu penyelenggaraan pendidikan dan pengelolaan perguruan tinggi": 7,
+    "Tata cara pendokumentasian implementasi SPMI": 8,
+}
+
 # 7b has 5 fixed rows for PPEPP cycle items
 _PPEPP_ROW = {
     "Penetapan":    5,
@@ -32,9 +40,11 @@ class Section7Mapper(BaseMapper):
             )
             .scalars().all()
         )
-        for i, rec in enumerate(records):
-            row = 5 + i
-            self.safe_write(ws, f"B{row}", rec.jenis_dokumen)
+        for rec in records:
+            row = _SPMI_DOK_ROW.get(rec.jenis_dokumen)
+            if row is None:
+                continue
+            # Column B is pre-labeled in the template — only write C and D
             self.safe_write(ws, f"C{row}", rec.no_dokumen)
             self.safe_write(ws, f"D{row}", rec.tanggal_dokumen)
 

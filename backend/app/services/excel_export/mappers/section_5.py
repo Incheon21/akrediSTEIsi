@@ -49,7 +49,7 @@ class Section5Mapper(BaseMapper):
             .scalars().all()
         )
         for i, rec in enumerate(records):
-            row = 15 + i
+            row = 17 + i
             self.safe_write(ws, f"B{row}", rec.jenis_dokumen)
             self.safe_write(ws, f"C{row}", rec.jumlah)
             self.safe_write(ws, f"D{row}", rec.riwayat_pengesahan)
@@ -65,7 +65,7 @@ class Section5Mapper(BaseMapper):
             .scalars().all()
         )
         for i, rec in enumerate(records):
-            row = 16 + i
+            row = 17 + i
             self.safe_write(ws, f"B{row}", rec.nama_sarana)
             self.safe_write(ws, f"C{row}", rec.fungsi)
             self.safe_write(ws, f"D{row}", rec.jumlah_unit)

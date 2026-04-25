@@ -180,12 +180,13 @@ export default function Navbar({
                     {userName}
                   </p>
                 </div>
-                <button className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                  Profil
-                </button>
-                <button className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                  Pengaturan
-                </button>
+                <Link
+                  href="/program-studi"
+                  onClick={() => setDropdownOpen(false)}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Profil Program Studi
+                </Link>
                 <div className="border-t border-gray-100 mt-1">
                   <button
                     onClick={handleLogout}

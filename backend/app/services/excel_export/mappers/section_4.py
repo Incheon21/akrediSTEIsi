@@ -99,6 +99,13 @@ class Section4Mapper(BaseMapper):
             self.safe_write(ws, f"J{row}", rec.kesesuaian_kompetensi)
             self.safe_write(ws, f"K{row}", rec.jabatan_akademik)
             self.safe_write(ws, f"L{row}", rec.no_sertifikat_pendidik)
+            self.safe_write(ws, f"M{row}", rec.bidang_sertifikasi)
+            self.safe_write(ws, f"N{row}", rec.lembaga_penerbit_sertifikasi)
+            self.safe_write(ws, f"O{row}", rec.skip)
+            self.safe_write(ws, f"P{row}", rec.stri)
+            self.safe_write(ws, f"Q{row}", rec.mk_diampu_ps_diakreditasi)
+            self.safe_write(ws, f"R{row}", rec.kesesuaian_bidang_mk)
+            self.safe_write(ws, f"S{row}", rec.mk_diampu_ps_lain)
 
     def _fill_tendik(self) -> None:
         ws = self.wb["4b"]
@@ -142,20 +149,20 @@ class Section4Mapper(BaseMapper):
             # J=total/tahun, K=total/semester are formulas — never written
 
     def _fill_publikasi_dtps(self) -> None:
-        # Sheet 4d = akademik DTPS
-        self._write_publikasi_rows(
-            sheet_name="4d",
-            row_map=_PUBLIKASI_ROW_AKADEMIK,
-            sumber="dtps",
-            jenis_program="akademik",
-        )
-        # Sheet 4e = vokasi DTPS
-        self._write_publikasi_rows(
-            sheet_name="4e",
-            row_map=_PUBLIKASI_ROW_VOKASI,
-            sumber="dtps",
-            jenis_program="vokasi",
-        )
+        if self.sheet_applies("4d"):
+            self._write_publikasi_rows(
+                sheet_name="4d",
+                row_map=_PUBLIKASI_ROW_AKADEMIK,
+                sumber="dtps",
+                jenis_program="akademik",
+            )
+        if self.sheet_applies("4e"):
+            self._write_publikasi_rows(
+                sheet_name="4e",
+                row_map=_PUBLIKASI_ROW_VOKASI,
+                sumber="dtps",
+                jenis_program="vokasi",
+            )
 
     def _write_publikasi_rows(
         self, sheet_name: str, row_map: dict[str, int],
@@ -221,6 +228,8 @@ class Section4Mapper(BaseMapper):
                 self.safe_write(ws, f"D{row}", rec.nomor_isbn)
 
     def _fill_produk_jasa_dtps(self) -> None:
+        if not self.sheet_applies("4g"):
+            return
         ws = self.wb["4g"]
         records = (
             self.db.execute(
@@ -294,6 +303,8 @@ class Section4Mapper(BaseMapper):
             self.safe_write(ws, f"I{row}", rec.tahun)
 
     def _fill_pembimbing_lapangan(self) -> None:
+        if not self.sheet_applies("4k"):
+            return
         ws = self.wb["4k"]
         records = (
             self.db.execute(

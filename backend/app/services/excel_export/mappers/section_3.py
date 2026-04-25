@@ -20,6 +20,12 @@ _PENELITIAN_ROW: dict[str, int] = {
     "luar_negeri":             11,
 }
 
+_PKM_ROW: dict[str, int] = {
+    "perguruan_tinggi_mandiri": 10,
+    "dalam_negeri":            11,
+    "luar_negeri":             12,
+}
+
 
 class Section3Mapper(BaseMapper):
     def fill(self) -> None:
@@ -138,7 +144,7 @@ class Section3Mapper(BaseMapper):
             .scalars().all()
         )
         for rec in records:
-            row = _PENELITIAN_ROW.get(rec.kode_sumber)
+            row = _PKM_ROW.get(rec.kode_sumber)
             if row is None:
                 continue
             self.safe_write(ws, f"C{row}", rec.ts2)

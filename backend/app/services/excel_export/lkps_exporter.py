@@ -6,7 +6,7 @@ Usage:
 
 The exported workbook is a filled copy of the original template:
 - All formulas are preserved (never overwritten)
-- Sheet protection is removed for writing then restored
+- Sheet protection is removed so the exported file remains fully editable
 - Date cells receive Python date objects so Excel date-arithmetic formulas work
 """
 
@@ -18,7 +18,7 @@ import openpyxl
 from sqlalchemy.orm import Session
 
 from app.models.lkps import LkpsSubmission
-from .mappers.menu import MenuMapper
+from .mappers.menu import MenuMapper, DaftarTabelMapper
 from .mappers.section_1 import Section1Mapper
 from .mappers.section_2 import Section2Mapper
 from .mappers.section_3 import Section3Mapper
@@ -46,6 +46,7 @@ class LkpsExporter:
         # is the master TS date referenced by kerjasama status formulas.
         mappers = [
             MenuMapper,
+            DaftarTabelMapper,
             Section1Mapper,
             Section2Mapper,
             Section3Mapper,
@@ -56,10 +57,6 @@ class LkpsExporter:
         ]
         for mapper_cls in mappers:
             mapper_cls(wb, submission, db).fill()
-
-        # Re-apply sheet protection (no password, same as original template)
-        for ws in wb.worksheets:
-            ws.protection.sheet = True
 
         output = BytesIO()
         wb.save(output)

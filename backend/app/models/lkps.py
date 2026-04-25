@@ -297,6 +297,16 @@ class LkpsDosenProfil(Base):
     kesesuaian_kompetensi = Column(String(50), nullable=True)  # Sesuai | Tidak Sesuai
     jabatan_akademik = Column(String(100), nullable=True)
     no_sertifikat_pendidik = Column(String(100), nullable=True)
+    # Sertifikat Kompetensi/Profesi/Industri (cols M–N)
+    bidang_sertifikasi = Column(String(300), nullable=True)
+    lembaga_penerbit_sertifikasi = Column(String(300), nullable=True)
+    # Sertifikat Keinsinyuran (cols O–P)
+    skip = Column(String(100), nullable=True)   # Sertifikat Kompetensi Insinyur Profesional
+    stri = Column(String(100), nullable=True)   # Surat Tanda Registrasi Insinyur
+    # Mata kuliah yang diampu (cols Q–S)
+    mk_diampu_ps_diakreditasi = Column(Text, nullable=True)
+    kesesuaian_bidang_mk = Column(String(50), nullable=True)  # Sesuai | Tidak Sesuai
+    mk_diampu_ps_lain = Column(Text, nullable=True)
 
 
 # ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, func
+from sqlalchemy import Column, DateTime, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -21,6 +21,22 @@ class ProgramStudi(Base):
     tanggal_akreditasi = Column(DateTime(timezone=True), nullable=True)
     tanggal_kadaluarsa = Column(DateTime(timezone=True), nullable=True)
     status = Column(String(20), default="aktif")  # aktif, tidak aktif
+
+    # Extended identity fields (Menu sheet + profile page)
+    alamat = Column(Text, nullable=True)
+    kota = Column(String(100), nullable=True)
+    kode_pos = Column(String(10), nullable=True)
+    nomor_telepon = Column(String(30), nullable=True)
+    email = Column(String(200), nullable=True)
+    website = Column(String(300), nullable=True)
+    no_sk_pendirian_pt = Column(String(100), nullable=True)
+    tanggal_sk_pendirian_pt = Column(DateTime(timezone=True), nullable=True)
+    pejabat_sk_pendirian_pt = Column(String(200), nullable=True)
+    no_sk_pembukaan_ps = Column(String(100), nullable=True)
+    tanggal_sk_pembukaan_ps = Column(DateTime(timezone=True), nullable=True)
+    pejabat_sk_pembukaan_ps = Column(String(200), nullable=True)
+    tahun_pertama_menerima_mahasiswa = Column(Integer, nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

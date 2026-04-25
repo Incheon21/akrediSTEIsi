@@ -37,7 +37,7 @@ const kerjasamaFields: FieldDefinition[] = [
 ];
 
 const penggunaanDanaFields: FieldDefinition[] = [
-  { key: "kode", label: "Kode Baris", type: "text" },
+  { key: "kode", label: "Jenis Penggunaan", type: "text" },
   { key: "upps_ts2", label: "UPPS TS-2", type: "integer" },
   { key: "upps_ts1", label: "UPPS TS-1", type: "integer" },
   { key: "upps_ts", label: "UPPS TS", type: "integer" },
@@ -365,6 +365,7 @@ const staticSections: SectionDefinition[] = [
     mode: "static",
     fields: [],
     note: "Data otomatis dari master PPI.",
+    applicableFor: ["PPI"],
   },
   {
     code: "3a2",
@@ -375,6 +376,7 @@ const staticSections: SectionDefinition[] = [
     mode: "static",
     fields: [],
     note: "Isi langsung pada dokumen LED.",
+    applicableFor: ["PPI"],
   },
 ];
 
@@ -427,6 +429,18 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 2",
     mode: "records",
     fields: penggunaanDanaFields,
+    labelKey: "kode",
+    templateRows: [
+      { kode: "biaya_dosen",              kode_label: "a. Biaya Dosen (Gaji, Honor)" },
+      { kode: "biaya_tendik",             kode_label: "b. Biaya Tenaga Kependidikan (Gaji, Honor)" },
+      { kode: "biaya_op_pembelajaran",    kode_label: "c. Biaya Operasional Pembelajaran (Bahan dan Peralatan Habis Pakai)" },
+      { kode: "biaya_op_tidak_langsung",  kode_label: "d. Biaya Operasional Tidak Langsung (Listrik, Gas, Air, Pemeliharaan, dll.)" },
+      { kode: "biaya_praktik_ppi",        kode_label: "e. Biaya Operasional Pendidikan di luar PT (Praktik Keinsinyuran, dll)" },
+      { kode: "biaya_investasi",          kode_label: "f. Biaya Investasi (SDM, Sarana dan Prasarana)" },
+      { kode: "biaya_kemahasiswaan",      kode_label: "Biaya Operasional Kemahasiswaan" },
+      { kode: "biaya_penelitian",         kode_label: "Biaya Penelitian" },
+      { kode: "biaya_pkm",               kode_label: "Biaya PkM" },
+    ],
   },
   {
     code: "3a1",
@@ -454,6 +468,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 3",
     mode: "records",
     fields: basicScienceFields,
+    applicableFor: ["S1", "S1Tr"],
   },
   {
     code: "3a5",
@@ -463,6 +478,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 3",
     mode: "records",
     fields: capstoneFields,
+    applicableFor: ["S1", "S1Tr"],
   },
   {
     code: "3b",
@@ -472,6 +488,12 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 3",
     mode: "records",
     fields: aggregateSummaryFields,
+    labelKey: "kode_sumber",
+    templateRows: [
+      { kode_sumber: "perguruan_tinggi_mandiri", kode_label: "Perguruan Tinggi / Mandiri" },
+      { kode_sumber: "dalam_negeri",             kode_label: "Lembaga Dalam Negeri" },
+      { kode_sumber: "luar_negeri",              kode_label: "Lembaga Luar Negeri" },
+    ],
   },
   {
     code: "3c",
@@ -481,6 +503,12 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 3",
     mode: "records",
     fields: aggregateSummaryFields,
+    labelKey: "kode_sumber",
+    templateRows: [
+      { kode_sumber: "perguruan_tinggi_mandiri", kode_label: "Perguruan Tinggi / Mandiri" },
+      { kode_sumber: "dalam_negeri",             kode_label: "Lembaga Dalam Negeri" },
+      { kode_sumber: "luar_negeri",              kode_label: "Lembaga Luar Negeri" },
+    ],
   },
   {
     code: "4a",
@@ -518,6 +546,17 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     mode: "records",
     pinnedValues: { sumber: "dtps", jenis_program: "akademik" },
     fields: publikasiFields,
+    applicableFor: ["S1", "S2", "S3", "PPI"],
+    labelKey: "kode_publikasi",
+    templateRows: [
+      { kode_publikasi: "jurnal_nasional_tidak_terakreditasi",     kode_label: "Jurnal Nasional Tidak Terakreditasi" },
+      { kode_publikasi: "jurnal_nasional_terakreditasi",           kode_label: "Jurnal Nasional Terakreditasi" },
+      { kode_publikasi: "jurnal_internasional",                    kode_label: "Jurnal Internasional" },
+      { kode_publikasi: "jurnal_internasional_bereputasi",         kode_label: "Jurnal Internasional Bereputasi" },
+      { kode_publikasi: "prosiding_nasional",                      kode_label: "Prosiding Nasional" },
+      { kode_publikasi: "prosiding_internasional_tidak_terindeks", kode_label: "Prosiding Internasional Tidak Terindeks" },
+      { kode_publikasi: "prosiding_internasional_terindeks",       kode_label: "Prosiding Internasional Terindeks" },
+    ],
   },
   {
     code: "4e",
@@ -528,6 +567,20 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     mode: "records",
     pinnedValues: { sumber: "dtps", jenis_program: "vokasi" },
     fields: publikasiFields,
+    applicableFor: ["D1", "D2", "D3", "S1Tr", "S2Tr", "S3Tr", "PPI"],
+    labelKey: "kode_publikasi",
+    templateRows: [
+      { kode_publikasi: "jurnal_nasional_tidak_terakreditasi",     kode_label: "Jurnal Nasional Tidak Terakreditasi" },
+      { kode_publikasi: "jurnal_nasional_terakreditasi",           kode_label: "Jurnal Nasional Terakreditasi" },
+      { kode_publikasi: "jurnal_internasional",                    kode_label: "Jurnal Internasional" },
+      { kode_publikasi: "jurnal_internasional_bereputasi",         kode_label: "Jurnal Internasional Bereputasi" },
+      { kode_publikasi: "prosiding_nasional",                      kode_label: "Prosiding Nasional" },
+      { kode_publikasi: "prosiding_internasional_tidak_terindeks", kode_label: "Prosiding Internasional Tidak Terindeks" },
+      { kode_publikasi: "prosiding_internasional_terindeks",       kode_label: "Prosiding Internasional Terindeks" },
+      { kode_publikasi: "pagelaran_wilayah",                       kode_label: "Pagelaran / Pameran / Presentasi Wilayah" },
+      { kode_publikasi: "pagelaran_nasional",                      kode_label: "Pagelaran / Pameran / Presentasi Nasional" },
+      { kode_publikasi: "pagelaran_internasional",                 kode_label: "Pagelaran / Pameran / Presentasi Internasional" },
+    ],
   },
   {
     code: "4f-1",
@@ -578,6 +631,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     mode: "records",
     pinnedValues: { sumber: "dtps" },
     fields: produkJasaFields,
+    applicableFor: ["D1", "D2", "D3", "S1Tr", "S2Tr", "S3Tr"],
   },
   {
     code: "4h",
@@ -594,6 +648,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
       { key: "ts", label: "TS", type: "integer" },
       { key: "keterangan", label: "Keterangan", type: "textarea", span: 2 },
     ],
+    applicableFor: ["S1", "S1Tr", "S2", "S2Tr", "S3", "S3Tr"],
   },
   {
     code: "4i",
@@ -608,6 +663,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
       { key: "judul_artikel", label: "Judul Artikel", type: "textarea", span: 2 },
       { key: "jumlah_sitasi", label: "Jumlah Sitasi", type: "integer" },
     ],
+    applicableFor: ["S1", "S1Tr", "S2", "S2Tr", "S3", "S3Tr"],
   },
   {
     code: "4j",
@@ -626,6 +682,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 4",
     mode: "records",
     fields: pembimbingFields,
+    applicableFor: ["PPI"],
   },
   {
     code: "5a",
@@ -681,6 +738,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     mode: "records",
     pinnedValues: { jenis: "akademik" },
     fields: prestasiFields,
+    applicableFor: ["D1", "D2", "D3", "S1", "S1Tr", "S2", "S2Tr", "S3", "S3Tr"],
   },
   {
     code: "6c2",
@@ -691,6 +749,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     mode: "records",
     pinnedValues: { jenis: "non_akademik" },
     fields: prestasiFields,
+    applicableFor: ["D1", "D2", "D3", "S1", "S1Tr"],
   },
   {
     code: "6d",
@@ -710,6 +769,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     mode: "records",
     pinnedValues: { sumber: "mahasiswa", jenis_program: "akademik" },
     fields: publikasiFields,
+    applicableFor: ["S1", "S2", "S3"],
   },
   {
     code: "6e2",
@@ -720,6 +780,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     mode: "records",
     pinnedValues: { sumber: "mahasiswa", jenis_program: "vokasi" },
     fields: publikasiFields,
+    applicableFor: ["S1Tr", "S2Tr", "S3Tr"],
   },
   {
     code: "6e3-1",
@@ -770,6 +831,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     mode: "records",
     pinnedValues: { sumber: "mahasiswa" },
     fields: produkJasaFields,
+    applicableFor: ["D1", "D2", "D3", "S1Tr", "S2Tr", "S3Tr"],
   },
   {
     code: "6f1",
@@ -779,6 +841,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 6",
     mode: "records",
     fields: waktuTungguFields,
+    applicableFor: ["D1", "D2", "D3", "S1", "S1Tr", "PPI"],
   },
   {
     code: "6f2",
@@ -788,6 +851,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 6",
     mode: "records",
     fields: kesesuaianKerjaFields,
+    applicableFor: ["D1", "D2", "D3", "S1", "S1Tr", "S2", "S2Tr"],
   },
   {
     code: "6g1",
@@ -797,6 +861,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 6",
     mode: "records",
     fields: tempatKerjaFields,
+    applicableFor: ["D1", "D2", "D3", "S1", "S1Tr", "S2", "S2Tr", "PPI"],
   },
   {
     code: "6g2",
@@ -806,6 +871,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 6",
     mode: "records",
     fields: kepuasanPenggunaFields,
+    applicableFor: ["D1", "D2", "D3", "S1", "S1Tr", "S2", "S2Tr", "PPI"],
   },
   {
     code: "6h1",
@@ -816,6 +882,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     mode: "records",
     pinnedValues: { jenis: "penelitian" },
     fields: penelitianMahasiswaFields,
+    applicableFor: ["S1", "S1Tr", "S2", "S2Tr", "S3", "S3Tr", "PPI"],
   },
   {
     code: "6h2",
@@ -826,6 +893,7 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     mode: "records",
     pinnedValues: { jenis: "tesis_disertasi" },
     fields: penelitianMahasiswaFields,
+    applicableFor: ["S2", "S2Tr", "S3", "S3Tr"],
   },
   {
     code: "6i",
@@ -845,6 +913,13 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 7",
     mode: "records",
     fields: spmiDokumenFields,
+    labelKey: "jenis_dokumen",
+    templateRows: [
+      { jenis_dokumen: "Kebijakan SPMI",                             kode_label: "Kebijakan SPMI" },
+      { jenis_dokumen: "Pedoman penerapan siklus PPEPP standar pendidikan tinggi dalam SPMI", kode_label: "Pedoman penerapan siklus PPEPP standar pendidikan tinggi dalam SPMI" },
+      { jenis_dokumen: "Standar dan/atau kriteria, norma, acuan mutu penyelenggaraan pendidikan dan pengelolaan perguruan tinggi", kode_label: "Standar dan/atau kriteria, norma, acuan mutu penyelenggaraan pendidikan dan pengelolaan perguruan tinggi" },
+      { jenis_dokumen: "Tata cara pendokumentasian implementasi SPMI", kode_label: "Tata cara pendokumentasian implementasi SPMI" },
+    ],
   },
   {
     code: "7b",
@@ -854,5 +929,13 @@ export const LKPS_SECTIONS: SectionDefinition[] = [
     group: "Kriteria 7",
     mode: "records",
     fields: spmiPelaksanaanFields,
+    labelKey: "jenis_pelaksanaan",
+    templateRows: [
+      { jenis_pelaksanaan: "Penetapan",    kode_label: "Penetapan" },
+      { jenis_pelaksanaan: "Pelaksanaan",  kode_label: "Pelaksanaan" },
+      { jenis_pelaksanaan: "Evaluasi",     kode_label: "Evaluasi" },
+      { jenis_pelaksanaan: "Pengendalian", kode_label: "Pengendalian" },
+      { jenis_pelaksanaan: "Peningkatan",  kode_label: "Peningkatan" },
+    ],
   },
 ];
