@@ -411,30 +411,88 @@ def seed():
 
         db.commit()
 
-        # Seed Target Akreditasi for IF
-        if "IF" in prodis:
-            prodi_if = prodis["IF"]
-            existing_target = (
+        # ==========================================
+        # Seed Target Akreditasi
+        # 2025: IF (target skor terisi), TE/Teknik Tenaga Listrik (belum set target skor)
+        # 2024: EL/Teknik Elektro (target skor terisi)
+        # ==========================================
+
+        def upsert_target(prodi_obj, tahun, target_skor_val, deadline_val, is_aktif_val):
+            existing = (
                 db.query(TargetAkreditasi)
                 .filter(
-                    TargetAkreditasi.program_studi_id == prodi_if.id,
-                    TargetAkreditasi.tahun_akreditasi == 2025,
+                    TargetAkreditasi.program_studi_id == prodi_obj.id,
+                    TargetAkreditasi.tahun_akreditasi == tahun,
                 )
                 .first()
             )
-            if not existing_target:
-                target = TargetAkreditasi(
-                    program_studi_id=prodi_if.id,
-                    tahun_akreditasi=2025,
-                    target_skor=3.8,
-                    deadline=date.today() + timedelta(days=60),
-                    is_aktif=True,
+            if not existing:
+                t = TargetAkreditasi(
+                    program_studi_id=prodi_obj.id,
+                    tahun_akreditasi=tahun,
+                    target_skor=target_skor_val,
+                    deadline=deadline_val,
+                    is_aktif=is_aktif_val,
                 )
-                db.add(target)
-                db.commit()
-                print(f"Seeded target akreditasi for IF 2025")
+                db.add(t)
+                print(f"  Seeded TargetAkreditasi {prodi_obj.kode} {tahun}")
             else:
-                print("Target akreditasi for IF 2025 already exists")
+                existing.target_skor = target_skor_val
+                existing.deadline = deadline_val
+                existing.is_aktif = is_aktif_val
+                print(f"  Updated TargetAkreditasi {prodi_obj.kode} {tahun}")
+            db.commit()
+
+        def deactivate_other_targets(prodi_obj, keep_tahun):
+            """Nonaktifkan semua target prodi ini selain tahun yang ditentukan."""
+            others = (
+                db.query(TargetAkreditasi)
+                .filter(
+                    TargetAkreditasi.program_studi_id == prodi_obj.id,
+                    TargetAkreditasi.tahun_akreditasi != keep_tahun,
+                )
+                .all()
+            )
+            for o in others:
+                o.is_aktif = False
+            if others:
+                db.commit()
+                print(f"  Deactivated {len(others)} stale target(s) for {prodi_obj.kode} (non-{keep_tahun})")
+
+        # --- IF: aktif 2025, target skor terisi ---
+        if "IF" in prodis:
+            deactivate_other_targets(prodis["IF"], keep_tahun=2025)
+            upsert_target(
+                prodis["IF"],
+                tahun=2025,
+                target_skor_val=3.8,
+                deadline_val=date.today() + timedelta(days=60),
+                is_aktif_val=True,
+            )
+
+        # --- TE (Teknik Tenaga Listrik): aktif 2025, BELUM set target skor ---
+        if "TE" in prodis:
+            deactivate_other_targets(prodis["TE"], keep_tahun=2025)
+            upsert_target(
+                prodis["TE"],
+                tahun=2025,
+                target_skor_val=None,  # Belum diset oleh tim prodi
+                deadline_val=None,     # Belum diset oleh tim prodi
+                is_aktif_val=True,
+            )
+
+        # --- EL (Teknik Elektro): aktif 2024, target skor terisi ---
+        if "EL" in prodis:
+            deactivate_other_targets(prodis["EL"], keep_tahun=2024)
+            upsert_target(
+                prodis["EL"],
+                tahun=2024,
+                target_skor_val=3.5,
+                deadline_val=None,  # Tidak ada deadline spesifik untuk testing
+                is_aktif_val=True,
+            )
+
+
 
     finally:
         db.close()

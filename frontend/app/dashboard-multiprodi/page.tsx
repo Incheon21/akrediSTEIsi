@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useClickOutside } from "@/app/hooks/useClickOutside";
 import { apiFetch } from "@/app/services/api";
@@ -18,10 +18,20 @@ export default function DashboardMultiProdiPage() {
         useState<DashboardMultiProdiData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [togglingId, setTogglingId] = useState<string | null>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
+    const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
     const { user, loading: authLoading } = useAuth();
 
     useClickOutside(dropdownRef, () => setDropdownOpen(false));
+
+    // Auto-dismiss toast setelah 3 detik
+    useEffect(() => {
+        if (!toast) return;
+        const timer = setTimeout(() => setToast(null), 3000);
+        return () => clearTimeout(timer);
+    }, [toast]);
 
     useEffect(() => {
         if (!user) return;
@@ -65,7 +75,29 @@ export default function DashboardMultiProdiPage() {
         }
 
         fetchDashboard();
-    }, [user, tahun]);
+    }, [user, tahun, refreshKey]);
+
+    const handleToggle = async (prodiId: string, tahunToggle: number, isAktif: boolean) => {
+        setTogglingId(prodiId);
+        try {
+            const res = await apiFetch("/api/v1/multiprodi/toggle-target", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    program_studi_id: prodiId,
+                    tahun: tahunToggle,
+                    is_aktif: isAktif,
+                }),
+            });
+            if (!res.ok) throw new Error("Gagal mengubah status siklus akreditasi");
+            setToast({ type: "success", message: "Status siklus akreditasi berhasil diubah" });
+            setRefreshKey((k) => k + 1);
+        } catch (err) {
+            setToast({ type: "error", message: err instanceof Error ? err.message : "Terjadi kesalahan" });
+        } finally {
+            setTogglingId(null);
+        }
+    };
 
     if (authLoading || loading) {
         return (
@@ -102,8 +134,29 @@ export default function DashboardMultiProdiPage() {
         available_years,
     } = dashboardData;
 
+    // Kode lama berdasarkan status operasional:
+    // const active_prodi_list = prodi_list.filter((p) => p.prodi_status === "aktif");
+    // const inactive_prodi_list = prodi_list.filter((p) => p.prodi_status !== "aktif");
+
+    // Kode baru berdasarkan apakah punya target akreditasi di tahun terkait (is_active)
+    const active_prodi_list = prodi_list.filter((p) => p.is_active === true);
+    const inactive_prodi_list = prodi_list.filter((p) => p.is_active === false);
+
     return (
         <div className="p-6 px-10 bg-[#f4f6f8] min-h-screen">
+
+            {/* Toast Notification */}
+            {toast && (
+                <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all animate-fade-in ${
+                    toast.type === "success"
+                        ? "bg-green-50 text-green-800 border border-green-200"
+                        : "bg-red-50 text-red-800 border border-red-200"
+                }`}>
+                    <span>{toast.type === "success" ? "✓" : "✕"}</span>
+                    <span>{toast.message}</span>
+                    <button onClick={() => setToast(null)} className="ml-2 text-current opacity-50 hover:opacity-100">×</button>
+                </div>
+            )}
 
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
@@ -165,17 +218,57 @@ export default function DashboardMultiProdiPage() {
             <div className="flex gap-6 flex-wrap">
 
                 {/* Tabel prodi — kiri, lebih lebar */}
-                <div className="flex-1 min-w-[320px] flex flex-col gap-4">
-                    <div className="flex items-center gap-3">
-                        <span className="w-1 h-6 bg-[#00509d] rounded-full inline-block" />
-                        <h2 className="text-base font-bold text-[#132040]">
-                            Daftar Program Studi
-                        </h2>
-                        <span className="ml-auto text-xs text-gray-400">
-                            Klik baris untuk lihat detail
-                        </span>
+                <div className="flex-1 min-w-[320px] flex flex-col gap-8">
+                    {/* Daftar Prodi Aktif */}
+                    <div className="flex flex-col gap-4">
+                        <div className="flex items-center gap-3">
+                            <span className="w-1 h-6 bg-[#00509d] rounded-full inline-block" />
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-base font-bold text-[#132040]">
+                                    Daftar Program Studi
+                                </h2>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700 border border-green-200">
+                                    Aktif
+                                </span>
+                            </div>
+                            <span className="ml-auto text-xs text-gray-400">
+                                Klik baris untuk lihat detail
+                            </span>
+                        </div>
+                        {active_prodi_list.length > 0 ? (
+                            <ProdiCard
+                                prodiList={active_prodi_list}
+                                currentYear={current_year}
+                                onToggle={handleToggle}
+                                isTogglingId={togglingId}
+                            />
+                        ) : (
+                            <p className="text-sm text-gray-500 italic">Tidak ada program studi aktif.</p>
+                        )}
                     </div>
-                    <ProdiCard prodiList={prodi_list} />
+
+                    {/* Daftar Prodi Tidak Aktif */}
+                    {inactive_prodi_list.length > 0 && (
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center gap-3">
+                                <span className="w-1 h-6 bg-gray-400 rounded-full inline-block" />
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-base font-bold text-[#132040]">
+                                        Daftar Program Studi
+                                    </h2>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                                        Tidak Aktif
+                                    </span>
+                                </div>
+                            </div>
+                            <ProdiCard
+                                prodiList={inactive_prodi_list}
+                                currentYear={current_year}
+                                onToggle={handleToggle}
+                                isTogglingId={togglingId}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Chart simulasi — kanan */}
@@ -203,8 +296,8 @@ export default function DashboardMultiProdiPage() {
                                             style={{ width: `${value}%` }}
                                         />
                                     </div>
-                                    <span className="text-xs font-semibold text-gray-700 w-8 text-right">
-                                        {value}%
+                                    <span className="text-xs font-semibold text-gray-700 w-12 text-right">
+                                        {Number(value).toFixed(2)}%
                                     </span>
                                 </div>
                             ))}
@@ -213,7 +306,7 @@ export default function DashboardMultiProdiPage() {
                                     Rata-rata skor simulasi
                                 </span>
                                 <span className="text-sm font-bold text-[#00509d]">
-                                    {fakultas_summary.avg_simulation_score}
+                                    {Number(fakultas_summary.avg_simulation_score).toFixed(2)}
                                 </span>
                             </div>
                         </div>

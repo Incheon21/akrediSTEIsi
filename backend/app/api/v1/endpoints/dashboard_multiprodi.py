@@ -4,8 +4,8 @@ from uuid import UUID
 
 from app.db import get_db
 from app.models.user import User
-from app.schemas.dashboard import DashboardMultiProdiResponse
-from app.services.dashboard import get_dashboard_multiprodi_data
+from app.schemas.dashboard import DashboardMultiProdiResponse, ToggleTargetRequest
+from app.services.dashboard import get_dashboard_multiprodi_data, toggle_target_akreditasi
 from app.utils.dependencies import require_role
 
 router = APIRouter(prefix="/multiprodi", tags=["dashboard-multiprodi"])
@@ -21,3 +21,14 @@ def get_dashboard_prodi(
     current_user: User = Depends(require_role("admin", "pimpinan", "koordinator"))
 ) -> dict:
     return get_dashboard_multiprodi_data(db, tahun=tahun)
+
+@router.post(
+    "/toggle-target",
+    summary="Toggle Target Akreditasi for a program studi in a specific year"
+)
+def toggle_target(
+    req: ToggleTargetRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "pimpinan", "koordinator"))
+) -> dict:
+    return toggle_target_akreditasi(db, req.program_studi_id, req.tahun, req.is_aktif)

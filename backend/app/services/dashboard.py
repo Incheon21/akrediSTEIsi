@@ -104,12 +104,12 @@ def get_dashboard_prodi_data(
         .all()
     )
     available_years = sorted(
-        list(set([t.tahun_akreditasi for t in all_targets if t.tahun_akreditasi]))
+        list(set([t.tahun_akreditasi for t in all_targets if t.tahun_akreditasi and t.is_aktif]))
     )
 
     if tahun:
         active_target = next(
-            (t for t in all_targets if t.tahun_akreditasi == tahun), None
+            (t for t in all_targets if t.tahun_akreditasi == tahun and t.is_aktif), None
         )
     else:
         active_target = next((t for t in all_targets if t.is_aktif), None)
@@ -303,6 +303,7 @@ def get_dashboard_prodi_data(
             if prodi.tanggal_akreditasi
             else 0,
             "is_active_accreditation": aktif_akreditasi,
+            "prodi_status": prodi.status or "aktif",
         },
         "target_akreditasi_id": str(active_target.id) if active_target else "",
         "lkps_submission_id": str(lkps_submission.id) if lkps_submission else "",
@@ -350,31 +351,17 @@ def get_dashboard_multiprodi_data(db: Session, tahun: int | None = None):
             "available_years": [],
         }
 
-    # Filter prodi berdasarkan tahun jika diberikan
-    if tahun:
-        # Ambil prodi yang punya target di tahun tersebut
-        prodi_with_target = (
-            db.query(ProgramStudi)
-            .join(TargetAkreditasi)
-            .filter(TargetAkreditasi.tahun_akreditasi == tahun)
-            .all()
+    # Jika tahun tidak diberikan (initial load), cari tahun terbaru dari semua target
+    if not tahun:
+        latest_target = (
+            db.query(TargetAkreditasi)
+            .order_by(TargetAkreditasi.tahun_akreditasi.desc())
+            .first()
         )
-        list_prodi = prodi_with_target
-        if not list_prodi:
-            return {
-                "fakultas_summary": {
-                    "total_prodi": 0,
-                    "prodi_green": 0,
-                    "prodi_yellow": 0,
-                    "prodi_red": 0,
-                    "avg_lkps_percent": 0.0,
-                    "avg_led_percent": 0.0,
-                    "avg_simulation_score": 0.0,
-                },
-                "prodi_list": [],
-                "current_year": tahun,
-                "available_years": [tahun],
-            }
+        if latest_target:
+            tahun = latest_target.tahun_akreditasi
+        else:
+            tahun = date.today().year
 
     prodi_data_list = []
     for prodi in list_prodi:
@@ -435,11 +422,22 @@ def get_dashboard_multiprodi_data(db: Session, tahun: int | None = None):
                 "readiness_status": readiness_status,
                 "is_active": profile.get("is_active_accreditation", False),
                 "days_remaining": p.get("days_remaining", None),
+                "prodi_status": profile.get("prodi_status", "aktif"),
             }
         )
 
-        available_years_set.update(p.get("available_years", []))
+        # Kumpulkan semua tahun dari semua target (termasuk is_aktif=False)
+        # agar dropdown multiprodi tidak menghilang meski semua prodi dinonaktifkan di tahun tersebut
+        all_prodi_targets = (
+            db.query(TargetAkreditasi)
+            .filter(TargetAkreditasi.program_studi_id == prodi.id)
+            .all()
+        )
+        available_years_set.update(
+            t.tahun_akreditasi for t in all_prodi_targets if t.tahun_akreditasi
+        )
         current_years.append(p.get("current_year", 0))
+
 
     total_prodi = len(prodi_summary_list)
     green_count = sum(1 for p in prodi_summary_list if p["readiness_status"] == "green")
@@ -478,3 +476,28 @@ def get_dashboard_multiprodi_data(db: Session, tahun: int | None = None):
         "current_year": tahun or max(current_years) if current_years else 0,
         "available_years": sorted(available_years_set),
     }
+
+def toggle_target_akreditasi(db: Session, prodi_id: UUID, tahun: int, is_aktif: bool) -> dict:
+    target = db.query(TargetAkreditasi).filter(
+        TargetAkreditasi.program_studi_id == prodi_id,
+        TargetAkreditasi.tahun_akreditasi == tahun
+    ).first()
+
+    if is_aktif:
+        if not target:
+            target = TargetAkreditasi(
+                program_studi_id=prodi_id,
+                tahun_akreditasi=tahun,
+                target_skor=None,
+                deadline=None,
+                is_aktif=True
+            )
+            db.add(target)
+        else:
+            target.is_aktif = True
+    else:
+        if target:
+            target.is_aktif = False
+    
+    db.commit()
+    return {"message": "Success"}
