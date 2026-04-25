@@ -126,3 +126,12 @@ export async function downloadLkpsWorkbook(submissionId: string): Promise<Blob> 
     responseType: "blob",
   });
 }
+export async function uploadLkps(submissionId: string, file: File):
+    Promise<{message: string; submission_id: string;}> {
+  const form = new FormData();
+  form.append("file", file);
+  return apiRequest(`${BASE_PATH}/import/${submissionId}`, {
+    method: "POST",
+    body: form,
+  });
+}

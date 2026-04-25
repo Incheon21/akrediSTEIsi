@@ -11,6 +11,7 @@ import {
   fetchProgramStudiList,
   fetchSectionRecords,
   updateSectionRecord,
+  uploadLkps
 } from "@/lib/api/lkps";
 import { LKPS_SECTIONS } from "@/constants/lkps-sections";
 import type {
@@ -116,6 +117,8 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [sectionError, setSectionError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeSection = sectionLookup[activeSectionCode] ?? applicableSections[0];
   const activeRecords = recordsBySection[activeSection.code] ?? [];
@@ -270,6 +273,31 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
     .filter((s) => s.mode === "records" && !s.templateRows)
     .reduce((acc, s) => acc + (recordsBySection[s.code]?.length ?? 0), 0);
 
+  const handleImport = useCallback(async () => {
+    setImporting(true);
+    setSectionError(null);
+    const file = fileInputRef.current?.files?.[0];
+    if (!file){
+      setSectionError(
+        err instanceof Error ? err.message : "Pilih file terlebih dahulu.",
+      );
+      setImporting(false);
+      return;
+    }
+    try {
+      await uploadLkps(submissionId, file)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (err) {
+      setSectionError(
+        err instanceof Error ? err.message : "Gagal mengupload data lkps.",
+      );
+    } finally {
+      setImporting(false);
+    }
+  }, [submissionId, fileInputRef]);
+
   return (
     <main className="min-h-screen bg-[#f4f6f8] px-4 py-8 text-(--accent-ink) md:px-8">
       {kriteriaFilter && targetId && (
@@ -321,6 +349,21 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
               {exporting ? "Mengekspor..." : "Ekspor ke Excel (.xlsx)"}
             </button>
 
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xls,.xlsx"
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-500 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-xs file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+              required
+            />
+            <button
+              type="button"
+              onClick={handleImport}
+              disabled={importing}
+              className="mt-2 w-full rounded-lg bg-[#00509d] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#003f7d] disabled:opacity-50"
+            >
+              {importing ? "Mengimpor..." : "Import Excel (.xlsx)"}
+            </button>
             <div className="mt-4 space-y-4">
               {groupedSections.map(([groupName, sections]) => (
                 <div key={groupName}>
