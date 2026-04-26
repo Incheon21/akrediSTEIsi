@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     # Application
     APP_ENV: str = "development"
     APP_NAME: str = "STEI Accreditation System"
+    BACKEND_URL: str = "http://localhost:8000"
 
     # Database
     DATABASE_URL: str = ""

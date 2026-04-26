@@ -14,6 +14,7 @@ from fastapi import (
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.db import get_db
 from app.models.evidence import EvidenceIndikator
 from app.models.user import User
@@ -33,6 +34,14 @@ from app.services.evidence import (
     upload_evidence,
 )
 from app.utils.dependencies import get_current_user
+
+settings = get_settings()
+
+
+def _build_download_url(url_file: str) -> str:
+    """Construct the full publicly accessible static URL for an evidence file."""
+    return f"{settings.BACKEND_URL.rstrip('/')}{url_file}"
+
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
 
@@ -55,7 +64,7 @@ def upload_evidence_endpoint(
     Upload an evidence file.
     Accepts form data for metadata and the file itself.
     """
-    return upload_evidence(
+    evidence = upload_evidence(
         db=db,
         file=file,
         judul=judul,
@@ -64,6 +73,9 @@ def upload_evidence_endpoint(
         uploaded_by=current_user.id,
         program_studi_id=current_user.program_studi_id,
     )
+    response = EvidenceResponse.model_validate(evidence)
+    response.download_url = _build_download_url(evidence.url_file)
+    return response
 
 
 @router.get(
@@ -82,12 +94,18 @@ def read_evidence_list(
     Filters by the current user's prodi (shows global + prodi-specific evidence).
     Admins and pimpinan (no prodi) see all evidence.
     """
-    return get_evidence_list(
+    evidence_list = get_evidence_list(
         db=db,
         skip=skip,
         limit=limit,
         program_studi_id=current_user.program_studi_id,
     )
+    results = []
+    for ev in evidence_list:
+        r = EvidenceResponse.model_validate(ev)
+        r.download_url = _build_download_url(ev.url_file)
+        results.append(r)
+    return results
 
 
 @router.get(
@@ -108,7 +126,9 @@ def read_evidence(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Evidence not found"
         )
-    return evidence
+    response = EvidenceResponse.model_validate(evidence)
+    response.download_url = _build_download_url(evidence.url_file)
+    return response
 
 
 @router.get(

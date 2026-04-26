@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
@@ -12,9 +15,15 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# Ensure storage directory exists and mount it for direct file access
+STORAGE_DIR = Path(__file__).resolve().parent.parent / "storage"
+STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+(STORAGE_DIR / "evidence").mkdir(parents=True, exist_ok=True)
+app.mount("/storage", StaticFiles(directory=str(STORAGE_DIR)), name="storage")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
