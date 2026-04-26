@@ -526,3 +526,56 @@ def test_led_post_rejected_for_unallowed_role(client, db):
 
     assert response.status_code == 403
     assert "Access restricted." in response.json()["detail"]
+
+
+def test_export_led_word_success(client, db, tim_prodi_user, tim_prodi_token):
+    """
+    GET /led/export/{target_akreditasi_id} should return a .docx file
+    with the correct content-type when at least one narasi exists.
+    """
+    seeded = _seed_led_context(db, tim_prodi_user)
+    target = seeded["target"]
+    indikator = seeded["indikator"]
+
+    # Seed a narasi so the document has content to render
+    narasi = NarasiLED(
+        target_akreditasi_id=target.id,
+        indikator_id=indikator.id,
+        narasi="Narasi test untuk export LED Word document.",
+    )
+    db.add(narasi)
+    db.commit()
+
+    response = client.get(
+        f"/api/v1/led/export/{target.id}",
+        headers=_auth_headers(tim_prodi_token),
+    )
+
+    assert response.status_code == 200
+    assert (
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        in response.headers["content-type"]
+    )
+    assert "attachment" in response.headers.get("content-disposition", "")
+    # Verify the response body is a non-empty binary (valid docx starts with PK zip magic bytes)
+    assert response.content[:2] == b"PK"
+
+
+def test_export_led_word_not_found(client, tim_prodi_token):
+    """GET /led/export/{nonexistent_id} should return 404."""
+    import uuid
+
+    response = client.get(
+        f"/api/v1/led/export/{uuid.uuid4()}",
+        headers=_auth_headers(tim_prodi_token),
+    )
+    assert response.status_code == 404
+
+
+def test_export_led_word_unauthorized(client, db, tim_prodi_user):
+    """GET /led/export without a token should return 401."""
+    seeded = _seed_led_context(db, tim_prodi_user)
+    target = seeded["target"]
+
+    response = client.get(f"/api/v1/led/export/{target.id}")
+    assert response.status_code == 401
