@@ -26,6 +26,9 @@ export default function DashboardProdiPage() {
   const [isDownloadingLED, setIsDownloadingLED] = useState(false);
   const [isImportingLKPS, setIsImportingLKPS] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const LIMIT = 3;
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
 
@@ -335,7 +338,9 @@ export default function DashboardProdiPage() {
                   </div>
                 </div>
               ))}
-              {data.recommendation_messages.map((msg, i) => (
+            {data.recommendation_messages
+              .slice(0, showAll ? data.recommendation_messages.length : LIMIT)
+              .map((msg, i) => (
                 <div
                   key={i}
                   className="rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 shadow-sm"
@@ -360,6 +365,15 @@ export default function DashboardProdiPage() {
                   </div>
                 </div>
               ))}
+
+            {data.recommendation_messages.length > LIMIT && (
+              <button
+                onClick={() => setShowAll(!showAll)}
+                className="text-sm text-blue-600 hover:underline mt-1"
+              >
+                {showAll ? "Sembunyikan" : `Tampilkan ${data.recommendation_messages.length - LIMIT} lainnya`}
+              </button>
+            )}
             </div>
           )}
 
