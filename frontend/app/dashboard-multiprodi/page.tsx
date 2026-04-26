@@ -147,11 +147,10 @@ export default function DashboardMultiProdiPage() {
 
             {/* Toast Notification */}
             {toast && (
-                <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all animate-fade-in ${
-                    toast.type === "success"
+                <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all animate-fade-in ${toast.type === "success"
                         ? "bg-green-50 text-green-800 border border-green-200"
                         : "bg-red-50 text-red-800 border border-red-200"
-                }`}>
+                    }`}>
                     <span>{toast.type === "success" ? "✓" : "✕"}</span>
                     <span>{toast.message}</span>
                     <button onClick={() => setToast(null)} className="ml-2 text-current opacity-50 hover:opacity-100">×</button>
@@ -239,7 +238,8 @@ export default function DashboardMultiProdiPage() {
                             <ProdiCard
                                 prodiList={active_prodi_list}
                                 currentYear={current_year}
-                                onToggle={handleToggle}
+                                onToggle={user?.role === "admin" || user?.role === "koordinator" ? handleToggle : undefined}
+
                                 isTogglingId={togglingId}
                             />
                         ) : (
@@ -264,7 +264,8 @@ export default function DashboardMultiProdiPage() {
                             <ProdiCard
                                 prodiList={inactive_prodi_list}
                                 currentYear={current_year}
-                                onToggle={handleToggle}
+                                onToggle={user?.role === "admin" || user?.role === "koordinator" ? handleToggle : undefined}
+
                                 isTogglingId={togglingId}
                             />
                         </div>
