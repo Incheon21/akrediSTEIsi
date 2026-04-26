@@ -230,20 +230,24 @@ export default function DashboardProdiPage() {
 
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-3">
-              <button
-                onClick={onUnduhLKPS}
-                disabled={isDownloadingLKPS}
-                className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDownloadingLKPS ? 'bg-[#00509d] opacity-70 cursor-not-allowed' : 'bg-[#00509d] hover:bg-[#003f7d]'}`}
-              >
-                {isDownloadingLKPS ? "Mengunduh..." : "Unduh LKPS"}
-              </button>
-              <button
-                onClick={onUnduhLED}
-                disabled={isDownloadingLED}
-                className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 ${isDownloadingLED ? 'bg-green-700 opacity-70 cursor-not-allowed' : 'bg-green-700 hover:bg-green-800'}`}
-              >
-                {isDownloadingLED ? "Mengunduh..." : "Unduh LED"}
-              </button>
+              {data.program_studi_profile.is_active_accreditation && (
+                <>
+                  <button
+                    onClick={onUnduhLKPS}
+                    disabled={isDownloadingLKPS}
+                    className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDownloadingLKPS ? 'bg-[#00509d] opacity-70 cursor-not-allowed' : 'bg-[#00509d] hover:bg-[#003f7d]'}`}
+                  >
+                    {isDownloadingLKPS ? "Mengunduh..." : "Unduh LKPS"}
+                  </button>
+                  <button
+                    onClick={onUnduhLED}
+                    disabled={isDownloadingLED}
+                    className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 ${isDownloadingLED ? 'bg-green-700 opacity-70 cursor-not-allowed' : 'bg-green-700 hover:bg-green-800'}`}
+                  >
+                    {isDownloadingLED ? "Mengunduh..." : "Unduh LED"}
+                  </button>
+                </>
+              )}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -277,23 +281,27 @@ export default function DashboardProdiPage() {
               </div>
             </div>
             {/* Import LKPS */}
-            <div className="flex items-center gap-2">
-              <input
-                ref={importFileRef}
-                type="file"
-                accept=".xls,.xlsx"
-                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-500 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-xs file:font-medium file:text-blue-700 hover:file:bg-blue-100"
-              />
-              <button
-                onClick={onImportLKPS}
-                disabled={isImportingLKPS}
-                className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isImportingLKPS ? 'bg-[#00509d] opacity-70 cursor-not-allowed' : 'bg-[#00509d] hover:bg-[#003f7d]'}`}
-              >
-                {isImportingLKPS ? "Mengimpor..." : "Import LKPS"}
-              </button>
-            </div>
-            {importError && (
-              <p className="text-xs text-red-600">{importError}</p>
+            {data.program_studi_profile.is_active_accreditation && (
+              <>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={importFileRef}
+                    type="file"
+                    accept=".xls,.xlsx"
+                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-500 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-xs file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  <button
+                    onClick={onImportLKPS}
+                    disabled={isImportingLKPS}
+                    className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isImportingLKPS ? 'bg-[#00509d] opacity-70 cursor-not-allowed' : 'bg-[#00509d] hover:bg-[#003f7d]'}`}
+                  >
+                    {isImportingLKPS ? "Mengimpor..." : "Import LKPS"}
+                  </button>
+                </div>
+                {importError && (
+                  <p className="text-xs text-red-600">{importError}</p>
+                )}
+              </>
             )}
           </div>
         </header>
@@ -355,123 +363,135 @@ export default function DashboardProdiPage() {
             </div>
           )}
 
-        {/* Overview Cards */}
-        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-slate-500">
-              Progress LKPS
-            </h3>
-            <div className="mt-4">
-              <ProgressBar progress={data.lkps_percent} />
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {data.lkps_percent}%
-              </p>
-            </div>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-slate-500">Progress LED</h3>
-            <div className="mt-4">
-              <ProgressBar progress={data.led_percent} />
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {data.led_percent}%
-              </p>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center justify-center">
-            <GaugeMeter
-              score={data.score_value}
-              target={data.target_score}
-            />
-          </div>
-        </section>
-
-        {/* Criteria List */}
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
-            <h2 className="text-lg font-semibold text-slate-800">
-              Detail Kriteria
-            </h2>
-          </div>
-          <div className="divide-y divide-slate-200">
-            {data.criteria_list.map((kriteria: CriteriaRow) => (
-              <div
-                key={kriteria.id}
-                className="p-6 transition-colors hover:bg-slate-50"
-              >
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="flex items-center space-x-4">
-                    <StatusDot
-                      status={kriteria.status}
-                      label={kriteria.status_label} />
-                    <div>
-                      <h4 className="font-semibold text-slate-900">
-                        {kriteria.name}
-                      </h4>
-                      <p className="text-sm text-slate-500">
-                        Status: {kriteria.status_label}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-1 items-center justify-end">
-                    <div className="hidden md:flex flex-col gap-1.5 w-48">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 w-8 shrink-0">LKPS</span>
-                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-2 bg-[#00509d] rounded-full transition-all duration-500"
-                            style={{ width: `${kriteria.lkps_progress ?? 0}%` }}
-                          />
-                        </div>
-                        <span className="text-[10px] font-semibold text-gray-600 w-7 text-right">
-                          {kriteria.lkps_progress ?? 0}%
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 w-8 shrink-0">LED</span>
-                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-2 bg-green-600 rounded-full transition-all duration-500"
-                            style={{ width: `${kriteria.led_progress ?? 0}%` }}
-                          />
-                        </div>
-                        <span className="text-[10px] font-semibold text-gray-600 w-7 text-right">
-                          {kriteria.led_progress ?? 0}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {editAllowed && (
-                    <div className="mt-4 flex gap-2 md:mt-0">
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/akreditasi/lkps/${data.lkps_submission_id}?kriteria=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}&id=${prodiIdFromUrl || ""}`,
-                          )
-                        }
-                        className="rounded-md bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100"
-                      >
-                        Isi LKPS
-                      </button>
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/prodi/led?kriteria_kode=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}&id=${prodiIdFromUrl || ""}&lkps_submission_id=${data.lkps_submission_id}`,
-                          )
-                        }
-                        className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-                      >
-                        Isi LED
-                      </button>
-                    </div>
-                  )}
+        {/* Overview Cards & Criteria List (only if active) */}
+        {data.program_studi_profile.is_active_accreditation ? (
+          <>
+            <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-sm font-medium text-slate-500">
+                  Progress LKPS
+                </h3>
+                <div className="mt-4">
+                  <ProgressBar progress={data.lkps_percent} />
+                  <p className="mt-2 text-2xl font-bold text-slate-900">
+                    {data.lkps_percent}%
+                  </p>
                 </div>
               </div>
-            ))}
+              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-sm font-medium text-slate-500">Progress LED</h3>
+                <div className="mt-4">
+                  <ProgressBar progress={data.led_percent} />
+                  <p className="mt-2 text-2xl font-bold text-slate-900">
+                    {data.led_percent}%
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center justify-center">
+                <GaugeMeter
+                  score={data.score_value}
+                  target={data.target_score}
+                />
+              </div>
+            </section>
+
+            {/* Criteria List */}
+            <section className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
+                <h2 className="text-lg font-semibold text-slate-800">
+                  Detail Kriteria
+                </h2>
+              </div>
+              <div className="divide-y divide-slate-200">
+                {data.criteria_list.map((kriteria: CriteriaRow) => (
+                  <div
+                    key={kriteria.id}
+                    className="p-6 transition-colors hover:bg-slate-50"
+                  >
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div className="flex items-center space-x-4">
+                        <StatusDot
+                          status={kriteria.status}
+                          label={kriteria.status_label} />
+                        <div>
+                          <h4 className="font-semibold text-slate-900">
+                            {kriteria.name}
+                          </h4>
+                          <p className="text-sm text-slate-500">
+                            Status: {kriteria.status_label}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-1 items-center justify-end">
+                        <div className="hidden md:flex flex-col gap-1.5 w-48">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-400 w-8 shrink-0">LKPS</span>
+                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-2 bg-[#00509d] rounded-full transition-all duration-500"
+                                style={{ width: `${kriteria.lkps_progress ?? 0}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-semibold text-gray-600 w-7 text-right">
+                              {kriteria.lkps_progress ?? 0}%
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-400 w-8 shrink-0">LED</span>
+                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-2 bg-green-600 rounded-full transition-all duration-500"
+                                style={{ width: `${kriteria.led_progress ?? 0}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-semibold text-gray-600 w-7 text-right">
+                              {kriteria.led_progress ?? 0}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {editAllowed && (
+                        <div className="mt-4 flex gap-2 md:mt-0">
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/akreditasi/lkps/${data.lkps_submission_id}?kriteria=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}&id=${prodiIdFromUrl || ""}`,
+                              )
+                            }
+                            className="rounded-md bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100"
+                          >
+                            Isi LKPS
+                          </button>
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/prodi/led?kriteria_kode=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}&id=${prodiIdFromUrl || ""}&lkps_submission_id=${data.lkps_submission_id}`,
+                              )
+                            }
+                            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+                          >
+                            Isi LED
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
+        ) : (
+          <div className="py-16 text-center bg-white rounded-xl border border-slate-200 shadow-sm">
+            <p className="text-4xl">⚠️</p>
+            <h2 className="mt-4 text-xl font-semibold text-slate-800">Siklus Tidak Aktif</h2>
+            <p className="mt-2 text-slate-500 max-w-md mx-auto">
+              Program studi ini tidak terdaftar dalam siklus akreditasi untuk tahun {tahun || data.current_year}. Data pengisian dan progres hanya ditampilkan pada siklus yang aktif.
+            </p>
           </div>
-        </section>
+        )}
       </div>
     </main>
   );

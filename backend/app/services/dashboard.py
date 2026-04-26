@@ -100,22 +100,25 @@ def get_dashboard_prodi_data(
             detail="Program Studi tidak ditemukan.",
         )
 
-    # Get all target akreditasi years for this prodi
-    all_targets = (
+    # Get all target akreditasi years globally to keep dropdown populated correctly
+    global_targets = db.query(TargetAkreditasi).filter(TargetAkreditasi.tahun_akreditasi.isnot(None)).all()
+    available_years = sorted(
+        list(set([t.tahun_akreditasi for t in global_targets if t.tahun_akreditasi])),
+        reverse=True
+    )
+
+    all_prodi_targets = (
         db.query(TargetAkreditasi)
         .filter(TargetAkreditasi.program_studi_id == prodi_id)
         .all()
     )
-    available_years = sorted(
-        list(set([t.tahun_akreditasi for t in all_targets if t.tahun_akreditasi and t.is_aktif]))
-    )
 
     if tahun:
         active_target = next(
-            (t for t in all_targets if t.tahun_akreditasi == tahun and t.is_aktif), None
+            (t for t in all_prodi_targets if t.tahun_akreditasi == tahun and t.is_aktif), None
         )
     else:
-        active_target = next((t for t in all_targets if t.is_aktif), None)
+        active_target = next((t for t in all_prodi_targets if t.is_aktif), None)
 
     aktif_akreditasi = active_target is not None
     current_year = active_target.tahun_akreditasi if active_target else (tahun or 0)
