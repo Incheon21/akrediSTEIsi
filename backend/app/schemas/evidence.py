@@ -37,3 +37,16 @@ class EvidenceDetailResponse(EvidenceResponse):
     """
 
     pass
+
+
+class EvidenceIndikatorRequest(BaseModel):
+    indikator_id: UUID
+    target_akreditasi_id: UUID
+
+
+class EvidenceIndikatorResponse(BaseModel):
+    evidence_id: UUID
+    indikator_id: UUID
+    target_akreditasi_id: UUID
+
+    model_config = ConfigDict(from_attributes=True)

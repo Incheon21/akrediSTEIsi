@@ -1,18 +1,35 @@
 import uuid
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.db import get_db
+from app.models.evidence import EvidenceIndikator
 from app.models.user import User
-from app.schemas.evidence import EvidenceResponse
+from app.schemas.evidence import (
+    EvidenceIndikatorRequest,
+    EvidenceIndikatorResponse,
+    EvidenceResponse,
+)
 from app.services.evidence import (
     delete_evidence,
     get_evidence_by_id,
+    get_evidence_indikator_links,
     get_evidence_list,
     get_physical_file_path,
+    link_evidence_indikator,
+    unlink_evidence_indikator,
     upload_evidence,
 )
 from app.utils.dependencies import get_current_user
@@ -151,8 +168,91 @@ def delete_evidence_endpoint(
             status_code=status.HTTP_404_NOT_FOUND, detail="Evidence not found"
         )
 
-    # In a real app, you might want to check if the current_user is the uploader or an admin
-    # if evidence.uploaded_by != current_user.id and not current_user.is_superuser:
-    #     raise HTTPException(status_code=403, detail="Not enough permissions")
+    if current_user.id != evidence.uploaded_by and current_user.role.name not in (
+        "admin",
+        "koordinator",
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions to delete this evidence.",
+        )
 
     delete_evidence(db=db, evidence_id=evidence_id)
+
+
+@router.post(
+    "/{evidence_id}/indikator",
+    response_model=EvidenceIndikatorResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Link an evidence document to an indikator",
+)
+def add_evidence_indikator(
+    evidence_id: uuid.UUID,
+    body: EvidenceIndikatorRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Create an EvidenceIndikator record linking the given evidence to an indikator
+    for a specific target_akreditasi. Returns 404 if the evidence does not exist,
+    409 if the link already exists.
+    """
+    evidence = get_evidence_by_id(db=db, evidence_id=evidence_id)
+    if not evidence:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Evidence not found"
+        )
+
+    return link_evidence_indikator(
+        db=db,
+        evidence_id=evidence_id,
+        indikator_id=body.indikator_id,
+        target_akreditasi_id=body.target_akreditasi_id,
+    )
+
+
+@router.get(
+    "/{evidence_id}/indikator",
+    response_model=List[EvidenceIndikatorResponse],
+    summary="List all indikator links for an evidence document",
+)
+def read_evidence_indikator_links(
+    evidence_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Retrieve all EvidenceIndikator records associated with the given evidence.
+    Returns 404 if the evidence does not exist.
+    """
+    evidence = get_evidence_by_id(db=db, evidence_id=evidence_id)
+    if not evidence:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Evidence not found"
+        )
+
+    return get_evidence_indikator_links(db=db, evidence_id=evidence_id)
+
+
+@router.delete(
+    "/{evidence_id}/indikator/{indikator_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove an indikator link from an evidence document",
+)
+def remove_evidence_indikator(
+    evidence_id: uuid.UUID,
+    indikator_id: uuid.UUID,
+    target_akreditasi_id: uuid.UUID = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Delete the EvidenceIndikator link identified by evidence_id, indikator_id,
+    and target_akreditasi_id. Returns 404 if the link does not exist.
+    """
+    unlink_evidence_indikator(
+        db=db,
+        evidence_id=evidence_id,
+        indikator_id=indikator_id,
+        target_akreditasi_id=target_akreditasi_id,
+    )

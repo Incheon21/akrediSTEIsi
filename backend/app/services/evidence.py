@@ -7,7 +7,7 @@ from typing import List, Optional
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.models.evidence import Evidence, EvidenceProdi
+from app.models.evidence import Evidence, EvidenceIndikator, EvidenceProdi
 
 # Define storage directory path relative to the backend root
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -91,10 +91,12 @@ def upload_evidence(
 
     # Auto-link to prodi when not global
     if not is_global and program_studi_id:
-        db.add(EvidenceProdi(
-            evidence_id=db_evidence.id,
-            prodi_id=program_studi_id,
-        ))
+        db.add(
+            EvidenceProdi(
+                evidence_id=db_evidence.id,
+                prodi_id=program_studi_id,
+            )
+        )
 
     db.commit()
     db.refresh(db_evidence)
@@ -122,6 +124,7 @@ def get_evidence_list(
     """
     if program_studi_id:
         from sqlalchemy import or_
+
         linked_ids = (
             db.query(EvidenceProdi.evidence_id)
             .filter(EvidenceProdi.prodi_id == program_studi_id)
@@ -174,3 +177,81 @@ def get_physical_file_path(url_file: str) -> Path:
     """Helper to resolve the physical path for downloading/serving."""
     filename = Path(url_file).name
     return STORAGE_DIR / filename
+
+
+def link_evidence_indikator(
+    db: Session,
+    evidence_id: uuid.UUID,
+    indikator_id: uuid.UUID,
+    target_akreditasi_id: uuid.UUID,
+) -> EvidenceIndikator:
+    """
+    Create a link between an evidence record and an indikator for a given
+    target_akreditasi. Raises 409 if the link already exists.
+    """
+    existing = (
+        db.query(EvidenceIndikator)
+        .filter(
+            EvidenceIndikator.evidence_id == evidence_id,
+            EvidenceIndikator.indikator_id == indikator_id,
+            EvidenceIndikator.target_akreditasi_id == target_akreditasi_id,
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Link between this evidence and indikator already exists.",
+        )
+
+    link = EvidenceIndikator(
+        evidence_id=evidence_id,
+        indikator_id=indikator_id,
+        target_akreditasi_id=target_akreditasi_id,
+    )
+    db.add(link)
+    db.commit()
+    db.refresh(link)
+    return link
+
+
+def get_evidence_indikator_links(
+    db: Session,
+    evidence_id: uuid.UUID,
+) -> List[EvidenceIndikator]:
+    """Return all EvidenceIndikator links for a given evidence record."""
+    return (
+        db.query(EvidenceIndikator)
+        .filter(EvidenceIndikator.evidence_id == evidence_id)
+        .all()
+    )
+
+
+def unlink_evidence_indikator(
+    db: Session,
+    evidence_id: uuid.UUID,
+    indikator_id: uuid.UUID,
+    target_akreditasi_id: uuid.UUID,
+) -> bool:
+    """
+    Remove the link between an evidence record and an indikator.
+    Raises 404 if the link does not exist.
+    """
+    link = (
+        db.query(EvidenceIndikator)
+        .filter(
+            EvidenceIndikator.evidence_id == evidence_id,
+            EvidenceIndikator.indikator_id == indikator_id,
+            EvidenceIndikator.target_akreditasi_id == target_akreditasi_id,
+        )
+        .first()
+    )
+    if not link:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="EvidenceIndikator link not found.",
+        )
+
+    db.delete(link)
+    db.commit()
+    return True
