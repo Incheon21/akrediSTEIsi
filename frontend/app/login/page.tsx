@@ -46,7 +46,7 @@ export default function LoginPage() {
       const profile = await profileRes.json();
       const role = profile.role?.name ?? "tim_prodi";
 
-      if (role === "admin" || role === "pimpinan") {
+      if (role === "admin" || role === "pimpinan" || role === "koordinator") {
         router.push("/dashboard-multiprodi");
       } else {
         const prodiId = profile.program_studi_id;
