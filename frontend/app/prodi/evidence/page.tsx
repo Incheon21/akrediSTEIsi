@@ -13,13 +13,24 @@ interface EvidenceItem {
   tipe_file: string | null;
   uploaded_by: string | null;
   uploaded_at: string | null;
+  download_url: string | null;
 }
 
 function getFileIcon(tipeFile: string | null): string {
   if (!tipeFile) return "📄";
   if (tipeFile.includes("pdf")) return "📕";
-  if (tipeFile.includes("word") || tipeFile.includes("docx") || tipeFile.includes("doc")) return "📘";
-  if (tipeFile.includes("image") || tipeFile.includes("jpeg") || tipeFile.includes("png")) return "🖼️";
+  if (
+    tipeFile.includes("word") ||
+    tipeFile.includes("docx") ||
+    tipeFile.includes("doc")
+  )
+    return "📘";
+  if (
+    tipeFile.includes("image") ||
+    tipeFile.includes("jpeg") ||
+    tipeFile.includes("png")
+  )
+    return "🖼️";
   return "📄";
 }
 
@@ -32,7 +43,11 @@ function formatDate(iso: string | null): string {
   });
 }
 
-async function apiFetchAuth(path: string, token: string | null, options: RequestInit = {}) {
+async function apiFetchAuth(
+  path: string,
+  token: string | null,
+  options: RequestInit = {},
+) {
   return fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
@@ -58,19 +73,26 @@ export default function EvidencePage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [uploadedLink, setUploadedLink] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Delete state
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
 
   // Filter state
-  const [filterType, setFilterType] = useState<"all" | "global" | "prodi">("all");
+  const [filterType, setFilterType] = useState<"all" | "global" | "prodi">(
+    "all",
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 
-  const canEdit = user && ["admin", "koordinator", "tim_prodi"].includes(user.role);
+  const canEdit =
+    user && ["admin", "koordinator", "tim_prodi"].includes(user.role);
 
   async function fetchEvidence() {
     setLoadingList(true);
@@ -110,7 +132,8 @@ export default function EvidencePage() {
     const form = new FormData();
     form.append("file", uploadFile);
     form.append("judul", uploadJudul.trim());
-    if (uploadDeskripsi.trim()) form.append("deskripsi", uploadDeskripsi.trim());
+    if (uploadDeskripsi.trim())
+      form.append("deskripsi", uploadDeskripsi.trim());
     form.append("is_global", uploadIsGlobal ? "true" : "false");
 
     try {
@@ -120,9 +143,14 @@ export default function EvidencePage() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error((body as Record<string, string>)?.detail ?? "Gagal mengunggah file.");
+        throw new Error(
+          (body as Record<string, string>)?.detail ?? "Gagal mengunggah file.",
+        );
       }
+      const uploaded: EvidenceItem = await res.json();
       setUploadSuccess("Dokumen berhasil diunggah!");
+      setUploadedLink(uploaded.download_url ?? null);
+      setLinkCopied(false);
       setUploadJudul("");
       setUploadDeskripsi("");
       setUploadIsGlobal(false);
@@ -131,16 +159,41 @@ export default function EvidencePage() {
       setShowUploadForm(false);
       await fetchEvidence();
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Terjadi kesalahan saat upload.");
+      setUploadError(
+        err instanceof Error ? err.message : "Terjadi kesalahan saat upload.",
+      );
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleCopyLink(url: string, id: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedLinkId(id);
+      setTimeout(() => setCopiedLinkId(null), 2000);
+    } catch {
+      alert("Gagal menyalin link. Silakan salin secara manual: " + url);
+    }
+  }
+
+  async function handleCopyUploadedLink(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      alert("Gagal menyalin link. Silakan salin secara manual: " + url);
     }
   }
 
   async function handleDownload(item: EvidenceItem) {
     setDownloadingId(item.id);
     try {
-      const res = await apiFetchAuth(`/api/v1/evidence/${item.id}/download`, token);
+      const res = await apiFetchAuth(
+        `/api/v1/evidence/${item.id}/download`,
+        token,
+      );
       if (!res.ok) throw new Error("Gagal mengunduh file.");
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -152,21 +205,35 @@ export default function EvidencePage() {
       window.URL.revokeObjectURL(url);
       a.remove();
     } catch (err) {
-      alert("Gagal mengunduh: " + (err instanceof Error ? err.message : String(err)));
+      alert(
+        "Gagal mengunduh: " +
+          (err instanceof Error ? err.message : String(err)),
+      );
     } finally {
       setDownloadingId(null);
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Yakin ingin menghapus dokumen ini? Tindakan ini tidak dapat dibatalkan.")) return;
+    if (
+      !confirm(
+        "Yakin ingin menghapus dokumen ini? Tindakan ini tidak dapat dibatalkan.",
+      )
+    )
+      return;
     setDeletingId(id);
     try {
-      const res = await apiFetchAuth(`/api/v1/evidence/${id}`, token, { method: "DELETE" });
-      if (!res.ok && res.status !== 204) throw new Error("Gagal menghapus dokumen.");
+      const res = await apiFetchAuth(`/api/v1/evidence/${id}`, token, {
+        method: "DELETE",
+      });
+      if (!res.ok && res.status !== 204)
+        throw new Error("Gagal menghapus dokumen.");
       setEvidenceList((prev) => prev.filter((e) => e.id !== id));
     } catch (err) {
-      alert("Gagal menghapus: " + (err instanceof Error ? err.message : String(err)));
+      alert(
+        "Gagal menghapus: " +
+          (err instanceof Error ? err.message : String(err)),
+      );
     } finally {
       setDeletingId(null);
     }
@@ -175,7 +242,8 @@ export default function EvidencePage() {
   const filteredList = evidenceList.filter((ev) => {
     const matchesSearch =
       ev.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (ev.deskripsi?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+      (ev.deskripsi?.toLowerCase().includes(searchQuery.toLowerCase()) ??
+        false);
     const matchesType =
       filterType === "all" ||
       (filterType === "global" && ev.is_global) ||
@@ -223,15 +291,30 @@ export default function EvidencePage() {
 
         {/* Upload Success Banner */}
         {uploadSuccess && (
-          <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-            ✅ {uploadSuccess}
+          <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 space-y-2">
+            <p>✅ {uploadSuccess}</p>
+            {uploadedLink && (
+              <div className="flex items-center gap-2 rounded-md border border-green-300 bg-white px-3 py-2">
+                <span className="truncate flex-1 text-xs font-mono text-slate-600 select-all">
+                  {uploadedLink}
+                </span>
+                <button
+                  onClick={() => handleCopyUploadedLink(uploadedLink)}
+                  className="flex-shrink-0 rounded-md bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
+                >
+                  {linkCopied ? "✓ Tersalin!" : "Salin Link"}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         {/* Upload Form */}
         {showUploadForm && canEdit && (
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-base font-semibold text-slate-800">Unggah Dokumen Baru</h2>
+            <h2 className="mb-4 text-base font-semibold text-slate-800">
+              Unggah Dokumen Baru
+            </h2>
             <form onSubmit={handleUpload} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
@@ -248,7 +331,9 @@ export default function EvidencePage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">File</label>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">
+                    File
+                  </label>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -257,7 +342,9 @@ export default function EvidencePage() {
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
                     required
                   />
-                  <p className="mt-1 text-xs text-slate-400">PDF, DOC, DOCX, JPG, PNG (maks. tipe file yang didukung)</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    PDF, DOC, DOCX, JPG, PNG (maks. tipe file yang didukung)
+                  </p>
                 </div>
               </div>
 
@@ -282,10 +369,16 @@ export default function EvidencePage() {
                   onChange={(e) => setUploadIsGlobal(e.target.checked)}
                   className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="is-global-toggle" className="text-sm text-slate-700">
-                  <span className="font-medium">Bagikan ke semua prodi (Global)</span>
+                <label
+                  htmlFor="is-global-toggle"
+                  className="text-sm text-slate-700"
+                >
+                  <span className="font-medium">
+                    Bagikan ke semua prodi (Global)
+                  </span>
                   <span className="ml-2 text-slate-400">
-                    — Jika tidak dicentang, dokumen hanya terlihat oleh prodi Anda sendiri.
+                    — Jika tidak dicentang, dokumen hanya terlihat oleh prodi
+                    Anda sendiri.
                   </span>
                 </label>
               </div>
@@ -319,13 +412,32 @@ export default function EvidencePage() {
         {/* Stats Summary */}
         <div className="grid gap-4 sm:grid-cols-3">
           {[
-            { label: "Total Dokumen", value: evidenceList.length, color: "text-slate-800" },
-            { label: "Dokumen Global", value: globalCount, color: "text-blue-700" },
-            { label: "Dokumen Prodi", value: prodiCount, color: "text-green-700" },
+            {
+              label: "Total Dokumen",
+              value: evidenceList.length,
+              color: "text-slate-800",
+            },
+            {
+              label: "Dokumen Global",
+              value: globalCount,
+              color: "text-blue-700",
+            },
+            {
+              label: "Dokumen Prodi",
+              value: prodiCount,
+              color: "text-green-700",
+            },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-              <p className="text-xs font-medium uppercase tracking-wider text-slate-400">{stat.label}</p>
-              <p className={`mt-1 text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+            <div
+              key={stat.label}
+              className="rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
+            >
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                {stat.label}
+              </p>
+              <p className={`mt-1 text-3xl font-bold ${stat.color}`}>
+                {stat.value}
+              </p>
             </div>
           ))}
         </div>
@@ -337,12 +449,17 @@ export default function EvidencePage() {
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${filterType === type
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  filterType === type
                     ? "bg-[#00509d] text-white"
                     : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
-                  }`}
+                }`}
               >
-                {type === "all" ? "Semua" : type === "global" ? "🌐 Global" : "🏫 Prodi"}
+                {type === "all"
+                  ? "Semua"
+                  : type === "global"
+                    ? "🌐 Global"
+                    : "🏫 Prodi"}
               </button>
             ))}
           </div>
@@ -389,10 +506,14 @@ export default function EvidencePage() {
                 >
                   {/* File Info */}
                   <div className="flex items-start gap-3 min-w-0">
-                    <span className="mt-0.5 text-2xl flex-shrink-0">{getFileIcon(ev.tipe_file)}</span>
+                    <span className="mt-0.5 text-2xl flex-shrink-0">
+                      {getFileIcon(ev.tipe_file)}
+                    </span>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-slate-800 truncate">{ev.judul}</h3>
+                        <h3 className="font-semibold text-slate-800 truncate">
+                          {ev.judul}
+                        </h3>
                         {ev.is_global ? (
                           <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
                             Global
@@ -404,17 +525,31 @@ export default function EvidencePage() {
                         )}
                       </div>
                       {ev.deskripsi && (
-                        <p className="mt-0.5 text-sm text-slate-500 line-clamp-1">{ev.deskripsi}</p>
+                        <p className="mt-0.5 text-sm text-slate-500 line-clamp-1">
+                          {ev.deskripsi}
+                        </p>
                       )}
                       <p className="mt-1 text-xs text-slate-400">
                         Diunggah {formatDate(ev.uploaded_at)}
-                        {ev.tipe_file && ` · ${ev.tipe_file.split("/").pop()?.toUpperCase()}`}
+                        {ev.tipe_file &&
+                          ` · ${ev.tipe_file.split("/").pop()?.toUpperCase()}`}
                       </p>
                     </div>
                   </div>
 
                   {/* Actions */}
                   <div className="flex flex-shrink-0 gap-2 md:ml-4">
+                    {ev.download_url && (
+                      <button
+                        onClick={() => handleCopyLink(ev.download_url!, ev.id)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50"
+                        title={ev.download_url}
+                      >
+                        {copiedLinkId === ev.id
+                          ? "✓ Tersalin!"
+                          : "🔗 Salin Link"}
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDownload(ev)}
                       disabled={downloadingId === ev.id}
