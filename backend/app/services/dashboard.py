@@ -48,42 +48,45 @@ from app.models.narasi_led import NarasiLED
 from app.models.program_studi import ProgramStudi
 from app.models.target_akreditasi import TargetAkreditasi
 
-KRITERIA_LKPS_MODELS = {
-    "C1": [LkpsVmts],
-    "C2": [LkpsKerjasama, LkpsPenggunaanDana],
+_ALL_JENJANG = frozenset({"D1","D2","D3","S1","S1Tr","S2","S2Tr","S3","S3Tr","PPI"})
+
+# Each entry: (model, applicable_jenjang_set). None means all jenjang.
+KRITERIA_LKPS_MODELS: dict[str, list[tuple]] = {
+    "C1": [(LkpsVmts, None)],
+    "C2": [(LkpsKerjasama, None), (LkpsPenggunaanDana, None)],
     "C3": [
-        LkpsKurikulum,
-        LkpsIntegrasiPenelitian,
-        LkpsMkBasicScience,
-        LkpsCapstoneDesign,
-        LkpsPenelitianSummary,
-        LkpsPkmSummary,
+        (LkpsKurikulum, None),
+        (LkpsIntegrasiPenelitian, None),
+        (LkpsMkBasicScience, None),
+        (LkpsCapstoneDesign, None),
+        (LkpsPenelitianSummary, None),
+        (LkpsPkmSummary, None),
     ],
     "C4": [
-        LkpsDosenProfil,
-        LkpsTenagaKependidikan,
-        LkpsBebanKerjaDosen,
-        LkpsPublikasiIlmiah,
-        LkpsLuaranPenelitian,
-        LkpsProdukJasa,
-        LkpsKinerjaDtps,
-        LkpsSitasiDtps,
-        LkpsRekognisiDtps,
-        LkpsPembimbingLapangan,
+        (LkpsDosenProfil, None),
+        (LkpsTenagaKependidikan, None),
+        (LkpsBebanKerjaDosen, None),
+        (LkpsPublikasiIlmiah, frozenset({"S1","S2","S3","PPI"})),       # 4d akademik
+        (LkpsLuaranPenelitian, None),
+        (LkpsProdukJasa, frozenset({"D1","D2","D3","S1Tr","S2Tr","S3Tr"})),  # 4g vokasi
+        (LkpsKinerjaDtps, frozenset({"S1","S1Tr","S2","S2Tr","S3","S3Tr"})),  # 4h
+        (LkpsSitasiDtps, frozenset({"S1","S1Tr","S2","S2Tr","S3","S3Tr"})),   # 4i
+        (LkpsRekognisiDtps, None),
+        (LkpsPembimbingLapangan, frozenset({"PPI"})),                    # 4k
     ],
-    "C5": [LkpsPrasarana, LkpsK3lDokumen, LkpsK3lFasilitas],
+    "C5": [(LkpsPrasarana, None), (LkpsK3lDokumen, None), (LkpsK3lFasilitas, None)],
     "C6": [
-        LkpsMahasiswaAktif,
-        LkpsIpkLulusan,
-        LkpsPrestasiMahasiswa,
-        LkpsMasaStudi,
-        LkpsWaktuTunggu,
-        LkpsKesesuaianKerja,
-        LkpsTempatKerja,
-        LkpsKepuasanPengguna,
-        LkpsPenelitianMahasiswa,
+        (LkpsMahasiswaAktif, None),
+        (LkpsIpkLulusan, None),
+        (LkpsPrestasiMahasiswa, None),
+        (LkpsMasaStudi, None),
+        (LkpsWaktuTunggu, None),
+        (LkpsKesesuaianKerja, None),
+        (LkpsTempatKerja, None),
+        (LkpsKepuasanPengguna, None),
+        (LkpsPenelitianMahasiswa, None),
     ],
-    "C7": [LkpsSpmiDokumen, LkpsSpmiPelaksanaan],
+    "C7": [(LkpsSpmiDokumen, None), (LkpsSpmiPelaksanaan, None)],
 }
 
 
@@ -170,17 +173,23 @@ def get_dashboard_prodi_data(
         if active_target:
             ind_ids = [ind.id for ind in indikators]
 
-            # LKPS progress: fraction of sections for this criteria that have ≥1 row
-            models = KRITERIA_LKPS_MODELS.get(k.kode, [])
-            if lkps_submission and models:
+            # LKPS progress: fraction of applicable sections that have ≥1 row
+            all_model_entries = KRITERIA_LKPS_MODELS.get(k.kode, [])
+            jenjang = prodi.jenjang or ""
+            applicable_models = [
+                model
+                for model, allowed in all_model_entries
+                if allowed is None or jenjang in allowed
+            ]
+            if lkps_submission and applicable_models:
                 sections_with_data = sum(
                     1
-                    for model in models
+                    for model in applicable_models
                     if db.query(model)
                     .filter(model.submission_id == lkps_submission.id)
                     .first()
                 )
-                lkps_progress = int((sections_with_data / len(models)) * 100)
+                lkps_progress = int((sections_with_data / len(applicable_models)) * 100)
 
             if ind_ids:
                 # Check Evidence via junction table

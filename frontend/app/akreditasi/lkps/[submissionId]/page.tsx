@@ -6,12 +6,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import {
   createSectionRecord,
   deleteSectionRecord,
-  downloadLkpsWorkbook,
   fetchLkpsSubmission,
   fetchProgramStudiList,
   fetchSectionRecords,
   updateSectionRecord,
-  uploadLkps
 } from "@/lib/api/lkps";
 import { LKPS_SECTIONS } from "@/constants/lkps-sections";
 import type {
@@ -116,9 +114,6 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
   const [addingRow, setAddingRow] = useState(false);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [sectionError, setSectionError] = useState<string | null>(null);
-  const [exporting, setExporting] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeSection = sectionLookup[activeSectionCode] ?? applicableSections[0];
   const activeRecords = recordsBySection[activeSection.code] ?? [];
@@ -171,23 +166,21 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
       setAddingRow(true);
       const newRecord = createEmptyRecord(section);
       const hasNo = section.fields.some((f) => f.key === "no");
+      if (hasNo) {
+        // Read current count synchronously from state snapshot via ref trick
+        newRecord.no = (recordsBySection[section.code]?.length ?? 0) + 1;
+      }
       try {
-        setRecordsBySection((prev) => {
-          if (hasNo) newRecord.no = (prev[section.code]?.length ?? 0) + 1;
-          return prev;
-        });
-        const saved = await createSectionRecord(submissionId, section.code, newRecord);
-        setRecordsBySection((prev) => ({
-          ...prev,
-          [section.code]: [...(prev[section.code] ?? []), saved as PersistedRecord],
-        }));
+        await createSectionRecord(submissionId, section.code, newRecord);
+        // Reload from backend to get authoritative order
+        await loadSection(section.code);
       } catch (err) {
         setSectionError(err instanceof Error ? err.message : "Gagal menambah baris.");
       } finally {
         setAddingRow(false);
       }
     },
-    [submissionId],
+    [submissionId, recordsBySection, loadSection],
   );
 
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -241,67 +234,22 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
         if (record.id) {
           await deleteSectionRecord(submissionId, sectionCode, record.id);
         }
-        setRecordsBySection((prev) => ({
-          ...prev,
-          [sectionCode]: (prev[sectionCode] ?? []).filter((_, idx) => idx !== recordIndex),
-        }));
+        // Reload from backend so remaining rows reflect correct order/no values
+        await loadSection(sectionCode);
       } catch (err) {
         setSectionError(err instanceof Error ? err.message : "Gagal menghapus baris.");
       } finally {
         setDeletingIndex(null);
       }
     },
-    [submissionId, recordsBySection],
+    [submissionId, recordsBySection, loadSection],
   );
 
-  const handleExport = useCallback(async () => {
-    setExporting(true);
-    setSectionError(null);
-    try {
-      const blob = await downloadLkpsWorkbook(submissionId);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `LKPS-${submissionId}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      setSectionError(err instanceof Error ? err.message : "Gagal mengekspor workbook.");
-    } finally {
-      setExporting(false);
-    }
-  }, [submissionId]);
 
   const totalRows = applicableSections
     .filter((s) => s.mode === "records" && !s.templateRows)
     .reduce((acc, s) => acc + (recordsBySection[s.code]?.length ?? 0), 0);
 
-  const handleImport = useCallback(async () => {
-    setImporting(true);
-    setSectionError(null);
-    const file = fileInputRef.current?.files?.[0];
-    if (!file){
-      setSectionError(
-        err instanceof Error ? err.message : "Pilih file terlebih dahulu.",
-      );
-      setImporting(false);
-      return;
-    }
-    try {
-      await uploadLkps(submissionId, file)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    } catch (err) {
-      setSectionError(
-        err instanceof Error ? err.message : "Gagal mengupload data lkps.",
-      );
-    } finally {
-      setImporting(false);
-    }
-  }, [submissionId, fileInputRef]);
 
   return (
     <main className="min-h-screen bg-[#f4f6f8] px-4 py-8 text-(--accent-ink) md:px-8">
@@ -345,30 +293,6 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
               <span>{totalRows}</span>
             </div>
 
-            <button
-              type="button"
-              onClick={handleExport}
-              disabled={exporting}
-              className="mt-2 w-full rounded-lg bg-[#00509d] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#003f7d] disabled:opacity-50"
-            >
-              {exporting ? "Mengekspor..." : "Ekspor ke Excel (.xlsx)"}
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xls,.xlsx"
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-500 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-xs file:font-medium file:text-blue-700 hover:file:bg-blue-100"
-              required
-            />
-            <button
-              type="button"
-              onClick={handleImport}
-              disabled={importing}
-              className="mt-2 w-full rounded-lg bg-[#00509d] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#003f7d] disabled:opacity-50"
-            >
-              {importing ? "Mengimpor..." : "Import Excel (.xlsx)"}
-            </button>
             <div className="mt-4 space-y-4">
               {groupedSections.map(([groupName, sections]) => (
                 <div key={groupName}>

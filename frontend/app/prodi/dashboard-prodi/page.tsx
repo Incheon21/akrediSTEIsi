@@ -24,7 +24,10 @@ export default function DashboardProdiPage() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isDownloadingLKPS, setIsDownloadingLKPS] = useState(false);
   const [isDownloadingLED, setIsDownloadingLED] = useState(false);
+  const [isImportingLKPS, setIsImportingLKPS] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -185,6 +188,29 @@ export default function DashboardProdiPage() {
     }
   };
 
+  const onImportLKPS = async () => {
+    const file = importFileRef.current?.files?.[0];
+    if (!file) {
+      setImportError("Pilih file terlebih dahulu.");
+      return;
+    }
+    if (!data?.lkps_submission_id) {
+      setImportError("Belum ada submission LKPS untuk siklus ini.");
+      return;
+    }
+    setIsImportingLKPS(true);
+    setImportError(null);
+    try {
+      const { uploadLkps } = await import("@/lib/api/lkps");
+      await uploadLkps(data.lkps_submission_id, file);
+      if (importFileRef.current) importFileRef.current.value = "";
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : "Gagal mengimpor LKPS.");
+    } finally {
+      setIsImportingLKPS(false);
+    }
+  };
+
   const editAllowed = canEdit(role);
 
   return (
@@ -202,65 +228,73 @@ export default function DashboardProdiPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onUnduhLKPS}
-              disabled={isDownloadingLKPS}
-              className={`inline-flex h-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDownloadingLKPS ? 'bg-[#00509d] opacity-70 cursor-not-allowed' : 'bg-[#00509d] hover:bg-[#003f7d]'
-                }`}
-            >
-              {isDownloadingLKPS ? "Mengunduh..." : "Unduh LKPS"}
-            </button>
-            <button
-              onClick={onUnduhLED}
-              disabled={isDownloadingLED}
-              className={`inline-flex h-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                isDownloadingLED ? 'bg-green-700 opacity-70 cursor-not-allowed' : 'bg-green-700 hover:bg-green-800'
-              }`}
-            >
-              {isDownloadingLED ? "Mengunduh..." : "Unduh LED"}
-            </button>
-            <div className="relative" ref={dropdownRef}>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-3">
               <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="inline-flex w-40 items-center justify-between rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onClick={onUnduhLKPS}
+                disabled={isDownloadingLKPS}
+                className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDownloadingLKPS ? 'bg-[#00509d] opacity-70 cursor-not-allowed' : 'bg-[#00509d] hover:bg-[#003f7d]'}`}
               >
-                Tahun {tahun || data.current_year}
-                <svg
-                  className={`ml-2 h-5 w-5 transition-transform ${dropdownOpen ? "rotate-180" : ""
-                    }`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                {isDownloadingLKPS ? "Mengunduh..." : "Unduh LKPS"}
               </button>
-
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                  <div className="py-1">
-                    {data.available_years.map((y) => (
-                      <button
-                        key={y}
-                        onClick={() => {
-                          setTahun(y.toString());
-                          setDropdownOpen(false);
-                        }}
-                        className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
-                      >
-                        {y}
-                      </button>
-                    ))}
+              <button
+                onClick={onUnduhLED}
+                disabled={isDownloadingLED}
+                className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 ${isDownloadingLED ? 'bg-green-700 opacity-70 cursor-not-allowed' : 'bg-green-700 hover:bg-green-800'}`}
+              >
+                {isDownloadingLED ? "Mengunduh..." : "Unduh LED"}
+              </button>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="inline-flex w-40 items-center justify-between rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Tahun {tahun || data.current_year}
+                  <svg
+                    className={`ml-2 h-5 w-5 transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                    <div className="py-1">
+                      {data.available_years.map((y) => (
+                        <button
+                          key={y}
+                          onClick={() => { setTahun(y.toString()); setDropdownOpen(false); }}
+                          className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
+                        >
+                          {y}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
+            {/* Import LKPS */}
+            <div className="flex items-center gap-2">
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".xls,.xlsx"
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-500 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-xs file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+              />
+              <button
+                onClick={onImportLKPS}
+                disabled={isImportingLKPS}
+                className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isImportingLKPS ? 'bg-[#00509d] opacity-70 cursor-not-allowed' : 'bg-[#00509d] hover:bg-[#003f7d]'}`}
+              >
+                {isImportingLKPS ? "Mengimpor..." : "Import LKPS"}
+              </button>
+            </div>
+            {importError && (
+              <p className="text-xs text-red-600">{importError}</p>
+            )}
           </div>
         </header>
 
