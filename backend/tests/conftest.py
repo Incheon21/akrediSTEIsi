@@ -55,6 +55,27 @@ def client(db):
 
 
 @pytest.fixture()
+def authorized_client(client, admin_token):
+    """A TestClient pre-configured with a valid admin Bearer token."""
+    client.headers.update({"Authorization": f"Bearer {admin_token}"})
+    return client
+
+
+@pytest.fixture()
+def authorized_client_pimpinan(client, pimpinan_token):
+    """A TestClient pre-configured with a valid pimpinan Bearer token."""
+    client.headers.update({"Authorization": f"Bearer {pimpinan_token}"})
+    return client
+
+
+@pytest.fixture()
+def authorized_client_tim_prodi(client, tim_prodi_token):
+    """A TestClient pre-configured with a valid tim_prodi Bearer token."""
+    client.headers.update({"Authorization": f"Bearer {tim_prodi_token}"})
+    return client
+
+
+@pytest.fixture()
 def seeded_roles(db):
     """Create all four roles and return them as a dict keyed by name."""
     roles = {}
