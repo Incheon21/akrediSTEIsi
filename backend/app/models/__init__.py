@@ -1,50 +1,51 @@
-from app.models.program_studi import ProgramStudi
-from app.models.role import Role
-from app.models.user import User
-from app.models.kriteria import Kriteria
-from app.models.indikator import Indikator
-from app.models.target_akreditasi import TargetAkreditasi
-from app.models.evidence import Evidence, EvidenceProdi, EvidenceIndikator
 from app.models.data_lkps import DataLKPS
-from app.models.narasi_led import NarasiLED
+from app.models.evidence import Evidence, EvidenceIndikator, EvidenceProdi
+from app.models.indikator import Indikator
+from app.models.kriteria import Kriteria
 from app.models.lkps import (
-    LkpsTemplate,
-    LkpsSubmission,
-    LkpsSectionProgress,
-    LkpsVmts,
-    LkpsKerjasama,
-    LkpsPenggunaanDana,
-    LkpsKurikulum,
-    LkpsIntegrasiPenelitian,
-    LkpsMkBasicScience,
-    LkpsCapstoneDesign,
-    LkpsPenelitianSummary,
-    LkpsPkmSummary,
-    LkpsDosenProfil,
-    LkpsTenagaKependidikan,
     LkpsBebanKerjaDosen,
-    LkpsPublikasiIlmiah,
-    LkpsLuaranPenelitian,
-    LkpsProdukJasa,
-    LkpsKinerjaDtps,
-    LkpsSitasiDtps,
-    LkpsRekognisiDtps,
-    LkpsPembimbingLapangan,
-    LkpsPrasarana,
+    LkpsCapstoneDesign,
+    LkpsDosenProfil,
+    LkpsIntegrasiPenelitian,
+    LkpsIpkLulusan,
     LkpsK3lDokumen,
     LkpsK3lFasilitas,
-    LkpsMahasiswaAktif,
-    LkpsIpkLulusan,
-    LkpsPrestasiMahasiswa,
-    LkpsMasaStudi,
-    LkpsWaktuTunggu,
-    LkpsKesesuaianKerja,
-    LkpsTempatKerja,
     LkpsKepuasanPengguna,
+    LkpsKerjasama,
+    LkpsKesesuaianKerja,
+    LkpsKinerjaDtps,
+    LkpsKurikulum,
+    LkpsLuaranPenelitian,
+    LkpsMahasiswaAktif,
+    LkpsMasaStudi,
+    LkpsMkBasicScience,
+    LkpsPembimbingLapangan,
     LkpsPenelitianMahasiswa,
+    LkpsPenelitianSummary,
+    LkpsPenggunaanDana,
+    LkpsPkmSummary,
+    LkpsPrasarana,
+    LkpsPrestasiMahasiswa,
+    LkpsProdukJasa,
+    LkpsPublikasiIlmiah,
+    LkpsRekognisiDtps,
+    LkpsSectionProgress,
+    LkpsSitasiDtps,
     LkpsSpmiDokumen,
     LkpsSpmiPelaksanaan,
+    LkpsSubmission,
+    LkpsTempatKerja,
+    LkpsTemplate,
+    LkpsTenagaKependidikan,
+    LkpsVmts,
+    LkpsWaktuTunggu,
 )
+from app.models.narasi_led import NarasiLED
+from app.models.program_studi import ProgramStudi
+from app.models.role import Role
+from app.models.simulasi import IndikatorSimulasi, KomponenPenilaian, MatriksAkreditasi
+from app.models.target_akreditasi import TargetAkreditasi
+from app.models.user import User
 
 __all__ = [
     "ProgramStudi",
@@ -58,6 +59,9 @@ __all__ = [
     "EvidenceIndikator",
     "DataLKPS",
     "NarasiLED",
+    "MatriksAkreditasi",
+    "KomponenPenilaian",
+    "IndikatorSimulasi",
     "LkpsTemplate",
     "LkpsSubmission",
     "LkpsSectionProgress",
