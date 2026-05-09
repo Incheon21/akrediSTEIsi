@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProgressBar from "@/app/components/dashboard-prodi/ProgressBar";
 import StatusDot from "@/app/components/dashboard-prodi/StatusDot";
 import GaugeMeter from "@/app/components/dashboard-prodi/GaugeMeter";
+import SetTargetModal from "@/app/components/dashboard-prodi/SetTargetModal";
 import {
   CriteriaRow,
   DashboardData,
@@ -27,6 +28,8 @@ export default function DashboardProdiPage() {
   const [isImportingLKPS, setIsImportingLKPS] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [showSetTargetModal, setShowSetTargetModal] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const LIMIT = 3;
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -71,7 +74,7 @@ export default function DashboardProdiPage() {
     }
 
     fetchDashboard();
-  }, [tahun, user?.program_studi_id, prodiIdFromUrl, authLoading]);
+  }, [tahun, user?.program_studi_id, prodiIdFromUrl, authLoading, refreshKey]);
 
   if (authLoading || loading) {
     return (
@@ -338,75 +341,112 @@ export default function DashboardProdiPage() {
                   </div>
                 </div>
               ))}
-            {data.recommendation_messages
-              .slice(0, showAll ? data.recommendation_messages.length : LIMIT)
-              .map((msg, i) => (
-                <div
-                  key={i}
-                  className="rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 shadow-sm"
-                >
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg
-                        className="h-5 w-5 text-blue-400"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-blue-800">{msg}</p>
+              {data.recommendation_messages
+                .slice(0, showAll ? data.recommendation_messages.length : LIMIT)
+                .map((msg, i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 shadow-sm"
+                  >
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg
+                          className="h-5 w-5 text-blue-400"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-blue-800">{msg}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
-            {data.recommendation_messages.length > LIMIT && (
-              <button
-                onClick={() => setShowAll(!showAll)}
-                className="text-sm text-blue-600 hover:underline mt-1"
-              >
-                {showAll ? "Sembunyikan" : `Tampilkan ${data.recommendation_messages.length - LIMIT} lainnya`}
-              </button>
-            )}
+              {data.recommendation_messages.length > LIMIT && (
+                <button
+                  onClick={() => setShowAll(!showAll)}
+                  className="text-sm text-blue-600 hover:underline mt-1"
+                >
+                  {showAll ? "Sembunyikan" : `Tampilkan ${data.recommendation_messages.length - LIMIT} lainnya`}
+                </button>
+              )}
             </div>
           )}
 
-        {/* Overview Cards & Criteria List (only if active) */}
         {data.program_studi_profile.is_active_accreditation ? (
           <>
-            <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="text-sm font-medium text-slate-500">
-                  Progress LKPS
-                </h3>
-                <div className="mt-4">
-                  <ProgressBar progress={data.lkps_percent} />
-                  <p className="mt-2 text-2xl font-bold text-slate-900">
-                    {data.lkps_percent}%
-                  </p>
+            <SetTargetModal
+              isOpen={showSetTargetModal}
+              onClose={() => setShowSetTargetModal(false)}
+              onSuccess={() => setRefreshKey((k) => k + 1)}
+              prodiId={prodiIdFromUrl || user?.program_studi_id || ""}
+              tahunAkreditasi={data.current_year}
+              currentTargetScore={data.target_score}
+              currentDeadlineLabel={data.deadline}
+            />
+
+            <section className="flex gap-5 items-stretch">
+              {/* Kolom kiri: LKPS + LED dikecilkan */}
+              <div className="flex flex-col gap-4 w-52 shrink-0">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex-1">
+                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Progress LKPS
+                  </h3>
+                  <div className="mt-3">
+                    <ProgressBar progress={data.lkps_percent} />
+                    <p className="mt-2 text-2xl font-bold text-slate-900">
+                      {data.lkps_percent}%
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="text-sm font-medium text-slate-500">Progress LED</h3>
-                <div className="mt-4">
-                  <ProgressBar progress={data.led_percent} />
-                  <p className="mt-2 text-2xl font-bold text-slate-900">
-                    {data.led_percent}%
-                  </p>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex-1">
+                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Progress LED
+                  </h3>
+                  <div className="mt-3">
+                    <ProgressBar progress={data.led_percent} />
+                    <p className="mt-2 text-2xl font-bold text-slate-900">
+                      {data.led_percent}%
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center justify-center">
+              {/* Kolom kanan: Gauge diperbesar */}
+              <div className="flex-1 rounded-xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col gap-5">
                 <GaugeMeter
                   score={data.score_value}
                   target={data.target_score}
                 />
+
+                {/* Deadline + tombol — strip dengan background */}
+                <div className="flex items-center justify-between gap-4 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">Deadline Akreditasi</p>
+                    <p className="text-sm font-semibold text-slate-700 mt-0.5">{data.deadline}</p>
+                    {data.days_remaining > 0 && (
+                      <p className="text-[11px] text-orange-500 font-medium mt-0.5">
+                        {data.days_remaining} hari lagi
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowSetTargetModal(true)}
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#00509d] text-white text-xs font-semibold hover:bg-[#003f7d] transition-colors shadow-sm whitespace-nowrap"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Set Skor Target &amp; Deadline
+                  </button>
+                </div>
               </div>
             </section>
 
