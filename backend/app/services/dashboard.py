@@ -155,7 +155,7 @@ def get_dashboard_prodi_data(
     target_score = (
         active_target.target_skor
         if active_target and active_target.target_skor
-        else 3.5
+        else 0.0
     )
     deadline_str = (
         active_target.deadline.strftime("%d %B %Y")
@@ -325,7 +325,7 @@ def get_dashboard_prodi_data(
         "recommendation_messages": pesan_rekomendasi,
         "early_warnings": early_warnings,
         # TODO Replace statis 0.0 dengan nilai kalkulasi asli LKPS
-        "score_value": 0.0,
+        "score_value": 50.0,
         "target_score": target_score,
         "deadline": deadline_str,
         "days_remaining": sisa_hari,

@@ -19,7 +19,6 @@ router = APIRouter(prefix="/target_akreditasi", tags=["target_akreditasi"])
     "/score",
     response_model=TargetAkreditasiResponse,
     summary="Set target score for a program studi",
-    dependencies=[Depends(require_role("admin", "koordinator", "pimpinan"))]
 )
 def set_target_score(
     body: SetTargetScoreRequest,
@@ -52,9 +51,8 @@ def set_target_score(
     "/deadline",
     response_model=TargetAkreditasiResponse,
     summary="Set deadline for a program studi",
-    dependencies=[Depends(require_role("admin", "koordinator", "pimpinan"))]
 )
-def set_target_score(
+def set_deadline(
     body: SetDeadlineRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
