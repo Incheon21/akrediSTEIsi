@@ -38,7 +38,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: ${CI_REGISTRY_IMAGE}/frontend:{$TAG:-latest}
+    image: ${CI_REGISTRY_IMAGE}/frontend:${TAG}
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
