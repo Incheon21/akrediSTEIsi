@@ -13,7 +13,9 @@ const COLOR_MAP = {
 };
 
 export default function SimulasiChart({ prodiList }: Props) {
-    const maxScore = 4.0; // skor maksimal IABEE
+    const maxScore = 400; // skala nilai akhir LAM Teknik
+    const clampPct = (value: number) =>
+        Math.min(100, Math.max(0, Math.round((value / maxScore) * 100)));
 
     // Nama prodi disingkat agar muat di bar chart
     const shortened = (name: string) =>
@@ -32,8 +34,8 @@ export default function SimulasiChart({ prodiList }: Props) {
                 {[...prodiList]
                     .sort((a, b) => b.simulation_score - a.simulation_score)
                     .map((prodi) => {
-                        const pct = Math.round((prodi.simulation_score / maxScore) * 100);
-                        const targetPct = Math.round((prodi.target_score / maxScore) * 100);
+                        const pct = clampPct(prodi.simulation_score);
+                        const targetPct = clampPct(prodi.target_score);
                         const colors = COLOR_MAP[prodi.readiness_status];
 
                         return (
