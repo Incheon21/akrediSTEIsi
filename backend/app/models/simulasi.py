@@ -1,4 +1,7 @@
-from sqlalchemy import JSON, Column, Float, ForeignKey, Integer, String
+import uuid
+
+from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.db import Base
@@ -39,3 +42,15 @@ class IndikatorSimulasi(Base):
     konfigurasi_rumus = Column(JSON)
 
     komponen = relationship("KomponenPenilaian", back_populates="indikator")
+
+
+class SkorManualSimulasi(Base):
+    __tablename__ = "skor_manual_simulasi"
+    __table_args__ = (UniqueConstraint("submission_id", "kode_indikator"),)
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    submission_id = Column(UUID(as_uuid=True), ForeignKey("lkps_submission.id"), nullable=False)
+    kode_indikator = Column(String, nullable=False)
+    skor = Column(Float, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

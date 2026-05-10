@@ -478,6 +478,13 @@ def seed():
                 is_aktif_val=True,
             )
 
+        try:
+            from scripts.seed_simulasi import seed as seed_simulasi
+
+            seed_simulasi()
+        except Exception as e:
+            print(f"Warning: failed to seed simulation matrix: {e}")
+
     finally:
         db.close()
 

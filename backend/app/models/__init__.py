@@ -41,9 +41,15 @@ from app.models.lkps import (
     LkpsWaktuTunggu,
 )
 from app.models.narasi_led import NarasiLED
+from app.models.notifikasi import Notifikasi
 from app.models.program_studi import ProgramStudi
 from app.models.role import Role
-from app.models.simulasi import IndikatorSimulasi, KomponenPenilaian, MatriksAkreditasi
+from app.models.simulasi import (
+    IndikatorSimulasi,
+    KomponenPenilaian,
+    MatriksAkreditasi,
+    SkorManualSimulasi,
+)
 from app.models.target_akreditasi import TargetAkreditasi
 from app.models.user import User
 
@@ -59,9 +65,11 @@ __all__ = [
     "EvidenceIndikator",
     "DataLKPS",
     "NarasiLED",
+    "Notifikasi",
     "MatriksAkreditasi",
     "KomponenPenilaian",
     "IndikatorSimulasi",
+    "SkorManualSimulasi",
     "LkpsTemplate",
     "LkpsSubmission",
     "LkpsSectionProgress",

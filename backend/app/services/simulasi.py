@@ -1,3 +1,5 @@
+import re
+
 from sqlalchemy.orm import Session
 
 from app.models.simulasi import IndikatorSimulasi, KomponenPenilaian, MatriksAkreditasi
@@ -8,15 +10,23 @@ class SimulasiService:
     def __init__(self, db: Session):
         self.db = db
 
+    def _normalisasi_formula(self, formula: str) -> str:
+        formula = re.sub(r"(?<=\d)\.(?=\d{3}(\D|$))", "", formula)
+        return re.sub(r"(?<=\d),(?=\d)", ".", formula)
+
     def _evaluasi_formula(self, formula: str, variables: dict) -> float:
         try:
-            # Safely evaluate formula with given variables
-            # Replace variables in formula
             import math
 
             allowed_names = {"math": math, "min": min, "max": max}
             allowed_names.update(variables)
-            return float(eval(formula, {"__builtins__": {}}, allowed_names))
+            return float(
+                eval(
+                    self._normalisasi_formula(formula),
+                    {"__builtins__": {}},
+                    allowed_names,
+                )
+            )
         except Exception:
             return 0.0
 
@@ -32,8 +42,6 @@ class SimulasiService:
         elif tipe == "LINEAR_SCALE":
             if nilai_input >= config.get("max", float("inf")):
                 return 4.0
-            if nilai_input <= config.get("min", float("-inf")):
-                return 0.0
             formula = config.get("formula", "")
             if formula:
                 # Get the variable name from the formula (e.g. BOP, DPD)
@@ -48,6 +56,8 @@ class SimulasiService:
                     "PKDMhs": nilai_input,
                 }
                 return min(4.0, max(0.0, self._evaluasi_formula(formula, vars_dict)))
+            if nilai_input <= config.get("min", float("-inf")):
+                return 0.0
             return 0.0
 
         elif tipe == "LESS_IS_BETTER":

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.main import app
 from app.models.simulasi import IndikatorSimulasi, KomponenPenilaian, MatriksAkreditasi
+from app.services.simulasi import SimulasiService
 
 
 def test_hitung_simulasi_endpoint(client: TestClient, db: Session):
@@ -59,3 +60,29 @@ def test_hitung_simulasi_not_found(client: TestClient):
     response = client.post("/api/v1/simulasi/hitung", json=payload)
     assert response.status_code == 400
     assert "Matriks tidak ditemukan" in response.json()["detail"]
+
+
+def test_formula_pdf_format_ribuan_dinormalisasi(db: Session):
+    service = SimulasiService(db)
+
+    assert service._evaluasi_formula("BOP / 5.000.000", {"BOP": 10000000}) == 2.0
+    assert service._evaluasi_formula(
+        "(2 * DPD) / 5.000.000", {"DPD": 5000000}
+    ) == 2.0
+    assert service._evaluasi_formula(
+        "(4 * DPkMD) / 5.000.000", {"DPkMD": 2500000}
+    ) == 2.0
+
+
+def test_linear_scale_tetap_mengevaluasi_formula_di_nilai_minimum(db: Session):
+    service = SimulasiService(db)
+    indikator = IndikatorSimulasi(
+        tipe_evaluasi="LINEAR_SCALE",
+        konfigurasi_rumus={
+            "min": 0,
+            "max": 0.5,
+            "formula": "1 + (6 * PPDMhs)",
+        },
+    )
+
+    assert service._hitung_skor_mentah(indikator, 0) == 1.0

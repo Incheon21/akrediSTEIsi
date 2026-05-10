@@ -135,7 +135,7 @@ def seed():
                 "konfigurasi_rumus": {
                     "min": 0,
                     "max": 20000000,
-                    "formula": "BOP / 5.000.000",
+                    "formula": "BOP / 5000000",
                 },
             },
             {
@@ -146,7 +146,7 @@ def seed():
                 "konfigurasi_rumus": {
                     "min": 0,
                     "max": 10000000,
-                    "formula": "(2 * DPD) / 5.000.000",
+                    "formula": "(2 * DPD) / 5000000",
                 },
             },
             {
@@ -157,7 +157,7 @@ def seed():
                 "konfigurasi_rumus": {
                     "min": 0,
                     "max": 5000000,
-                    "formula": "(4 * DPkMD) / 5.000.000",
+                    "formula": "(4 * DPkMD) / 5000000",
                 },
             },
             # PROSES & OUTPUT (Indikator 12 - 25)

@@ -324,8 +324,9 @@ def get_dashboard_prodi_data(
         "criteria_list": kriteria_list_response,
         "recommendation_messages": pesan_rekomendasi,
         "early_warnings": early_warnings,
-        # TODO Replace statis 0.0 dengan nilai kalkulasi asli LKPS
-        "score_value": 50.0,
+        # Skor akreditasi harus berasal dari simulasi/rubrik, bukan progres pengisian.
+        # Saat belum ada hasil simulasi tersimpan, tampilkan kosong di frontend.
+        "score_value": 0.0,
         "target_score": target_score,
         "deadline": deadline_str,
         "days_remaining": sisa_hari,

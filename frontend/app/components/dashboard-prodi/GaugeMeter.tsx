@@ -10,8 +10,6 @@ const GaugeMeter = ({ score, target }: { score: number; target: number }) => {
 
   const pct = (v: number) => `${((v / MAX_SCORE) * 100).toFixed(2)}%`;
 
-  const minLulusPct = (MIN_LULUS / MAX_SCORE) * 100; // ~55.4%
-
   const scoreColor = scoreVal >= MIN_LULUS ? "#22c55e" : "#ef4444";
 
   return (
@@ -98,10 +96,10 @@ const GaugeMeter = ({ score, target }: { score: number; target: number }) => {
         <div className="flex-1 text-center">
           <p className="text-[10px] text-slate-400 uppercase tracking-wide">Skor</p>
           <p
-            className="text-xl font-bold mt-0.5"
+            className={hasScore ? "text-xl font-bold mt-0.5" : "text-sm font-semibold mt-1"}
             style={{ color: hasScore ? scoreColor : "#94a3b8" }}
           >
-            {hasScore ? scoreVal.toFixed(0) : "—"}
+            {hasScore ? scoreVal.toFixed(0) : "Belum dihitung"}
           </p>
         </div>
         <div className="flex-1 text-center">
