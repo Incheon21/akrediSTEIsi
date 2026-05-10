@@ -97,11 +97,11 @@ export default function SetTargetModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm w-screen h-screen"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+        className="bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-slate-200 w-full max-w-md mx-4 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-[#00509d] px-6 py-4 flex items-center justify-between">
@@ -172,7 +172,7 @@ export default function SetTargetModal({
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-              Deadline Pengumpulan
+              Deadline Pengisian
               <span className="text-slate-400 font-normal ml-1">(opsional)</span>
             </label>
             {currentDeadlineLabel && currentDeadlineLabel !== "Belum Diatur" && (
