@@ -48,42 +48,45 @@ from app.models.narasi_led import NarasiLED
 from app.models.program_studi import ProgramStudi
 from app.models.target_akreditasi import TargetAkreditasi
 
-KRITERIA_LKPS_MODELS = {
-    "C1": [LkpsVmts],
-    "C2": [LkpsKerjasama, LkpsPenggunaanDana],
+_ALL_JENJANG = frozenset({"D1","D2","D3","S1","S1Tr","S2","S2Tr","S3","S3Tr","PPI"})
+
+# Each entry: (model, applicable_jenjang_set). None means all jenjang.
+KRITERIA_LKPS_MODELS: dict[str, list[tuple]] = {
+    "C1": [(LkpsVmts, None)],
+    "C2": [(LkpsKerjasama, None), (LkpsPenggunaanDana, None)],
     "C3": [
-        LkpsKurikulum,
-        LkpsIntegrasiPenelitian,
-        LkpsMkBasicScience,
-        LkpsCapstoneDesign,
-        LkpsPenelitianSummary,
-        LkpsPkmSummary,
+        (LkpsKurikulum, None),
+        (LkpsIntegrasiPenelitian, None),
+        (LkpsMkBasicScience, None),
+        (LkpsCapstoneDesign, None),
+        (LkpsPenelitianSummary, None),
+        (LkpsPkmSummary, None),
     ],
     "C4": [
-        LkpsDosenProfil,
-        LkpsTenagaKependidikan,
-        LkpsBebanKerjaDosen,
-        LkpsPublikasiIlmiah,
-        LkpsLuaranPenelitian,
-        LkpsProdukJasa,
-        LkpsKinerjaDtps,
-        LkpsSitasiDtps,
-        LkpsRekognisiDtps,
-        LkpsPembimbingLapangan,
+        (LkpsDosenProfil, None),
+        (LkpsTenagaKependidikan, None),
+        (LkpsBebanKerjaDosen, None),
+        (LkpsPublikasiIlmiah, frozenset({"S1","S2","S3","PPI"})),       # 4d akademik
+        (LkpsLuaranPenelitian, None),
+        (LkpsProdukJasa, frozenset({"D1","D2","D3","S1Tr","S2Tr","S3Tr"})),  # 4g vokasi
+        (LkpsKinerjaDtps, frozenset({"S1","S1Tr","S2","S2Tr","S3","S3Tr"})),  # 4h
+        (LkpsSitasiDtps, frozenset({"S1","S1Tr","S2","S2Tr","S3","S3Tr"})),   # 4i
+        (LkpsRekognisiDtps, None),
+        (LkpsPembimbingLapangan, frozenset({"PPI"})),                    # 4k
     ],
-    "C5": [LkpsPrasarana, LkpsK3lDokumen, LkpsK3lFasilitas],
+    "C5": [(LkpsPrasarana, None), (LkpsK3lDokumen, None), (LkpsK3lFasilitas, None)],
     "C6": [
-        LkpsMahasiswaAktif,
-        LkpsIpkLulusan,
-        LkpsPrestasiMahasiswa,
-        LkpsMasaStudi,
-        LkpsWaktuTunggu,
-        LkpsKesesuaianKerja,
-        LkpsTempatKerja,
-        LkpsKepuasanPengguna,
-        LkpsPenelitianMahasiswa,
+        (LkpsMahasiswaAktif, None),
+        (LkpsIpkLulusan, None),
+        (LkpsPrestasiMahasiswa, None),
+        (LkpsMasaStudi, None),
+        (LkpsWaktuTunggu, None),
+        (LkpsKesesuaianKerja, None),
+        (LkpsTempatKerja, None),
+        (LkpsKepuasanPengguna, None),
+        (LkpsPenelitianMahasiswa, None),
     ],
-    "C7": [LkpsSpmiDokumen, LkpsSpmiPelaksanaan],
+    "C7": [(LkpsSpmiDokumen, None), (LkpsSpmiPelaksanaan, None)],
 }
 
 
@@ -97,22 +100,25 @@ def get_dashboard_prodi_data(
             detail="Program Studi tidak ditemukan.",
         )
 
-    # Get all target akreditasi years for this prodi
-    all_targets = (
+    # Get all target akreditasi years globally to keep dropdown populated correctly
+    global_targets = db.query(TargetAkreditasi).filter(TargetAkreditasi.tahun_akreditasi.isnot(None)).all()
+    available_years = sorted(
+        list(set([t.tahun_akreditasi for t in global_targets if t.tahun_akreditasi])),
+        reverse=True
+    )
+
+    all_prodi_targets = (
         db.query(TargetAkreditasi)
         .filter(TargetAkreditasi.program_studi_id == prodi_id)
         .all()
     )
-    available_years = sorted(
-        list(set([t.tahun_akreditasi for t in all_targets if t.tahun_akreditasi and t.is_aktif]))
-    )
 
     if tahun:
         active_target = next(
-            (t for t in all_targets if t.tahun_akreditasi == tahun and t.is_aktif), None
+            (t for t in all_prodi_targets if t.tahun_akreditasi == tahun and t.is_aktif), None
         )
     else:
-        active_target = next((t for t in all_targets if t.is_aktif), None)
+        active_target = next((t for t in all_prodi_targets if t.is_aktif), None)
 
     aktif_akreditasi = active_target is not None
     current_year = active_target.tahun_akreditasi if active_target else (tahun or 0)
@@ -149,7 +155,7 @@ def get_dashboard_prodi_data(
     target_score = (
         active_target.target_skor
         if active_target and active_target.target_skor
-        else 3.5
+        else 0.0
     )
     deadline_str = (
         active_target.deadline.strftime("%d %B %Y")
@@ -170,17 +176,23 @@ def get_dashboard_prodi_data(
         if active_target:
             ind_ids = [ind.id for ind in indikators]
 
-            # LKPS progress: fraction of sections for this criteria that have ≥1 row
-            models = KRITERIA_LKPS_MODELS.get(k.kode, [])
-            if lkps_submission and models:
+            # LKPS progress: fraction of applicable sections that have ≥1 row
+            all_model_entries = KRITERIA_LKPS_MODELS.get(k.kode, [])
+            jenjang = prodi.jenjang or ""
+            applicable_models = [
+                model
+                for model, allowed in all_model_entries
+                if allowed is None or jenjang in allowed
+            ]
+            if lkps_submission and applicable_models:
                 sections_with_data = sum(
                     1
-                    for model in models
+                    for model in applicable_models
                     if db.query(model)
                     .filter(model.submission_id == lkps_submission.id)
                     .first()
                 )
-                lkps_progress = int((sections_with_data / len(models)) * 100)
+                lkps_progress = int((sections_with_data / len(applicable_models)) * 100)
 
             if ind_ids:
                 # Check Evidence via junction table
@@ -313,7 +325,7 @@ def get_dashboard_prodi_data(
         "recommendation_messages": pesan_rekomendasi,
         "early_warnings": early_warnings,
         # TODO Replace statis 0.0 dengan nilai kalkulasi asli LKPS
-        "score_value": 0.0,
+        "score_value": 50.0,
         "target_score": target_score,
         "deadline": deadline_str,
         "days_remaining": sisa_hari,

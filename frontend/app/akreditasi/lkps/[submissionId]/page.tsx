@@ -6,12 +6,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import {
   createSectionRecord,
   deleteSectionRecord,
-  downloadLkpsWorkbook,
   fetchLkpsSubmission,
   fetchProgramStudiList,
   fetchSectionRecords,
   updateSectionRecord,
-  uploadLkps
 } from "@/lib/api/lkps";
 import { LKPS_SECTIONS } from "@/constants/lkps-sections";
 import type {
@@ -116,9 +114,6 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
   const [addingRow, setAddingRow] = useState(false);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [sectionError, setSectionError] = useState<string | null>(null);
-  const [exporting, setExporting] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeSection = sectionLookup[activeSectionCode] ?? applicableSections[0];
   const activeRecords = recordsBySection[activeSection.code] ?? [];
@@ -170,19 +165,22 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
       setSectionError(null);
       setAddingRow(true);
       const newRecord = createEmptyRecord(section);
+      const hasNo = section.fields.some((f) => f.key === "no");
+      if (hasNo) {
+        // Read current count synchronously from state snapshot via ref trick
+        newRecord.no = (recordsBySection[section.code]?.length ?? 0) + 1;
+      }
       try {
-        const saved = await createSectionRecord(submissionId, section.code, newRecord);
-        setRecordsBySection((prev) => ({
-          ...prev,
-          [section.code]: [...prev[section.code], saved as PersistedRecord],
-        }));
+        await createSectionRecord(submissionId, section.code, newRecord);
+        // Reload from backend to get authoritative order
+        await loadSection(section.code);
       } catch (err) {
         setSectionError(err instanceof Error ? err.message : "Gagal menambah baris.");
       } finally {
         setAddingRow(false);
       }
     },
-    [submissionId],
+    [submissionId, recordsBySection, loadSection],
   );
 
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -236,67 +234,22 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
         if (record.id) {
           await deleteSectionRecord(submissionId, sectionCode, record.id);
         }
-        setRecordsBySection((prev) => ({
-          ...prev,
-          [sectionCode]: (prev[sectionCode] ?? []).filter((_, idx) => idx !== recordIndex),
-        }));
+        // Reload from backend so remaining rows reflect correct order/no values
+        await loadSection(sectionCode);
       } catch (err) {
         setSectionError(err instanceof Error ? err.message : "Gagal menghapus baris.");
       } finally {
         setDeletingIndex(null);
       }
     },
-    [submissionId, recordsBySection],
+    [submissionId, recordsBySection, loadSection],
   );
 
-  const handleExport = useCallback(async () => {
-    setExporting(true);
-    setSectionError(null);
-    try {
-      const blob = await downloadLkpsWorkbook(submissionId);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `LKPS-${submissionId}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      setSectionError(err instanceof Error ? err.message : "Gagal mengekspor workbook.");
-    } finally {
-      setExporting(false);
-    }
-  }, [submissionId]);
 
   const totalRows = applicableSections
     .filter((s) => s.mode === "records" && !s.templateRows)
     .reduce((acc, s) => acc + (recordsBySection[s.code]?.length ?? 0), 0);
 
-  const handleImport = useCallback(async () => {
-    setImporting(true);
-    setSectionError(null);
-    const file = fileInputRef.current?.files?.[0];
-    if (!file){
-      setSectionError(
-        err instanceof Error ? err.message : "Pilih file terlebih dahulu.",
-      );
-      setImporting(false);
-      return;
-    }
-    try {
-      await uploadLkps(submissionId, file)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    } catch (err) {
-      setSectionError(
-        err instanceof Error ? err.message : "Gagal mengupload data lkps.",
-      );
-    } finally {
-      setImporting(false);
-    }
-  }, [submissionId, fileInputRef]);
 
   return (
     <main className="min-h-screen bg-[#f4f6f8] px-4 py-8 text-(--accent-ink) md:px-8">
@@ -340,30 +293,6 @@ export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
               <span>{totalRows}</span>
             </div>
 
-            <button
-              type="button"
-              onClick={handleExport}
-              disabled={exporting}
-              className="mt-2 w-full rounded-lg bg-[#00509d] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#003f7d] disabled:opacity-50"
-            >
-              {exporting ? "Mengekspor..." : "Ekspor ke Excel (.xlsx)"}
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xls,.xlsx"
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-500 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-xs file:font-medium file:text-blue-700 hover:file:bg-blue-100"
-              required
-            />
-            <button
-              type="button"
-              onClick={handleImport}
-              disabled={importing}
-              className="mt-2 w-full rounded-lg bg-[#00509d] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#003f7d] disabled:opacity-50"
-            >
-              {importing ? "Mengimpor..." : "Import Excel (.xlsx)"}
-            </button>
             <div className="mt-4 space-y-4">
               {groupedSections.map(([groupName, sections]) => (
                 <div key={groupName}>
@@ -501,9 +430,9 @@ function SectionTable({
   onAddRow: () => void;
   addingRow: boolean;
 }) {
-  // For fixed sections: show all fields except the labelKey (it becomes the row label).
-  // For normal sections: hide pinnedValues fields.
+  // Hide: labelKey for fixed sections, pinnedValues fields, and "no" (auto-filled from row index).
   const visibleFields = section.fields.filter((f) => {
+    if (f.key === "no") return false;
     if (isFixed && f.key === section.labelKey) return false;
     if (!isFixed && section.pinnedValues && f.key in section.pinnedValues) return false;
     return true;
@@ -658,8 +587,12 @@ function TableCellInput({
   value: unknown;
   onChange: (value: unknown) => void;
 }) {
+  const [error, setError] = useState<string | null>(null);
+
   const base =
-    "w-full bg-transparent border border-transparent rounded px-1.5 py-1 text-sm text-gray-800 focus:border-[#00509d] focus:bg-white focus:outline-none hover:border-gray-300 transition-colors";
+    "w-full bg-transparent border rounded px-1.5 py-1 text-sm text-gray-800 focus:bg-white focus:outline-none transition-colors";
+  const normalBorder = "border-transparent hover:border-gray-300 focus:border-[#00509d]";
+  const errorBorder = "border-red-400 focus:border-red-500";
 
   if (field.type === "textarea") {
     return (
@@ -668,7 +601,7 @@ function TableCellInput({
         value={(value as string | undefined) ?? ""}
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder ?? "—"}
-        className={`${base} resize-none leading-snug`}
+        className={`${base} ${normalBorder} resize-none leading-snug`}
         style={{ minWidth: COL_WIDTH.textarea, minHeight: 52 }}
       />
     );
@@ -679,7 +612,7 @@ function TableCellInput({
       <select
         value={(value as string | undefined) ?? ""}
         onChange={(e) => onChange(e.target.value)}
-        className={`${base} cursor-pointer`}
+        className={`${base} ${normalBorder} cursor-pointer`}
         style={{ minWidth: COL_WIDTH.select }}
       >
         <option value="">— pilih —</option>
@@ -708,29 +641,61 @@ function TableCellInput({
   const isNumber = field.type === "integer" || field.type === "decimal" || field.type === "number";
   const inputType = field.type === "date" ? "date" : isNumber ? "number" : "text";
   const step = field.step ?? (field.type === "integer" ? 1 : field.type === "decimal" ? 0.01 : undefined);
+  const minValue = field.min ?? (isNumber ? 0 : undefined);
+
+  const validate = (raw: string): string | null => {
+    if (raw === "") return null;
+    if (isNumber) {
+      const n = Number(raw);
+      if (Number.isNaN(n)) return "Harus berupa angka";
+      if (n < 0) return "Tidak boleh negatif";
+      if (field.max !== undefined && n > field.max) return `Maks ${field.max}`;
+    }
+    return null;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    setError(validate(raw));
     if (field.type === "integer") {
-      onChange(e.target.value === "" ? "" : Number.parseInt(e.target.value, 10));
+      onChange(raw === "" ? "" : Number.parseInt(raw, 10));
     } else if (field.type === "decimal" || field.type === "number") {
-      onChange(e.target.value === "" ? "" : Number(e.target.value));
+      onChange(raw === "" ? "" : Number(raw));
     } else {
-      onChange(e.target.value);
+      onChange(raw);
+    }
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    if (isNumber && raw !== "") {
+      const n = Number(raw);
+      if (!Number.isNaN(n) && n < 0) {
+        // Clamp to 0 on blur
+        onChange(0);
+        setError(null);
+      }
     }
   };
 
   return (
-    <input
-      type={inputType}
-      value={value === undefined || value === null ? "" : typeof value === "number" ? value : (value as string)}
-      onChange={handleChange}
-      placeholder={field.placeholder ?? (isNumber ? "0" : "—")}
-      min={field.min}
-      max={field.max}
-      step={step}
-      className={base}
-      style={{ minWidth: COL_WIDTH[field.type] ?? 140 }}
-    />
+    <div>
+      <input
+        type={inputType}
+        value={value === undefined || value === null ? "" : typeof value === "number" ? value : (value as string)}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        placeholder={field.placeholder ?? (isNumber ? "0" : "—")}
+        min={minValue}
+        max={field.max}
+        step={step}
+        className={`${base} ${error ? errorBorder : normalBorder}`}
+        style={{ minWidth: COL_WIDTH[field.type] ?? 140 }}
+      />
+      {error && (
+        <p className="mt-0.5 text-[10px] text-red-500 leading-tight">{error}</p>
+      )}
+    </div>
   );
 }
 

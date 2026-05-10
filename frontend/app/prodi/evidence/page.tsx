@@ -94,6 +94,13 @@ export default function EvidencePage() {
   const canEdit =
     user && ["admin", "koordinator", "tim_prodi"].includes(user.role);
 
+  const checkCanDelete = (ev: EvidenceItem) => {
+    if (!user) return false;
+    if (user.role === "admin" || user.role === "koordinator") return true;
+    return user.id === ev.uploaded_by;
+  };
+
+
   async function fetchEvidence() {
     setLoadingList(true);
     setError(null);
@@ -557,7 +564,7 @@ export default function EvidencePage() {
                     >
                       {downloadingId === ev.id ? "Mengunduh..." : "⬇ Unduh"}
                     </button>
-                    {canEdit && (
+                    {checkCanDelete(ev) && (
                       <button
                         onClick={() => handleDelete(ev.id)}
                         disabled={deletingId === ev.id}

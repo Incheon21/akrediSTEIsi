@@ -187,7 +187,7 @@ def seed():
 
         db.commit()
 
-        # Kriteria LAM Teknik 2025
+        # Kriteria LAM Teknik 2026
         kriteria_data = [
             {
                 "kode": "C1",
@@ -204,7 +204,7 @@ def seed():
             {"kode": "C7", "nama": "Sistem Penjaminan Mutu"},
         ]
 
-        # Specific sub-indikator mapping based on LED LAM Teknik 2025
+        # Specific sub-indikator mapping based on LED LAM Teknik 2026
         lam_teknik_indicators = {
             'C1': [
                 {'kode': 'C1.1', 'nama': 'Latar Belakang', 'tipe': 'teks'},
@@ -399,8 +399,8 @@ def seed():
 
         # ==========================================
         # Seed Target Akreditasi
-        # 2025: IF (target skor terisi), TE/Teknik Tenaga Listrik (belum set target skor)
-        # 2024: EL/Teknik Elektro (target skor terisi)
+        # 2026: IF (target skor terisi), TE/Teknik Tenaga Listrik (belum set target skor)
+        # 2025: EL/Teknik Elektro (target skor terisi)
         # ==========================================
 
         def upsert_target(prodi_obj, tahun, target_skor_val, deadline_val, is_aktif_val):
@@ -445,40 +445,38 @@ def seed():
                 db.commit()
                 print(f"  Deactivated {len(others)} stale target(s) for {prodi_obj.kode} (non-{keep_tahun})")
 
-        # --- IF: aktif 2025, target skor terisi ---
+        # --- IF: aktif 2026, target skor terisi ---
         if "IF" in prodis:
-            deactivate_other_targets(prodis["IF"], keep_tahun=2025)
+            deactivate_other_targets(prodis["IF"], keep_tahun=2026)
             upsert_target(
                 prodis["IF"],
-                tahun=2025,
-                target_skor_val=3.8,
+                tahun=2026,
+                target_skor_val=340.0,
                 deadline_val=date.today() + timedelta(days=60),
                 is_aktif_val=True,
             )
 
-        # --- TE (Teknik Tenaga Listrik): aktif 2025, BELUM set target skor ---
+        # --- TE (Teknik Tenaga Listrik): aktif 2026, BELUM set target skor ---
         if "TE" in prodis:
-            deactivate_other_targets(prodis["TE"], keep_tahun=2025)
+            deactivate_other_targets(prodis["TE"], keep_tahun=2026)
             upsert_target(
                 prodis["TE"],
-                tahun=2025,
+                tahun=2026,
                 target_skor_val=None,  # Belum diset oleh tim prodi
                 deadline_val=None,     # Belum diset oleh tim prodi
                 is_aktif_val=True,
             )
 
-        # --- EL (Teknik Elektro): aktif 2024, target skor terisi ---
+        # --- EL (Teknik Elektro): aktif 2025, target skor terisi ---
         if "EL" in prodis:
-            deactivate_other_targets(prodis["EL"], keep_tahun=2024)
+            deactivate_other_targets(prodis["EL"], keep_tahun=2025)
             upsert_target(
                 prodis["EL"],
-                tahun=2024,
-                target_skor_val=3.5,
+                tahun=2025,
+                target_skor_val=300.0,
                 deadline_val=None,  # Tidak ada deadline spesifik untuk testing
                 is_aktif_val=True,
             )
-
-
 
     finally:
         db.close()
