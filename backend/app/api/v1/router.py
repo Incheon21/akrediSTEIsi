@@ -9,7 +9,9 @@ from app.api.v1.endpoints import (
     led,
     lkps,
     lkps_import,
+    notifikasi,
     program_studi,
+    simulasi,
     target_akreditasi,
 )
 
@@ -24,4 +26,6 @@ api_router.include_router(dashboard_multiprodi.router)
 api_router.include_router(indikator.router)
 api_router.include_router(led.router)
 api_router.include_router(evidence.router)
+api_router.include_router(simulasi.router, prefix="/simulasi", tags=["simulasi"])
+api_router.include_router(notifikasi.router)
 api_router.include_router(target_akreditasi.router)

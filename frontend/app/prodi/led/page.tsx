@@ -57,29 +57,47 @@ export default function ProdiLedPage() {
   }, [narasis, originalNarasis, indikators]);
 
   const groupedIndikators = useMemo(() => {
-    const groupMap: Record<string, typeof indikators> = {};
-    indikators.forEach((ind) => {
+    // Separate group definitions from actual fillable indicators
+    const groupDefs = indikators.filter((ind) => ind.tipe_input === "group");
+    const fillable = indikators.filter((ind) => ind.tipe_input !== "group");
+
+    const getGroupName = (kode: string) => {
+      const def = groupDefs.find((g) => g.kode_indikator === kode);
+      return def ? `${kode} - ${def.deskripsi}` : `Grup Indikator ${kode}`;
+    };
+
+    const groupMap: Record<string, typeof fillable> = {};
+    fillable.forEach((ind) => {
       const parts = ind.kode_indikator.split(".");
-      const parent =
-        parts.length > 2 ? parts.slice(0, 2).join(".") : ind.kode_indikator;
+      let parent = ind.kode_indikator;
+      if (parts.length === 4) parent = parts.slice(0, 3).join(".");
+      else if (parts.length === 3) parent = parts.slice(0, 2).join(".");
+
       if (!groupMap[parent]) groupMap[parent] = [];
       groupMap[parent].push(ind);
     });
 
-    const result: { title: string; items: typeof indikators }[] = [];
+    const result: { title: string; items: typeof fillable }[] = [];
     const seen = new Set<string>();
-    indikators.forEach((ind) => {
+    fillable.forEach((ind) => {
       const parts = ind.kode_indikator.split(".");
-      const parent =
-        parts.length > 2 ? parts.slice(0, 2).join(".") : ind.kode_indikator;
+      let parent = ind.kode_indikator;
+      if (parts.length === 4) parent = parts.slice(0, 3).join(".");
+      else if (parts.length === 3) parent = parts.slice(0, 2).join(".");
+
       if (!seen.has(parent)) {
         seen.add(parent);
-        result.push({ title: parent, items: groupMap[parent] });
+
+        let title = getGroupName(parent);
+        if (parent.endsWith(".3")) {
+          title = `Indikator Kinerja Utama (IKU) - ${title}`;
+        }
+
+        result.push({ title: title, items: groupMap[parent] });
       }
     });
     return result;
   }, [indikators]);
-
   const isFormReady = useMemo(
     () => Boolean(targetId && kriteriaKode && indikators.length > 0),
     [targetId, kriteriaKode, indikators],
@@ -394,9 +412,7 @@ export default function ProdiLedPage() {
                     <div className="flex items-center gap-2 mb-2 px-1">
                       <span className="w-1.5 h-5 bg-[#00509d] rounded-full inline-block" />
                       <h2 className="font-bold text-[#132040] text-base">
-                        {group.title.endsWith(".3")
-                          ? `Indikator Kinerja Utama (IKU) - ${group.title}`
-                          : `Grup Indikator ${group.title}`}
+                        {group.title}
                       </h2>
                     </div>
                   )}
