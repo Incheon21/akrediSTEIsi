@@ -306,6 +306,15 @@ def get_dashboard_prodi_data(
     if not aktif_akreditasi:
         lkpsPercent = ledPercent = dok_Percent = 0
 
+    score_value = 0.0
+    if aktif_akreditasi:
+        try:
+            from app.api.v1.endpoints.simulasi import hitung_simulasi_otomatis
+            simulasi_res = hitung_simulasi_otomatis(prodi_id, current_year, db)
+            score_value = float(simulasi_res.get("nilai_total", 0.0))
+        except Exception as e:
+            print(f"Error calculating simulasi: {e}")
+
     return {
         "program_studi_profile": {
             "name": prodi.nama,
@@ -325,8 +334,7 @@ def get_dashboard_prodi_data(
         "recommendation_messages": pesan_rekomendasi,
         "early_warnings": early_warnings,
         # Skor akreditasi harus berasal dari simulasi/rubrik, bukan progres pengisian.
-        # Saat belum ada hasil simulasi tersimpan, tampilkan kosong di frontend.
-        "score_value": 0.0,
+        "score_value": score_value,
         "target_score": target_score,
         "deadline": deadline_str,
         "days_remaining": sisa_hari,
