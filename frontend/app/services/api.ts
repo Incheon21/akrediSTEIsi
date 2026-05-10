@@ -98,3 +98,41 @@ export async function saveLedNarasi(
   }
   return res.json();
 }
+
+// ── Target Akreditasi ──────────────────────────────────────────────────────
+
+export async function setTargetScore(data: {
+  prodi_id: string;
+  target_skor: number;
+  tahun_akreditasi: number;
+}) {
+  const res = await apiFetch("/api/v1/target_akreditasi/score", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(
+      (body as Record<string, unknown>)?.detail ?? "Gagal menyimpan target skor.",
+    );
+  }
+  return res.json();
+}
+
+export async function setTargetDeadline(data: {
+  prodi_id: string;
+  deadline: string; // ISO date string: "YYYY-MM-DD"
+  tahun_akreditasi: number;
+}) {
+  const res = await apiFetch("/api/v1/target_akreditasi/deadline", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(
+      (body as Record<string, unknown>)?.detail ?? "Gagal menyimpan deadline.",
+    );
+  }
+  return res.json();
+}

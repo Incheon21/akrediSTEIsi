@@ -1,85 +1,118 @@
+const MAX_SCORE = 361;
+const MIN_LULUS = 200;
 
 const GaugeMeter = ({ score, target }: { score: number; target: number }) => {
-  const clamp = (v: number, min: number, max: number) =>
-    Math.min(max, Math.max(min, v));
-  const scoreAngleDeg = ((clamp(score, 1, 4) - 1) / 3) * 180 - 180;
-  const targetAngleDeg = ((clamp(target, 1, 4) - 1) / 3) * 180 - 180;
+  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const cx = 100;
-  const cy = 100;
-  const r = 70;
+  const hasScore = score > 0;
+  const scoreVal = clamp(score, 0, MAX_SCORE);
+  const targetVal = clamp(target, 0, MAX_SCORE);
 
-  const needleX = cx + r * 0.85 * Math.cos(toRad(scoreAngleDeg));
-  const needleY = cy + r * 0.85 * Math.sin(toRad(scoreAngleDeg));
+  const pct = (v: number) => `${((v / MAX_SCORE) * 100).toFixed(2)}%`;
 
-  const targetX = cx + (r + 14) * Math.cos(toRad(targetAngleDeg));
-  const targetY = cy + (r + 14) * Math.sin(toRad(targetAngleDeg));
+  const scoreColor = scoreVal >= MIN_LULUS ? "#22c55e" : "#ef4444";
 
   return (
-    <div className="flex flex-col items-center bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-      <div className="w-full flex items-center gap-2 mb-3">
-        <span className="w-1 h-5 bg-[#00509d] rounded-full inline-block" />
+    <div className="w-full flex flex-col">
+      {/* Title */}
+      <div className="flex items-center gap-2 mb-5">
+        <span className="w-1 h-5 bg-[#00509d] rounded-full inline-block shrink-0" />
         <p className="text-sm font-bold text-[#132040]">Hasil Skor Akreditasi</p>
       </div>
-      <svg viewBox="0 0 200 110" className="w-52">
-        {/* Gradient */}
-        {[
-          { start: -180, end: -120, color: "#ef4444" },
-          { start: -120, end: -60, color: "#eab308" },
-          { start: -60, end: -30, color: "#a3e635" },
-          { start: -30, end: 0, color: "#22c55e" },
-        ].map(({ start, end, color }, i) => {
-          const x1 = cx + r * Math.cos(toRad(start));
-          const y1 = cy + r * Math.sin(toRad(start));
-          const x2 = cx + r * Math.cos(toRad(end));
-          const y2 = cy + r * Math.sin(toRad(end));
-          const large = end - start > 180 ? 1 : 0;
-          return (
-            <path
-              key={i}
-              d={`M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`}
-              fill="none"
-              stroke={color}
-              strokeWidth="16"
-              strokeLinecap="butt"
+
+      {/* ── Bar area with top padding for the target marker ── */}
+      <div className="relative w-full mt-6">
+
+        {/* Target marker — segitiga + label di atas bar */}
+        {targetVal > 0 && (
+          <div
+            className="absolute flex flex-col items-center"
+            style={{
+              left: pct(targetVal),
+              transform: "translateX(-50%)",
+              bottom: "calc(100% + 4px)",
+            }}
+          >
+            <span className="text-[10px] font-bold text-[#00509d] whitespace-nowrap mb-1">
+              Target: {targetVal}
+            </span>
+            <div
+              className="w-0 h-0"
+              style={{
+                borderLeft: "5px solid transparent",
+                borderRight: "5px solid transparent",
+                borderTop: "8px solid #00509d",
+              }}
             />
-          );
-        })}
+          </div>
+        )}
 
-        <text x="18" y="105" fontSize="7" fill="#6b7280">1,0 - 2,0</text>
-        <text x="70" y="30" fontSize="7" fill="#6b7280" textAnchor="middle">2,01 - 3,5</text>
-        <text x="148" y="60" fontSize="7" fill="#6b7280" textAnchor="middle">3,51 - 4,0</text>
+        <div className="flex h-6 w-full rounded-full overflow-hidden">
+          <div
+            className="bg-red-100 shrink-0"
+            style={{ width: pct(MIN_LULUS) }}
+          />
+          <div className="flex-1 bg-green-100" />
+        </div>
 
-        {/* Target marker */}
-        <circle cx={targetX} cy={targetY} r="4" fill="#00509d" />
-        <text
-          x={targetX + 4}
-          y={targetY - 4}
-          fontSize="7"
-          fill="#00509d"
-          fontWeight="bold"
-        >
-          Target
-        </text>
+        {hasScore && (
+          <div
+            className="absolute top-0 left-0 h-6 rounded-full transition-all duration-700"
+            style={{ width: pct(scoreVal), backgroundColor: scoreColor, opacity: 0.65 }}
+          />
+        )}
 
-        {/* Needle */}
-        <line
-          x1={cx}
-          y1={cy}
-          x2={needleX}
-          y2={needleY}
-          stroke="#111"
-          strokeWidth="2.5"
-          strokeLinecap="round"
+        <div
+          className="absolute top-0 h-6 w-0.5 bg-red-400"
+          style={{ left: pct(MIN_LULUS) }}
         />
-        <circle cx={cx} cy={cy} r="4" fill="#111" />
+      </div>
 
-        {/* Skor label */}
-        <text x={cx} y={cy + 18} fontSize="8" fill="#374151" textAnchor="middle">
-          Skor
-        </text>
-      </svg>
+      <div className="relative w-full mt-1.5 h-5">
+        <span className="absolute left-0 text-[10px] text-slate-400">0</span>
+        <span
+          className="absolute text-[9px] text-red-400 font-medium whitespace-nowrap"
+          style={{ left: pct(MIN_LULUS), transform: "translateX(-50%)" }}
+        >
+          {MIN_LULUS}
+        </span>
+        <span className="absolute right-0 text-[10px] text-slate-400">{MAX_SCORE}</span>
+      </div>
+
+      {/* ── Zone legend ── */}
+      <div className="flex items-center justify-center gap-4 mt-2">
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm bg-red-300 inline-block" />
+          <span className="text-[10px] text-slate-500">Tidak Lulus (0–199)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm bg-green-400 inline-block" />
+          <span className="text-[10px] text-slate-500">Lulus (200–361)</span>
+        </div>
+      </div>
+
+      {/* ── Stats row ── */}
+      <div className="flex mt-4 pt-3 border-t border-slate-100 divide-x divide-slate-100">
+        <div className="flex-1 text-center">
+          <p className="text-[10px] text-slate-400 uppercase tracking-wide">Skor</p>
+          <p
+            className={hasScore ? "text-xl font-bold mt-0.5" : "text-sm font-semibold mt-1"}
+            style={{ color: hasScore ? scoreColor : "#94a3b8" }}
+          >
+            {hasScore ? scoreVal.toFixed(0) : "Belum dihitung"}
+          </p>
+        </div>
+        <div className="flex-1 text-center">
+          <p className="text-[10px] text-slate-400 uppercase tracking-wide">Target</p>
+          <p className="text-xl font-bold text-[#00509d] mt-0.5">
+            {targetVal > 0 ? targetVal.toFixed(0) : "—"}
+          </p>
+        </div>
+        <div className="flex-1 text-center">
+          <p className="text-[10px] text-slate-400 uppercase tracking-wide">Maks</p>
+          <p className="text-xl font-bold text-slate-300 mt-0.5">{MAX_SCORE}</p>
+        </div>
+      </div>
     </div>
   );
 };

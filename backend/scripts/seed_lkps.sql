@@ -17,6 +17,7 @@ DO $$
 DECLARE
     v_prodi_id   UUID;
     v_sid        UUID;
+    v_tahun_ts   INTEGER;
 BEGIN
 
 -- ── 1. Get or create the IF prodi ────────────────────────────
@@ -44,9 +45,19 @@ UPDATE program_studi SET
     no_sk_ban_pt                    = '2030/SK/BAN-PT/Ak-PPJ/S/VII/2022'
 WHERE id = v_prodi_id;
 
--- ── 3. Get or create a draft submission for IF ───────────────
+-- ── 3. Get or create a draft submission for IF's active accreditation year ──
+SELECT tahun_akreditasi INTO v_tahun_ts
+FROM target_akreditasi
+WHERE program_studi_id = v_prodi_id AND is_aktif = true
+ORDER BY tahun_akreditasi DESC
+LIMIT 1;
+
+IF v_tahun_ts IS NULL THEN
+    v_tahun_ts := EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER;
+END IF;
+
 SELECT id INTO v_sid FROM lkps_submission
-WHERE program_studi_id = v_prodi_id AND status = 'draft'
+WHERE program_studi_id = v_prodi_id AND tahun_ts = v_tahun_ts
 LIMIT 1;
 
 IF v_sid IS NULL THEN
@@ -54,13 +65,13 @@ IF v_sid IS NULL THEN
     DECLARE v_tmpl_id UUID;
     BEGIN
         SELECT id INTO v_tmpl_id FROM lkps_template LIMIT 1;
-        INSERT INTO lkps_submission (id, program_studi_id, template_id, status)
-        VALUES (gen_random_uuid(), v_prodi_id, v_tmpl_id, 'draft')
+        INSERT INTO lkps_submission (id, program_studi_id, template_id, tahun_ts, status)
+        VALUES (gen_random_uuid(), v_prodi_id, v_tmpl_id, v_tahun_ts, 'draft')
         RETURNING id INTO v_sid;
-        RAISE NOTICE 'Created new submission: %', v_sid;
+        RAISE NOTICE 'Created new submission for TS %: %', v_tahun_ts, v_sid;
     END;
 ELSE
-    RAISE NOTICE 'Using existing submission: %', v_sid;
+    RAISE NOTICE 'Using existing submission for TS %: %', v_tahun_ts, v_sid;
 END IF;
 
 -- ── 4. Clear existing LKPS data for this submission ──────────

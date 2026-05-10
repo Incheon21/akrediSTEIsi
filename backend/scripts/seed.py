@@ -187,7 +187,7 @@ def seed():
 
         db.commit()
 
-        # Kriteria LAM Teknik 2025
+        # Kriteria LAM Teknik 2026
         kriteria_data = [
             {
                 "kode": "C1",
@@ -204,167 +204,153 @@ def seed():
             {"kode": "C7", "nama": "Sistem Penjaminan Mutu"},
         ]
 
-        # Specific sub-indikator mapping based on LED LAM Teknik 2025
+        # Specific sub-indikator mapping based on LED LAM Teknik 2026
         lam_teknik_indicators = {
-            "C1": [
-                {"kode": "C1.1", "nama": "Latar Belakang", "tipe": "teks"},
-                {"kode": "C1.2", "nama": "Kebijakan", "tipe": "teks"},
-                {"kode": "C1.3.1", "nama": "Kekhasan VMTS", "tipe": "both"},
-                {
-                    "kode": "C1.3.2",
-                    "nama": "Mekanisme Penyusunan VMTS",
-                    "tipe": "both",
-                },
-                {
-                    "kode": "C1.3.3",
-                    "nama": "Tingkat Pemahaman dan Pencapaian VMTS",
-                    "tipe": "both",
-                },
-                {
-                    "kode": "C1.4",
-                    "nama": "Analisis Faktor Keberhasilan dan Penghambat Pencapaian VMTS",
-                    "tipe": "teks",
-                },
-                {
-                    "kode": "C1.5",
-                    "nama": "Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)",
-                    "tipe": "teks",
-                },
+            'C1': [
+                {'kode': 'C1.1', 'nama': 'Latar Belakang', 'tipe': 'teks'},
+                {'kode': 'C1.2', 'nama': 'Kebijakan', 'tipe': 'teks'},
+                {'kode': 'C1.3.1', 'nama': 'Kekhasan VMTS', 'tipe': 'teks'},
+                {'kode': 'C1.3.2', 'nama': 'Mekanisme Penyusunan VMTS', 'tipe': 'teks'},
+                {'kode': 'C1.3.3', 'nama': 'Tingkat Pemahaman dan Pencapaian VMTS', 'tipe': 'teks'},
+                {'kode': 'C1.4', 'nama': 'Analisis Faktor Keberhasilan dan Penghambat Pencapaian VMTS', 'tipe': 'teks'},
+                {'kode': 'C1.5', 'nama': 'Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)', 'tipe': 'teks'},
             ],
-            "C2": [
-                {"kode": "C2.1", "nama": "Latar Belakang", "tipe": "teks"},
-                {"kode": "C2.2", "nama": "Kebijakan", "tipe": "teks"},
-                {
-                    "kode": "C2.3.1",
-                    "nama": "Tata Pamong dan Tata Kelola",
-                    "tipe": "both",
-                },
-                {"kode": "C2.3.2", "nama": "Kerja Sama", "tipe": "both"},
-                {"kode": "C2.3.3", "nama": "Keuangan", "tipe": "both"},
-                {
-                    "kode": "C2.4",
-                    "nama": "Analisis Faktor Keberhasilan dan Penghambat Pencapaian Tata Pamong, Tata Kelola, Kerja Sama, dan Keuangan",
-                    "tipe": "teks",
-                },
-                {
-                    "kode": "C2.5",
-                    "nama": "Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)",
-                    "tipe": "teks",
-                },
+            'C2': [
+                {'kode': 'C2.3.1', 'nama': 'Tata Pamong dan Tata Kelola', 'tipe': 'group'},
+                {'kode': 'C2.3.2', 'nama': 'Kerja Sama', 'tipe': 'group'},
+                {'kode': 'C2.3.3', 'nama': 'Keuangan', 'tipe': 'group'},
+                {'kode': 'C2.1', 'nama': 'Latar Belakang', 'tipe': 'teks'},
+                {'kode': 'C2.2', 'nama': 'Kebijakan', 'tipe': 'teks'},
+                {'kode': 'C2.3.1.a', 'nama': 'Sistem Tata Pamong', 'tipe': 'teks'},
+                {'kode': 'C2.3.1.b', 'nama': 'Good University Governance', 'tipe': 'teks'},
+                {'kode': 'C2.3.1.c', 'nama': 'Komitmen Pimpinan (Visi dan Integritas)', 'tipe': 'teks'},
+                {'kode': 'C2.3.1.d', 'nama': 'Komitmen Pimpinan (Kemampuan Manajerial)', 'tipe': 'teks'},
+                {'kode': 'C2.3.2.a', 'nama': 'Relevansi Kerja Sama', 'tipe': 'teks'},
+                {'kode': 'C2.3.2.b', 'nama': 'Tingkat Kerja Sama', 'tipe': 'teks'},
+                {'kode': 'C2.3.2.c', 'nama': 'Pelaksanaan Kerja Sama', 'tipe': 'teks'},
+                {'kode': 'C2.3.3.a', 'nama': 'Pengelolaan Keuangan', 'tipe': 'teks'},
+                {'kode': 'C2.3.3.b', 'nama': 'Biaya Operasional Pendidikan', 'tipe': 'teks'},
+                {'kode': 'C2.3.3.c', 'nama': 'Dana Penelitian', 'tipe': 'teks'},
+                {'kode': 'C2.3.3.d', 'nama': 'Dana PkM', 'tipe': 'teks'},
+                {'kode': 'C2.4', 'nama': 'Analisis Faktor Keberhasilan dan Penghambat Pencapaian', 'tipe': 'teks'},
+                {'kode': 'C2.5', 'nama': 'Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)', 'tipe': 'teks'},
             ],
-            "C3": [
-                {"kode": "C3.1", "nama": "Latar Belakang", "tipe": "teks"},
-                {"kode": "C3.2", "nama": "Kebijakan", "tipe": "teks"},
-                {"kode": "C3.3.1", "nama": "Pendidikan", "tipe": "both"},
-                {"kode": "C3.3.2", "nama": "Penelitian", "tipe": "both"},
-                {
-                    "kode": "C3.3.3",
-                    "nama": "Pengabdian Kepada Masyarakat (PkM)",
-                    "tipe": "both",
-                },
-                {
-                    "kode": "C3.4",
-                    "nama": "Analisis Faktor Keberhasilan dan Penghambat Pencapaian",
-                    "tipe": "teks",
-                },
-                {
-                    "kode": "C3.5",
-                    "nama": "Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)",
-                    "tipe": "teks",
-                },
+            'C3': [
+                {'kode': 'C3.3.1', 'nama': 'Pendidikan', 'tipe': 'group'},
+                {'kode': 'C3.3.2', 'nama': 'Penelitian', 'tipe': 'group'},
+                {'kode': 'C3.3.3', 'nama': 'Pengabdian Kepada Masyarakat (PkM)', 'tipe': 'group'},
+                {'kode': 'C3.1', 'nama': 'Latar Belakang', 'tipe': 'teks'},
+                {'kode': 'C3.2', 'nama': 'Kebijakan', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.a', 'nama': 'Pemutakhiran kurikulum', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.b', 'nama': 'Profil lulusan', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.c', 'nama': 'Kesesuaian CPL dengan profil lulusan', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.d', 'nama': 'Kesesuaian CPL dengan standar kompetensi lulusan', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.e', 'nama': 'Proses tinjauan rutin CPL', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.f', 'nama': 'Kualitas input mahasiswa (Metode rekrutmen)', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.g', 'nama': 'Kriteria penerimaan mahasiswa', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.h', 'nama': 'Proses seleksi', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.i', 'nama': 'Ketersediaan dan kelengkapan dokumen RPS', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.j', 'nama': 'Proses tinjauan rutin RPS', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.k', 'nama': 'Proses pembelajaran', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.l', 'nama': 'Proses tinjauan rutin proses pembelajaran', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.m', 'nama': 'Integrasi penelitian dan PkM dalam pembelajaran', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.n', 'nama': 'Pembelajaran penugasan, praktikum, praktik lapangan', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.o', 'nama': 'Basic Sciences dan matematika', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.p', 'nama': 'Proyek Rekayasa Penciri bidang Prodi (Capstone Design)', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.q', 'nama': 'Suasana akademik', 'tipe': 'teks'},
+                {'kode': 'C3.3.1.r', 'nama': 'Integritas dan kebebasan ilmiah', 'tipe': 'teks'},
+                {'kode': 'C3.3.2.a', 'nama': 'Kesesuaian penelitian dalam mendukung VMTS dan Visi Keilmuan', 'tipe': 'teks'},
+                {'kode': 'C3.3.2.b', 'nama': 'Penelitian DTPS yang sesuai dengan Peta jalan', 'tipe': 'teks'},
+                {'kode': 'C3.3.2.c', 'nama': 'Penelitian DTPS yang menjadi rujukan tema tesis/disertasi', 'tipe': 'teks'},
+                {'kode': 'C3.3.3.a', 'nama': 'Kesesuaian PkM dalam mendukung VMTS dan Visi Keilmuan', 'tipe': 'teks'},
+                {'kode': 'C3.3.3.b', 'nama': 'PkM DTPS yang sesuai dengan Peta jalan', 'tipe': 'teks'},
+                {'kode': 'C3.4', 'nama': 'Analisis Faktor Keberhasilan dan Penghambat Pencapaian', 'tipe': 'teks'},
+                {'kode': 'C3.5', 'nama': 'Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)', 'tipe': 'teks'},
             ],
-            "C4": [
-                {"kode": "C4.1", "nama": "Latar Belakang", "tipe": "teks"},
-                {"kode": "C4.2", "nama": "Kebijakan", "tipe": "teks"},
-                {
-                    "kode": "C4.3.1",
-                    "nama": "Profil Dosen dan Tenaga Kependidikan",
-                    "tipe": "both",
-                },
-                {"kode": "C4.3.2", "nama": "Beban Kerja DTPS", "tipe": "both"},
-                {
-                    "kode": "C4.4",
-                    "nama": "Analisis Faktor Keberhasilan dan Penghambat",
-                    "tipe": "teks",
-                },
-                {
-                    "kode": "C4.5",
-                    "nama": "Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)",
-                    "tipe": "teks",
-                },
+            'C4': [
+                {'kode': 'C4.3.1', 'nama': 'Profil Dosen dan Tenaga Kependidikan', 'tipe': 'group'},
+                {'kode': 'C4.3.2', 'nama': 'Beban Kerja DTPS', 'tipe': 'group'},
+                {'kode': 'C4.1', 'nama': 'Latar Belakang', 'tipe': 'teks'},
+                {'kode': 'C4.2', 'nama': 'Kebijakan', 'tipe': 'teks'},
+                {'kode': 'C4.3.1.a', 'nama': 'Profil Dosen (Kecukupan jumlah dosen tetap)', 'tipe': 'teks'},
+                {'kode': 'C4.3.1.b', 'nama': 'Profil Dosen (Kecukupan jumlah DTPSPPI dan DI)', 'tipe': 'teks'},
+                {'kode': 'C4.3.1.c', 'nama': 'Kualifikasi akademik DTPS', 'tipe': 'teks'},
+                {'kode': 'C4.3.1.d', 'nama': 'Kualifikasi keinsinyuran DTPSPPI', 'tipe': 'teks'},
+                {'kode': 'C4.3.1.e', 'nama': 'Jabatan akademik DTPS (Guru Besar/Lektor Kepala/Lektor)', 'tipe': 'teks'},
+                {'kode': 'C4.3.1.f', 'nama': 'Jabatan akademik DTPS (Guru Besar/Lektor Kepala)', 'tipe': 'teks'},
+                {'kode': 'C4.3.1.g', 'nama': 'Jabatan akademik DTPS (Guru Besar)', 'tipe': 'teks'},
+                {'kode': 'C4.3.1.h', 'nama': 'Sertifikat kompetensi/profesi/industri', 'tipe': 'teks'},
+                {'kode': 'C4.3.1.i', 'nama': 'Mata kuliah kompetensi diampu oleh dosen industri/praktisi', 'tipe': 'teks'},
+                {'kode': 'C4.3.1.j', 'nama': 'Tenaga Kependidikan (Kualifikasi dan kecukupan laboran)', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.a', 'nama': 'Beban Kerja DTPS', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.b', 'nama': 'Kegiatan Penelitian DTPS', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.c', 'nama': 'Kegiatan Penelitian Kolaboratif Industri DTPSPPI', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.d', 'nama': 'Kegiatan PkM DTPS', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.e', 'nama': 'Kegiatan PkM Kolaboratif Industri DTPSPPI', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.f', 'nama': 'Publikasi ilmiah DTPS', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.g', 'nama': 'Pagelaran / pameran / presentasi / publikasi ilmiah DTPS', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.h', 'nama': 'Luaran penelitian dan PkM DTPS (HKI, Paten, dll)', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.i', 'nama': 'Luaran kolaboratif industri DTPSPPI (HKI, Paten, dll)', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.j', 'nama': 'Produk/jasa yang diadopsi oleh industri/masyarakat', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.k', 'nama': 'Kinerja DTPS dalam mendukung keunggulan kompetitif UPPS', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.l', 'nama': 'Karya ilmiah DTPS yang disitasi', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.m', 'nama': 'Pengakuan / rekognisi atas prestasi / kinerja DTPS', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.n', 'nama': 'Pengakuan / rekognisi atas kepakaran DTPSPPI', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.o', 'nama': 'Pengembangan Dosen DTPSPPI', 'tipe': 'teks'},
+                {'kode': 'C4.3.2.p', 'nama': 'Pembimbing Lapangan', 'tipe': 'teks'},
+                {'kode': 'C4.4', 'nama': 'Analisis Faktor Keberhasilan dan Penghambat', 'tipe': 'teks'},
+                {'kode': 'C4.5', 'nama': 'Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)', 'tipe': 'teks'},
             ],
-            "C5": [
-                {"kode": "C5.1", "nama": "Latar Belakang", "tipe": "teks"},
-                {"kode": "C5.2", "nama": "Kebijakan", "tipe": "teks"},
-                {
-                    "kode": "C5.3.1",
-                    "nama": "Sarana dan Prasarana",
-                    "tipe": "both",
-                },
-                {
-                    "kode": "C5.3.2",
-                    "nama": "Keselamatan, Kesehatan Kerja, dan Lingkungan (K3L)",
-                    "tipe": "both",
-                },
-                {
-                    "kode": "C5.4",
-                    "nama": "Analisis Faktor Keberhasilan dan Penghambat",
-                    "tipe": "teks",
-                },
-                {
-                    "kode": "C5.5",
-                    "nama": "Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)",
-                    "tipe": "teks",
-                },
+            'C5': [
+                {'kode': 'C5.3.1', 'nama': 'Sarana dan Prasarana', 'tipe': 'group'},
+                {'kode': 'C5.1', 'nama': 'Latar Belakang', 'tipe': 'teks'},
+                {'kode': 'C5.2', 'nama': 'Kebijakan', 'tipe': 'teks'},
+                {'kode': 'C5.3.1.a', 'nama': 'Sarana dan Prasarana (Kegiatan Akademik)', 'tipe': 'teks'},
+                {'kode': 'C5.3.1.b', 'nama': 'Sarana dan Prasarana (Kegiatan Non Akademik)', 'tipe': 'teks'},
+                {'kode': 'C5.3.2', 'nama': 'Keselamatan, Kesehatan Kerja dan Lingkungan (K3L)', 'tipe': 'teks'},
+                {'kode': 'C5.4', 'nama': 'Analisis Faktor Keberhasilan dan Penghambat', 'tipe': 'teks'},
+                {'kode': 'C5.5', 'nama': 'Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)', 'tipe': 'teks'},
             ],
-            "C6": [
-                {"kode": "C6.1", "nama": "Latar Belakang", "tipe": "teks"},
-                {"kode": "C6.2", "nama": "Kebijakan", "tipe": "teks"},
-                {"kode": "C6.3.1", "nama": "Kualitas Mahasiswa", "tipe": "both"},
-                {
-                    "kode": "C6.3.2",
-                    "nama": "Prestasi Mahasiswa dan Produk/Jasa Karya Mahasiswa",
-                    "tipe": "both",
-                },
-                {
-                    "kode": "C6.3.3",
-                    "nama": "Masa Studi, Lulusan Tepat Waktu, dan IPK Lulusan",
-                    "tipe": "both",
-                },
-                {
-                    "kode": "C6.3.4",
-                    "nama": "Keberhasilan Lulusan (Tracer Study)",
-                    "tipe": "both",
-                },
-                {
-                    "kode": "C6.4",
-                    "nama": "Analisis Faktor Keberhasilan dan Penghambat",
-                    "tipe": "teks",
-                },
-                {
-                    "kode": "C6.5",
-                    "nama": "Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)",
-                    "tipe": "teks",
-                },
+            'C6': [
+                {'kode': 'C6.3.1', 'nama': 'Kualitas Mahasiswa', 'tipe': 'group'},
+                {'kode': 'C6.3.2', 'nama': 'Prestasi Mahasiswa', 'tipe': 'group'},
+                {'kode': 'C6.3.3', 'nama': 'Masa Studi, Lulusan Tepat Waktu, dan IPK', 'tipe': 'group'},
+                {'kode': 'C6.3.4', 'nama': 'Keberhasilan Lulusan (Tracer Study)', 'tipe': 'group'},
+                {'kode': 'C6.1', 'nama': 'Latar Belakang', 'tipe': 'teks'},
+                {'kode': 'C6.2', 'nama': 'Kebijakan', 'tipe': 'teks'},
+                {'kode': 'C6.3.1.a', 'nama': 'Kualitas Mahasiswa (Rasio mahasiswa terhadap DTPS)', 'tipe': 'teks'},
+                {'kode': 'C6.3.1.b', 'nama': 'Kualitas Mahasiswa (Persentase mahasiswa asing)', 'tipe': 'teks'},
+                {'kode': 'C6.3.3.a', 'nama': 'Masa Studi, Lulusan Tepat Waktu, dan IPK (IPK lulusan)', 'tipe': 'teks'},
+                {'kode': 'C6.3.2.a', 'nama': 'Prestasi Mahasiswa (Prestasi akademik)', 'tipe': 'teks'},
+                {'kode': 'C6.3.2.b', 'nama': 'Prestasi Mahasiswa (Prestasi nonakademik)', 'tipe': 'teks'},
+                {'kode': 'C6.3.2.c', 'nama': 'Produk / jasa karya mahasiswa', 'tipe': 'teks'},
+                {'kode': 'C6.3.3.b', 'nama': 'Masa Studi, Lulusan Tepat Waktu, dan IPK (Masa studi)', 'tipe': 'teks'},
+                {'kode': 'C6.3.3.c', 'nama': 'Masa Studi, Lulusan Tepat Waktu, dan IPK (Lulusan tepat waktu)', 'tipe': 'teks'},
+                {'kode': 'C6.3.3.d', 'nama': 'Persentase keberhasilan studi moda reguler', 'tipe': 'teks'},
+                {'kode': 'C6.3.2.d', 'nama': 'Publikasi ilmiah mahasiswa', 'tipe': 'teks'},
+                {'kode': 'C6.3.2.e', 'nama': 'Pagelaran / pameran / presentasi mahasiswa', 'tipe': 'teks'},
+                {'kode': 'C6.3.2.f', 'nama': 'Luaran penelitian dan PkM yang dihasilkan mahasiswa', 'tipe': 'teks'},
+                {'kode': 'C6.3.4.a', 'nama': 'Keberhasilan Lulusan (Tracer study)', 'tipe': 'teks'},
+                {'kode': 'C6.3.4.b', 'nama': 'Keberhasilan Lulusan (Waktu tunggu)', 'tipe': 'teks'},
+                {'kode': 'C6.3.4.c', 'nama': 'Keberhasilan Lulusan (Waktu tunggu moda reguler)', 'tipe': 'teks'},
+                {'kode': 'C6.3.4.d', 'nama': 'Keberhasilan Lulusan (Kesesuaian bidang kerja)', 'tipe': 'teks'},
+                {'kode': 'C6.3.4.e', 'nama': 'Keberhasilan Lulusan (Tingkat dan ukuran tempat kerja)', 'tipe': 'teks'},
+                {'kode': 'C6.3.4.f', 'nama': 'Keberhasilan Lulusan (Tingkat kepuasan pengguna)', 'tipe': 'teks'},
+                {'kode': 'C6.4', 'nama': 'Analisis Faktor Keberhasilan dan Penghambat', 'tipe': 'teks'},
+                {'kode': 'C6.5', 'nama': 'Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)', 'tipe': 'teks'},
             ],
-            "C7": [
-                {"kode": "C7.1", "nama": "Latar Belakang", "tipe": "teks"},
-                {"kode": "C7.2", "nama": "Kebijakan", "tipe": "teks"},
-                {
-                    "kode": "C7.3.1",
-                    "nama": "Sistem Penjaminan Mutu",
-                    "tipe": "both",
-                },
-                {
-                    "kode": "C7.4",
-                    "nama": "Analisis Faktor Keberhasilan dan Penghambat Pelaksanaan Sistem Penjaminan Mutu",
-                    "tipe": "teks",
-                },
-                {
-                    "kode": "C7.5",
-                    "nama": "Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)",
-                    "tipe": "teks",
-                },
+            'C7': [
+                {'kode': 'C7.3.1', 'nama': 'Sistem Penjaminan Mutu', 'tipe': 'group'},
+                {'kode': 'C7.1', 'nama': 'Latar Belakang', 'tipe': 'teks'},
+                {'kode': 'C7.2', 'nama': 'Kebijakan', 'tipe': 'teks'},
+                {'kode': 'C7.3.1.a', 'nama': 'Keberadaan unit penjaminan dan komitmen pimpinan', 'tipe': 'teks'},
+                {'kode': 'C7.3.1.b', 'nama': 'Ketersediaan Perangkat SPMI dan pengakuan mutu eksternal', 'tipe': 'teks'},
+                {'kode': 'C7.3.1.c', 'nama': 'Indikator Kinerja Tambahan (IKT)', 'tipe': 'teks'},
+                {'kode': 'C7.3.1.d', 'nama': 'Keterlaksanaan penjaminan mutu dan audit mutu internal', 'tipe': 'teks'},
+                {'kode': 'C7.3.1.e', 'nama': 'Evaluasi capaian kinerja', 'tipe': 'teks'},
+                {'kode': 'C7.3.1.f', 'nama': 'Kepuasan Pemangku kepentingan', 'tipe': 'teks'},
+                {'kode': 'C7.4', 'nama': 'Analisis Faktor Keberhasilan dan Penghambat Pelaksanaan SPMI', 'tipe': 'teks'},
+                {'kode': 'C7.5', 'nama': 'Strategi Perbaikan dan Pengembangan (Menggunakan Analisis SWOT)', 'tipe': 'teks'},
             ],
         }
 
@@ -413,8 +399,8 @@ def seed():
 
         # ==========================================
         # Seed Target Akreditasi
-        # 2025: IF (target skor terisi), TE/Teknik Tenaga Listrik (belum set target skor)
-        # 2024: EL/Teknik Elektro (target skor terisi)
+        # 2026: IF (target skor terisi), TE/Teknik Tenaga Listrik (belum set target skor)
+        # 2025: EL/Teknik Elektro (target skor terisi)
         # ==========================================
 
         def upsert_target(prodi_obj, tahun, target_skor_val, deadline_val, is_aktif_val):
@@ -459,40 +445,45 @@ def seed():
                 db.commit()
                 print(f"  Deactivated {len(others)} stale target(s) for {prodi_obj.kode} (non-{keep_tahun})")
 
-        # --- IF: aktif 2025, target skor terisi ---
+        # --- IF: aktif 2026, target skor terisi ---
         if "IF" in prodis:
-            deactivate_other_targets(prodis["IF"], keep_tahun=2025)
+            deactivate_other_targets(prodis["IF"], keep_tahun=2026)
             upsert_target(
                 prodis["IF"],
-                tahun=2025,
-                target_skor_val=3.8,
+                tahun=2026,
+                target_skor_val=340.0,
                 deadline_val=date.today() + timedelta(days=60),
                 is_aktif_val=True,
             )
 
-        # --- TE (Teknik Tenaga Listrik): aktif 2025, BELUM set target skor ---
+        # --- TE (Teknik Tenaga Listrik): aktif 2026, BELUM set target skor ---
         if "TE" in prodis:
-            deactivate_other_targets(prodis["TE"], keep_tahun=2025)
+            deactivate_other_targets(prodis["TE"], keep_tahun=2026)
             upsert_target(
                 prodis["TE"],
-                tahun=2025,
+                tahun=2026,
                 target_skor_val=None,  # Belum diset oleh tim prodi
                 deadline_val=None,     # Belum diset oleh tim prodi
                 is_aktif_val=True,
             )
 
-        # --- EL (Teknik Elektro): aktif 2024, target skor terisi ---
+        # --- EL (Teknik Elektro): aktif 2025, target skor terisi ---
         if "EL" in prodis:
-            deactivate_other_targets(prodis["EL"], keep_tahun=2024)
+            deactivate_other_targets(prodis["EL"], keep_tahun=2025)
             upsert_target(
                 prodis["EL"],
-                tahun=2024,
-                target_skor_val=3.5,
+                tahun=2025,
+                target_skor_val=300.0,
                 deadline_val=None,  # Tidak ada deadline spesifik untuk testing
                 is_aktif_val=True,
             )
 
+        try:
+            from scripts.seed_simulasi import seed as seed_simulasi
 
+            seed_simulasi()
+        except Exception as e:
+            print(f"Warning: failed to seed simulation matrix: {e}")
 
     finally:
         db.close()

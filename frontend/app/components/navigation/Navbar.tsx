@@ -1,18 +1,32 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { apiFetch } from "@/app/services/api";
+
 interface NavbarProps {
   programStudi?: string;
+  programStudiId?: string;
   userName?: string;
   userInitial?: string;
   role?: string;
 }
 
+interface NotificationItem {
+  id: string;
+  kategori: string;
+  severity: "info" | "warning" | "critical" | string;
+  judul: string;
+  pesan: string;
+  href?: string | null;
+  is_read: boolean;
+}
+
 export default function Navbar({
   programStudi = "",
+  programStudiId = "",
   userName = "",
   userInitial = "",
   role = "",
@@ -20,8 +34,38 @@ export default function Navbar({
   const pathname = usePathname();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const searchParams = useSearchParams();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const prodiId = searchParams.get("id") || programStudiId;
+  const prodiQuery = prodiId ? `?id=${prodiId}` : "";
+  const notificationQuery = prodiId ? `&program_studi_id=${prodiId}` : "";
+
+  async function fetchNotifications() {
+    if (!role) return;
+
+    const response = await apiFetch(`/api/v1/notifikasi?limit=10${notificationQuery}`);
+    if (!response.ok) return;
+
+    const data = await response.json();
+    setNotifications(data.items ?? []);
+    setUnreadCount(data.unread_count ?? 0);
+  }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(fetchNotifications, 0);
+    const intervalId = window.setInterval(fetchNotifications, 60000);
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+    };
+    // fetchNotifications reads the latest auth token from localStorage through apiFetch.
+    // Re-subscribing on role changes is enough for this navbar-level polling.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, notificationQuery]);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -36,8 +80,35 @@ export default function Navbar({
     (role === "admin" || role === "pimpinan") &&
     (pathname.includes("/prodi/") || pathname.includes("/akreditasi/"));
 
-  const prodiId = searchParams.get("id");
-  const prodiQuery = prodiId ? `?id=${prodiId}` : "";
+  const markNotificationRead = async (item: NotificationItem) => {
+    if (item.is_read) return;
+
+    setNotifications((current) =>
+      current.map((notification) =>
+        notification.id === item.id
+          ? { ...notification, is_read: true }
+          : notification,
+      ),
+    );
+    setUnreadCount((current) => Math.max(0, current - 1));
+
+    await apiFetch(`/api/v1/notifikasi/${item.id}/read`, { method: "POST" });
+  };
+
+  const markAllNotificationsRead = async () => {
+    setNotifications((current) =>
+      current.map((notification) => ({ ...notification, is_read: true })),
+    );
+    setUnreadCount(0);
+    const readAllQuery = prodiId ? `?program_studi_id=${prodiId}` : "";
+    await apiFetch(`/api/v1/notifikasi/read-all${readAllQuery}`, { method: "POST" });
+  };
+
+  const severityClass = (severity: NotificationItem["severity"]) => {
+    if (severity === "critical") return "bg-red-500";
+    if (severity === "warning") return "bg-amber-400";
+    return "bg-blue-500";
+  };
 
   return (
     <nav className="w-full bg-[#00509d] shadow-md py-2">
@@ -140,6 +211,113 @@ export default function Navbar({
 
         {/* Kanan — info prodi + avatar */}
         <div className="flex items-center gap-3 px-5 border-l border-[#0060b8]">
+          <div className="relative" ref={notificationRef}>
+            <button
+              type="button"
+              onClick={() => setNotificationOpen((current) => !current)}
+              className="relative flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors hover:bg-[#0060b8] focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-1 focus:ring-offset-[#00509d]"
+              aria-label="Notifikasi"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {notificationOpen && (
+              <div className="absolute right-0 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-gray-100 bg-white shadow-lg z-50">
+                <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-bold text-gray-800">Notifikasi</p>
+                    <p className="text-xs text-gray-400">
+                      {unreadCount} belum dibaca
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={markAllNotificationsRead}
+                    className="text-xs font-semibold text-[#00509d] hover:text-[#003f7d]"
+                  >
+                    Tandai dibaca
+                  </button>
+                </div>
+
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="px-4 py-6 text-center text-sm text-gray-500">
+                      Tidak ada notifikasi.
+                    </div>
+                  ) : (
+                    notifications.map((item) => {
+                      const content = (
+                        <div
+                          className={`flex gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
+                            item.is_read ? "bg-white" : "bg-blue-50/60"
+                          }`}
+                        >
+                          <span
+                            className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${severityClass(
+                              item.severity,
+                            )}`}
+                          />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold text-gray-800">
+                              {item.judul}
+                            </span>
+                            <span className="mt-0.5 block text-xs leading-relaxed text-gray-500">
+                              {item.pesan}
+                            </span>
+                          </span>
+                        </div>
+                      );
+
+                      if (item.href) {
+                        return (
+                          <Link
+                            key={item.id}
+                            href={item.href}
+                            onClick={() => {
+                              markNotificationRead(item);
+                              setNotificationOpen(false);
+                            }}
+                            className="block"
+                          >
+                            {content}
+                          </Link>
+                        );
+                      }
+
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => markNotificationRead(item)}
+                          className="block w-full"
+                        >
+                          {content}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Info konteks — nama prodi untuk non-admin, label role untuk admin */}
           <div className="text-right hidden sm:block">
             {role === "admin" ? (
