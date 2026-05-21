@@ -52,6 +52,7 @@ from app.models.simulasi import (
 )
 from app.models.target_akreditasi import TargetAkreditasi
 from app.models.user import User
+from app.models.komentar import Komentar
 
 __all__ = [
     "ProgramStudi",
@@ -106,4 +107,5 @@ __all__ = [
     "LkpsPenelitianMahasiswa",
     "LkpsSpmiDokumen",
     "LkpsSpmiPelaksanaan",
+    "Komentar",
 ]
