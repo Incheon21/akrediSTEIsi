@@ -60,7 +60,8 @@ def create_komentar(
     target_id: UUID,
     payload: KomentarCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("pimpinan", "admin", "koordinator")),
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_role("pimpinan", "admin", "koordinator")),
 ):
     target = db.query(TargetAkreditasi).filter(TargetAkreditasi.id == target_id).first()
     if not target:
@@ -101,7 +102,8 @@ def update_komentar(
     komentar_id: UUID,
     payload: KomentarUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("pimpinan", "admin", "koordinator")),
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_role("pimpinan", "admin", "koordinator")),
 ):
     komentar = (
         db.query(Komentar)
@@ -146,7 +148,8 @@ def delete_komentar(
     target_id: UUID,
     komentar_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("pimpinan", "admin", "koordinator")),
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_role("pimpinan", "admin", "koordinator")),
 ):
     komentar = (
         db.query(Komentar)
