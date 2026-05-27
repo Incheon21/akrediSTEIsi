@@ -23,9 +23,6 @@ router = APIRouter(prefix="/user-management", tags=["user-management"])
 
 _ADMIN = Depends(require_role("admin"))
 
-
-# ─── Users ────────────────────────────────────────────────────────────────────
-
 @router.get(
     "/users",
     response_model=GetAllUsersResponse,
@@ -61,14 +58,12 @@ def get_user(user_id: UUID, db: Session = Depends(get_db)) -> UserResponse:
 )
 def create_user(body: CreateUserRequest, db: Session = Depends(get_db)) -> UserResponse:
     """Membuat user baru."""
-    # Check email uniqueness
     existing_email = db.execute(
         select(User).where(User.email == body.email)
     ).scalar_one_or_none()
     if existing_email:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email sudah digunakan")
 
-    # Check NIP uniqueness if provided
     if body.nip:
         existing_nip = db.execute(
             select(User).where(User.nip == body.nip)
@@ -76,12 +71,10 @@ def create_user(body: CreateUserRequest, db: Session = Depends(get_db)) -> UserR
         if existing_nip:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="NIP sudah digunakan")
 
-    # Validate role exists
     role = db.get(Role, body.role_id)
     if not role:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role tidak ditemukan")
 
-    # Validate program studi if provided
     if body.program_studi_id:
         prodi = db.get(ProgramStudi, body.program_studi_id)
         if not prodi:
@@ -124,7 +117,7 @@ def update_user(
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email sudah digunakan")
         user.email = body.email
 
-    if body.nip is not None and body.nip != user.nip:
+    if body.nip is not None and body.nip != "" and body.nip != user.nip:
         existing = db.execute(
             select(User).where(User.nip == body.nip)
         ).scalar_one_or_none()
@@ -172,9 +165,6 @@ def delete_user(user_id: UUID, db: Session = Depends(get_db)) -> None:
     db.delete(user)
     db.commit()
 
-
-# ─── Roles ────────────────────────────────────────────────────────────────────
-
 @router.get(
     "/roles",
     response_model=GetAllRolesResponse,
@@ -185,9 +175,6 @@ def get_all_roles(db: Session = Depends(get_db)) -> GetAllRolesResponse:
     """Mengembalikan semua role yang tersedia."""
     roles = db.execute(select(Role)).scalars().all()
     return GetAllRolesResponse.model_validate({"roles": roles})
-
-
-# ─── Program Studi ────────────────────────────────────────────────────────────
 
 @router.get(
     "/program-studi",

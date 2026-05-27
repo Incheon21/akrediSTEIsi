@@ -37,7 +37,7 @@ interface UserForm {
   is_active: boolean;
 }
 
-type FormErrors = Partial<Record<keyof UserForm, string>>;
+type FormErrors = Partial<Record<keyof UserForm | "api", string>>;
 
 const EMPTY_FORM: UserForm = {
   nama: "",
@@ -139,6 +139,7 @@ function UserFormComponent({
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       e.email = "Format email tidak valid";
     if (!isEdit && !form.password) e.password = "Password wajib diisi";
+    if (form.nip && !/^\d{18}$/.test(form.nip)) e.nip = "NIP harus terdiri dari 18 digit angka";
     if (!form.role_id) e.role_id = "Role wajib dipilih";
     return e;
   }
@@ -155,6 +156,8 @@ function UserFormComponent({
       const payload = { ...form };
       if (isEdit && !payload.password) delete (payload as Partial<UserForm>).password;
       await onSubmit(payload);
+    } catch (err: any) {
+      setErrors((e) => ({ ...e, api: err.message }));
     } finally {
       setLoading(false);
     }
@@ -170,6 +173,7 @@ function UserFormComponent({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
+
         <div className="col-span-2">
           <label className="block text-xs font-medium text-gray-500 mb-1">
             Nama Lengkap
@@ -208,9 +212,12 @@ function UserFormComponent({
           <input
             className={inputCls("nip")}
             value={form.nip}
-            onChange={(e) => setField("nip", e.target.value)}
+            onChange={(e) => setField("nip", e.target.value.replace(/\D/g, "").slice(0, 18))}
             placeholder="Opsional"
           />
+          {errors.nip && (
+            <p className="text-red-500 text-xs mt-1">{errors.nip}</p>
+          )}
         </div>
 
         <div className="col-span-2">
@@ -291,6 +298,9 @@ function UserFormComponent({
       </div>
 
       <div className="flex gap-3 justify-end pt-2">
+        {errors.api && (
+          <p className="flex-1 text-red-500 text-sm self-center">{errors.api}</p>
+        )}
         <button
           type="button"
           onClick={onClose}
@@ -328,7 +338,6 @@ function StatusBadge({ active }: { active: boolean }) {
     </span>
   );
 }
-
 
 export default function UserManagement() {
   const router = useRouter();
@@ -393,7 +402,15 @@ export default function UserManagement() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error("Gagal menambah user");
+    if (!res.ok) {
+      const err = await res.json();
+      const detail = err.detail;
+      throw new Error(
+        Array.isArray(detail)
+          ? detail.map((d: any) => d.msg).join(", ")
+          : detail ?? "Gagal menambah user"
+      );
+    }
     setShowCreate(false);
     await fetchUsers();
   }
@@ -405,7 +422,15 @@ export default function UserManagement() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error("Gagal memperbarui user");
+    if (!res.ok) {
+      const err = await res.json();
+      const detail = err.detail;
+      throw new Error(
+        Array.isArray(detail)
+          ? detail.map((d: any) => d.msg).join(", ")
+          : detail ?? "Gagal memperbarui user"
+      );
+    }
     setEditUser(null);
     await fetchUsers();
   }
@@ -433,6 +458,7 @@ export default function UserManagement() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
+  
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
