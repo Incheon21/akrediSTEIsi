@@ -136,6 +136,16 @@ export default function Navbar({
               >
                 Dashboard Multiprodi
               </Link>
+              <Link
+                href="/user-management"
+                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${
+                  isActive("/dashboard-multiprodi")
+                    ? "text-[#f3e412]"
+                    : "text-white hover:text-[#f3e412]"
+                }`}
+              >
+                Manajemen Pengguna
+              </Link>
 
               {/* Link halaman prodi — hanya muncul saat sedang di konteks prodi tertentu */}
               {isAdminInProdiPage && (
