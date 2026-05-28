@@ -11,6 +11,9 @@ from __future__ import annotations
 
 from datetime import date
 
+from sqlalchemy import select
+
+from app.models.lkps import LkpsMahasiswaAktif, LkpsPppiDisiplin
 from .base import BaseMapper, CHECK, _SHEET_JENJANG
 
 # Jenjang string → row in Menu where the checkbox "√" is placed (col G)
@@ -108,3 +111,76 @@ class DaftarTabelMapper(BaseMapper):
             allowed = _SHEET_JENJANG.get(sheet_name)
             applies = allowed is not None and jenjang in allowed
             self.safe_write(ws, f"{col}{row}", CHECK if applies else None)
+
+
+class ProgramStudiSheetMapper(BaseMapper):
+    """Fills static identity tabs whose data comes from ProgramStudi/LKPS data."""
+
+    def fill(self) -> None:
+        self._fill_ps_sheet()
+        self._fill_pppi_sheet()
+
+    def _fill_ps_sheet(self) -> None:
+        if not self.sheet_applies("PS"):
+            return
+        ws = self.wb["PS"]
+        ps = self.submission.program_studi
+
+        mahasiswa_aktif = (
+            self.db.execute(
+                select(LkpsMahasiswaAktif)
+                .where(
+                    LkpsMahasiswaAktif.submission_id == self.submission.id,
+                    LkpsMahasiswaAktif.prodi_diakreditasi.is_(True),
+                )
+                .order_by(LkpsMahasiswaAktif.no)
+            )
+            .scalars()
+            .first()
+        )
+
+        sk_parts = [part for part in (ps.no_sk_ban_pt, _date_value(ps.tanggal_akreditasi)) if part]
+        self.safe_write(ws, "B17", ps.jenjang)
+        self.safe_write(ws, "C17", ps.nama)
+        self.safe_write(ws, "D17", ps.akreditasi)
+        self.safe_write(ws, "E17", " / ".join(str(part) for part in sk_parts) if sk_parts else None)
+        self.safe_write(ws, "F17", _date_value(ps.tanggal_kadaluarsa))
+        self.safe_write(ws, "G17", mahasiswa_aktif.aktif_ts if mahasiswa_aktif else None)
+
+    def _fill_pppi_sheet(self) -> None:
+        if not self.sheet_applies("PSPPI"):
+            return
+        ws = self.wb["PSPPI"]
+        records = (
+            self.db.execute(
+                select(LkpsPppiDisiplin)
+                .where(LkpsPppiDisiplin.submission_id == self.submission.id)
+                .order_by(LkpsPppiDisiplin.no)
+            )
+            .scalars()
+            .all()
+        )
+
+        row_by_discipline = {
+            "Kebumian dan Energi": 17,
+            "Rekayasa Sipil dan Lingkungan Terbangun": 18,
+            "Industri": 19,
+            "Konservasi dan Pengelolaan Sumber Daya Alam": 20,
+            "Pertanian dan Hasil Pertanian": 21,
+            "Teknologi Kelautan dan Perkapalan": 22,
+            "Aeronotika dan Astronotika": 23,
+        }
+        for rec in records:
+            row = row_by_discipline.get(rec.disiplin)
+            if row is None:
+                continue
+            self.write_check(ws, "C", row, bool(rec.diselenggarakan))
+            self.write_check(ws, "D", row, not bool(rec.diselenggarakan))
+
+
+def _date_value(value):
+    if value is None:
+        return None
+    if hasattr(value, "date"):
+        return value.date()
+    return value

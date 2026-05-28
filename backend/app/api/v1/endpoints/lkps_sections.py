@@ -20,12 +20,14 @@ from app.models.lkps import (
     LkpsLuaranPenelitian,
     LkpsMahasiswaAktif,
     LkpsMasaStudi,
+    LkpsMataKuliahPpi,
     LkpsMkBasicScience,
     LkpsPembimbingLapangan,
     LkpsPenelitianMahasiswa,
     LkpsPenelitianSummary,
     LkpsPenggunaanDana,
     LkpsPkmSummary,
+    LkpsPppiDisiplin,
     LkpsPrasarana,
     LkpsPrestasiMahasiswa,
     LkpsProdukJasa,
@@ -68,6 +70,7 @@ def _binding(
 
 
 LKPS_SECTION_BINDINGS: Dict[str, SectionBinding] = {
+    "PSPPI": _binding("PSPPI", LkpsPppiDisiplin, order=("no",), label="Disiplin Teknik Keinsinyuran PPI"),
     "1": _binding("1", LkpsVmts, order=("no",), label="VMTS"),
     "2a1": _binding(
         "2a1",
@@ -96,6 +99,12 @@ LKPS_SECTION_BINDINGS: Dict[str, SectionBinding] = {
         LkpsKurikulum,
         order=("semester", "kode_mk"),
         label="Daftar Mata Kuliah",
+    ),
+    "3a2": _binding(
+        "3a2",
+        LkpsMataKuliahPpi,
+        order=("no",),
+        label="Mata Kuliah dan Dokumen Pembelajaran PPI",
     ),
     "3a3": _binding(
         "3a3",

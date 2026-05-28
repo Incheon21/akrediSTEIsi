@@ -18,6 +18,15 @@ interface AutomaticIndicator {
   kontribusi: number;
   kontribusi_maks: number;
   sumber_data: string;
+  kelompok_penilaian: string;
+  kelompok_urutan: number;
+  kelompok_nama: string;
+  kelompok_deskripsi: string;
+  subbab_penilaian?: string;
+  subbab_urutan?: number;
+  subbab_kode?: string;
+  subbab_nama?: string;
+  subbab_deskripsi?: string;
 }
 
 interface MatrixIndicator {
@@ -28,6 +37,44 @@ interface MatrixIndicator {
   kontribusi_maks: number;
   skor_manual: number | null;
   kontribusi_manual: number;
+  kelompok_penilaian: string;
+  kelompok_urutan: number;
+  kelompok_nama: string;
+  kelompok_deskripsi: string;
+  subbab_penilaian?: string;
+  subbab_urutan?: number;
+  subbab_kode?: string;
+  subbab_nama?: string;
+  subbab_deskripsi?: string;
+}
+
+interface ScoringSubsection {
+  id: string;
+  group_id: string;
+  urutan: number;
+  kode: string;
+  nama: string;
+  deskripsi: string;
+  kode_awal: number;
+  kode_akhir: number;
+  jumlah_indikator: number;
+  jumlah_manual: number;
+  jumlah_manual_terisi: number;
+  jumlah_otomatis: number;
+}
+
+interface ScoringGroup {
+  id: string;
+  urutan: number;
+  nama: string;
+  deskripsi: string;
+  kode_awal: number;
+  kode_akhir: number;
+  jumlah_indikator: number;
+  jumlah_manual: number;
+  jumlah_manual_terisi: number;
+  jumlah_otomatis: number;
+  sub_bab?: ScoringSubsection[];
 }
 
 interface AutomaticSimulation {
@@ -44,6 +91,7 @@ interface AutomaticSimulation {
   breakdown_skor: Record<string, number>;
   indikator: AutomaticIndicator[];
   semua_indikator: MatrixIndicator[];
+  kelompok_penilaian: ScoringGroup[];
   catatan: string;
 }
 
@@ -140,6 +188,36 @@ export default function SimulasiSkorPage() {
   const automaticByCode = new Map(
     simulation.indikator.map((item) => [item.kode_indikator, item]),
   );
+  const scoringGroups =
+    simulation.kelompok_penilaian?.length > 0
+      ? simulation.kelompok_penilaian
+      : Array.from(
+          new Map(
+            simulation.semua_indikator.map((item) => [
+              item.kelompok_penilaian,
+              {
+                id: item.kelompok_penilaian,
+                urutan: item.kelompok_urutan,
+                nama: item.kelompok_nama,
+                deskripsi: item.kelompok_deskripsi,
+                kode_awal: Number(item.kode_indikator),
+                kode_akhir: Number(item.kode_indikator),
+                jumlah_indikator: 0,
+                jumlah_manual: 0,
+                jumlah_manual_terisi: 0,
+                jumlah_otomatis: 0,
+              },
+            ]),
+          ).values(),
+        );
+  const manualGroups = scoringGroups
+    .map((group) => ({
+      ...group,
+      indicators: simulation.semua_indikator.filter(
+        (item) => item.kelompok_penilaian === group.id,
+      ),
+    }))
+    .filter((group) => group.indicators.length > 0);
   const manualScoreEntries = Object.entries(manualScores)
     .filter(([, value]) => value.trim() !== "")
     .map(([kode, value]) => [kode, Number(value)] as const)
@@ -165,6 +243,9 @@ export default function SimulasiSkorPage() {
   const statusClass = "bg-blue-50 text-blue-700 border-blue-200";
 
   async function handleSaveManualScores() {
+    const currentSimulation = simulation;
+    if (!currentSimulation) return;
+
     setSavingManual(true);
     setSaveMessage(null);
 
@@ -177,7 +258,7 @@ export default function SimulasiSkorPage() {
 
     try {
       const response = await apiFetch(
-        `/api/v1/simulasi/manual/${simulation.submission_id}`,
+        `/api/v1/simulasi/manual/${currentSimulation.submission_id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -372,83 +453,190 @@ export default function SimulasiSkorPage() {
             </p>
           )}
 
-          <div className="mt-4 overflow-hidden rounded-lg border border-slate-100">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
-                <tr>
-                  <th className="px-4 py-3">Kode</th>
-                  <th className="px-4 py-3">Indikator</th>
-                  <th className="px-4 py-3">Mode</th>
-                  <th className="px-4 py-3">Skor Rubrik</th>
-                  <th className="px-4 py-3">Poin</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {simulation.semua_indikator.map((item) => {
-                  const automatic = automaticByCode.get(item.kode_indikator);
-                  const manualValue = Number(manualScores[item.kode_indikator] || 0);
-                  const manualPoint =
-                    automatic?.kontribusi ??
-                    (Math.min(4, Math.max(0, manualValue)) / 4) *
-                      item.kontribusi_maks;
+          <div className="mt-4 flex flex-col gap-4">
+            {manualGroups.map((group) => {
+              const manualItems = group.indicators.filter(
+                (item) => item.mode === "MANUAL",
+              );
+              const groupManualFilled = manualItems.filter(
+                (item) => (manualScores[item.kode_indikator] ?? "").trim() !== "",
+              ).length;
+              const subBabGroups = group.indicators.reduce<
+                Array<{
+                  id: string;
+                  urutan: number;
+                  kode: string;
+                  nama: string;
+                  deskripsi: string;
+                  indicators: MatrixIndicator[];
+                }>
+              >((sections, item) => {
+                const id = item.subbab_penilaian ?? `${group.id}-utama`;
+                const existing = sections.find((section) => section.id === id);
+                if (existing) {
+                  existing.indicators.push(item);
+                  return sections;
+                }
 
-                  return (
-                    <tr key={item.kode_indikator} className="bg-white">
-                      <td className="px-4 py-3 font-semibold text-slate-600">
-                        {item.kode_indikator}
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">
-                        <p className="font-medium">{item.nama_indikator}</p>
-                        <p className="text-xs text-slate-400">{item.komponen}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
-                            automatic
-                              ? "bg-emerald-50 text-emerald-700"
-                              : "bg-amber-50 text-amber-700"
-                          }`}
-                        >
-                          {automatic ? "Otomatis" : "Manual"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {automatic ? (
-                          <span className="font-semibold text-slate-700">
-                            {automatic.skor_mentah.toFixed(2)} / 4
-                          </span>
-                        ) : (
-                          <input
-                            type="number"
-                            min="0"
-                            max="4"
-                            step="0.1"
-                            value={manualScores[item.kode_indikator] ?? ""}
-                            onChange={(event) => {
-                              const { value } = event.target;
-                              setManualScores((current) => {
-                                const next = { ...current };
-                                if (value === "") {
-                                  delete next[item.kode_indikator];
-                                } else {
-                                  next[item.kode_indikator] = value;
-                                }
-                                return next;
-                              });
-                            }}
-                            className="h-9 w-24 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#00509d]"
-                            placeholder="0-4"
-                          />
-                        )}
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-[#00509d]">
-                        {manualPoint.toFixed(2)} / {item.kontribusi_maks.toFixed(2)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                sections.push({
+                  id,
+                  urutan: item.subbab_urutan ?? 0,
+                  kode: item.subbab_kode ?? `${group.urutan}`,
+                  nama: item.subbab_nama ?? group.nama,
+                  deskripsi: item.subbab_deskripsi ?? group.deskripsi,
+                  indicators: [item],
+                });
+                return sections;
+              }, []);
+
+              return (
+                <div
+                  key={group.id}
+                  className="overflow-hidden rounded-lg border border-slate-200 bg-white"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#00509d]">
+                        Kelompok {group.urutan} | Indikator {group.kode_awal}
+                        -{group.kode_akhir}
+                      </p>
+                      <h3 className="mt-1 text-sm font-bold text-[#132040]">
+                        {group.nama}
+                      </h3>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                        {group.deskripsi}
+                      </p>
+                    </div>
+                    <div className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+                      Manual {groupManualFilled}/{manualItems.length}
+                    </div>
+                  </div>
+
+                  <div>
+                    {subBabGroups.map((subBab) => {
+                      const subManualItems = subBab.indicators.filter(
+                        (item) => item.mode === "MANUAL",
+                      );
+                      const subManualFilled = subManualItems.filter(
+                        (item) =>
+                          (manualScores[item.kode_indikator] ?? "").trim() !== "",
+                      ).length;
+
+                      return (
+                        <div key={subBab.id} className="border-t border-slate-100 first:border-t-0">
+                          <div className="flex flex-wrap items-start justify-between gap-3 bg-white px-4 py-3">
+                            <div>
+                              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                                Sub Bab {subBab.kode}
+                              </p>
+                              <p className="mt-1 text-sm font-semibold text-slate-800">
+                                {subBab.nama}
+                              </p>
+                              <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                                {subBab.deskripsi}
+                              </p>
+                            </div>
+                            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+                              Manual {subManualFilled}/{subManualItems.length}
+                            </span>
+                          </div>
+
+                          <div className="overflow-x-auto">
+                            <table className="w-full min-w-[760px] text-left text-sm">
+                              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+                                <tr>
+                                  <th className="px-4 py-3">Kode</th>
+                                  <th className="px-4 py-3">Indikator</th>
+                                  <th className="px-4 py-3">Mode</th>
+                                  <th className="px-4 py-3">Skor Rubrik</th>
+                                  <th className="px-4 py-3">Poin</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {subBab.indicators.map((item) => {
+                                  const automatic = automaticByCode.get(
+                                    item.kode_indikator,
+                                  );
+                                  const manualValue = Number(
+                                    manualScores[item.kode_indikator] || 0,
+                                  );
+                                  const manualPoint =
+                                    automatic?.kontribusi ??
+                                    (Math.min(4, Math.max(0, manualValue)) / 4) *
+                                      item.kontribusi_maks;
+
+                                  return (
+                                    <tr key={item.kode_indikator} className="bg-white">
+                                      <td className="px-4 py-3 font-semibold text-slate-600">
+                                        {item.kode_indikator}
+                                      </td>
+                                      <td className="px-4 py-3 text-slate-700">
+                                        <p className="font-medium">
+                                          {item.nama_indikator}
+                                        </p>
+                                        <p className="text-xs text-slate-400">
+                                          {item.komponen}
+                                        </p>
+                                      </td>
+                                      <td className="px-4 py-3">
+                                        <span
+                                          className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                                            automatic
+                                              ? "bg-emerald-50 text-emerald-700"
+                                              : "bg-amber-50 text-amber-700"
+                                          }`}
+                                        >
+                                          {automatic ? "Otomatis" : "Manual"}
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-3">
+                                        {automatic ? (
+                                          <span className="font-semibold text-slate-700">
+                                            {automatic.skor_mentah.toFixed(2)} / 4
+                                          </span>
+                                        ) : (
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            max="4"
+                                            step="0.1"
+                                            value={
+                                              manualScores[item.kode_indikator] ?? ""
+                                            }
+                                            onChange={(event) => {
+                                              const { value } = event.target;
+                                              setManualScores((current) => {
+                                                const next = { ...current };
+                                                if (value === "") {
+                                                  delete next[item.kode_indikator];
+                                                } else {
+                                                  next[item.kode_indikator] = value;
+                                                }
+                                                return next;
+                                              });
+                                            }}
+                                            className="h-9 w-24 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#00509d]"
+                                            placeholder="0-4"
+                                          />
+                                        )}
+                                      </td>
+                                      <td className="px-4 py-3 font-semibold text-[#00509d]">
+                                        {manualPoint.toFixed(2)} /{" "}
+                                        {item.kontribusi_maks.toFixed(2)}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 

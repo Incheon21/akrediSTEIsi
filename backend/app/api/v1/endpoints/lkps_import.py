@@ -21,12 +21,14 @@ from app.models.lkps import (
     LkpsKurikulum,
     LkpsMahasiswaAktif,
     LkpsMasaStudi,
+    LkpsMataKuliahPpi,
     LkpsMkBasicScience,
     LkpsPembimbingLapangan,
     LkpsPenggunaanDana,
     LkpsPenelitianMahasiswa,
     LkpsPenelitianSummary,
     LkpsPkmSummary,
+    LkpsPppiDisiplin,
     LkpsPrasarana,
     LkpsPrestasiMahasiswa,
     LkpsProdukJasa,
@@ -120,6 +122,23 @@ def _col(row_values: tuple, letter: str):
     for ch in letter.upper():
         idx = idx * 26 + (ord(ch) - ord("A") + 1)
     return row_values[idx - 1]
+
+
+def _has_data(*values) -> bool:
+    """Return True when at least one imported input cell is intentionally filled."""
+    for value in values:
+        if value is None:
+            continue
+        if isinstance(value, str) and value.strip() == "":
+            continue
+        return True
+    return False
+
+
+def _carry_forward(value, previous):
+    """Use the current cell value, or the previous non-empty category value."""
+    current = _s(value)
+    return current if current else previous
 
 
 # ---------------------------------------------------------------------------
@@ -241,6 +260,16 @@ _MASA_STUDI_SECTIONS: dict[str, tuple[int, list[str]]] = {
     "PPI":  (67, ["TS-2", "TS-1", "TS"]),
 }
 
+_PPPI_DISIPLIN_ROW_INV: dict[int, str] = {
+    17: "Kebumian dan Energi",
+    18: "Rekayasa Sipil dan Lingkungan Terbangun",
+    19: "Industri",
+    20: "Konservasi dan Pengelolaan Sumber Daya Alam",
+    21: "Pertanian dan Hasil Pertanian",
+    22: "Teknologi Kelautan dan Perkapalan",
+    23: "Aeronotika dan Astronotika",
+}
+
 
 # ---------------------------------------------------------------------------
 # Main endpoint
@@ -312,10 +341,12 @@ async def import_lkps_excel(
 # ---------------------------------------------------------------------------
 
 def _import_all_sheets(wb, db: Session, sid: uuid.UUID) -> None:
+    _import_sheet_pppi(wb, db, sid)
     _import_sheet_1(wb, db, sid)
     _import_sheet_2a(wb, db, sid)
     _import_sheet_2b(wb, db, sid)
     _import_sheet_3a1(wb, db, sid)
+    _import_sheet_3a2(wb, db, sid)
     _import_sheet_3a3(wb, db, sid)
     _import_sheet_3a4(wb, db, sid)
     _import_sheet_3a5(wb, db, sid)
@@ -354,6 +385,31 @@ def _import_all_sheets(wb, db: Session, sid: uuid.UUID) -> None:
 
 
 # ---------------------------------------------------------------------------
+# PPI Profile – Disiplin Teknik Keinsinyuran
+# ---------------------------------------------------------------------------
+
+def _import_sheet_pppi(wb, db: Session, sid: uuid.UUID) -> None:
+    if "PSPPI" not in wb.sheetnames:
+        return
+    ws = wb["PSPPI"]
+    db.query(LkpsPppiDisiplin).filter(LkpsPppiDisiplin.submission_id == sid).delete()
+    no_counter = 1
+    for row_num, disiplin in _PPPI_DISIPLIN_ROW_INV.items():
+        row = ws[row_num]
+        # C=Ya, D=Tidak. Only import rows where the user checked one option.
+        if not _has_data(row[2].value, row[3].value):
+            continue
+        db.add(LkpsPppiDisiplin(
+            submission_id=sid,
+            no=no_counter,
+            disiplin=disiplin,
+            diselenggarakan=_b(row[2].value),
+        ))
+        no_counter += 1
+    db.flush()
+
+
+# ---------------------------------------------------------------------------
 # Section 1 – VMTS
 # ---------------------------------------------------------------------------
 
@@ -363,14 +419,16 @@ def _import_sheet_1(wb, db: Session, sid: uuid.UUID) -> None:
     ws = wb["1"]
     db.query(LkpsVmts).filter(LkpsVmts.submission_id == sid).delete()
     no_counter = 1
+    current_jenis_vmts = None
     for row in ws.iter_rows(min_row=7, values_only=True):
         # Col A=no, B=jenis_vmts, C=pernyataan, D=no_sk, E=link_dokumen
-        if row[0] is None:
+        if not _has_data(row[2], row[3], row[4]):
             continue
+        current_jenis_vmts = _carry_forward(row[1], current_jenis_vmts)
         db.add(LkpsVmts(
             submission_id=sid,
             no=_i(row[0]) or no_counter,
-            jenis_vmts=_s(row[1]),
+            jenis_vmts=current_jenis_vmts,
             pernyataan=_s(row[2]),
             no_sk=_s(row[3]),
             link_dokumen=_s(row[4]),
@@ -397,18 +455,24 @@ def _import_sheet_2a(wb, db: Session, sid: uuid.UUID) -> None:
             LkpsKerjasama.jenis == jenis,
         ).delete()
         start_row = _KERJASAMA_DATA_START[sheet_name]
+        current_lembaga = None
+        current_tingkat = None
         for row in ws.iter_rows(min_row=start_row, values_only=True):
             # B=lembaga_mitra, C=internasional, D=nasional, E=lokal,
             # F=judul_kegiatan, G=manfaat, H=tanggal_awal, I=tanggal_akhir,
             # J=durasi(formula), K=status(formula), L=bukti_kerjasama
-            lembaga = _s(row[1])   # col B = index 1
+            if not _has_data(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[11]):
+                continue
+            lembaga = _carry_forward(row[1], current_lembaga)   # col B = index 1
             if not lembaga:
                 continue
+            current_lembaga = lembaga
+            current_tingkat = _tingkat(row[2], row[3], row[4]) or current_tingkat
             db.add(LkpsKerjasama(
                 submission_id=sid,
                 jenis=jenis,
                 lembaga_mitra=lembaga,
-                tingkat=_tingkat(row[2], row[3], row[4]),  # C, D, E
+                tingkat=current_tingkat,  # C, D, E
                 judul_kegiatan=_s(row[5]),
                 manfaat=_s(row[6]),
                 tanggal_awal=_d(row[7]),
@@ -435,6 +499,8 @@ def _import_sheet_2b(wb, db: Session, sid: uuid.UUID) -> None:
         # C=upps_ts2, D=upps_ts1, E=upps_ts, G=ps_ts2, H=ps_ts1, I=ps_ts
         def cv(cell):
             return cell.value
+        if not _has_data(cv(row[2]), cv(row[3]), cv(row[4]), cv(row[6]), cv(row[7]), cv(row[8])):
+            continue
         db.add(LkpsPenggunaanDana(
             submission_id=sid,
             kode=kode,
@@ -477,6 +543,34 @@ def _import_sheet_3a1(wb, db: Session, sid: uuid.UUID) -> None:
             konversi_jam=_f(row[8]),
             dokumen_rps=_s(row[9]),
             unit_penyelenggara=_s(row[10]),
+        ))
+        no_counter += 1
+    db.flush()
+
+
+# ---------------------------------------------------------------------------
+# Section 3a2 – Mata Kuliah dan Dokumen Pembelajaran PPI
+# ---------------------------------------------------------------------------
+
+def _import_sheet_3a2(wb, db: Session, sid: uuid.UUID) -> None:
+    if "3a2" not in wb.sheetnames:
+        return
+    ws = wb["3a2"]
+    db.query(LkpsMataKuliahPpi).filter(LkpsMataKuliahPpi.submission_id == sid).delete()
+    no_counter = 1
+    for row in ws.iter_rows(min_row=10, values_only=True):
+        # B=mata_kuliah, C=bobot_sks, D=konversi_teori_jam,
+        # E=konversi_praktik_jam, F=dokumen_rps
+        if not _has_data(row[1], row[2], row[3], row[4], row[5]):
+            continue
+        db.add(LkpsMataKuliahPpi(
+            submission_id=sid,
+            no=no_counter,
+            mata_kuliah=_s(row[1]),
+            bobot_sks=_f(row[2]),
+            konversi_teori_jam=_f(row[3]),
+            konversi_praktik_jam=_f(row[4]),
+            dokumen_rps=_s(row[5]),
         ))
         no_counter += 1
     db.flush()
@@ -590,6 +684,8 @@ def _import_sheet_3b(wb, db: Session, sid: uuid.UUID) -> None:
     for row_num, kode_sumber in _PENELITIAN_ROW_INV.items():
         row = ws[row_num]
         # C=ts2, D=ts1, E=ts
+        if not _has_data(row[2].value, row[3].value, row[4].value):
+            continue
         db.add(LkpsPenelitianSummary(
             submission_id=sid,
             kode_sumber=kode_sumber,
@@ -614,6 +710,8 @@ def _import_sheet_3c(wb, db: Session, sid: uuid.UUID) -> None:
     for row_num, kode_sumber in _PKM_ROW_INV.items():
         row = ws[row_num]
         # C=ts2, D=ts1, E=ts
+        if not _has_data(row[2].value, row[3].value, row[4].value):
+            continue
         db.add(LkpsPkmSummary(
             submission_id=sid,
             kode_sumber=kode_sumber,
@@ -634,6 +732,7 @@ def _import_sheet_4a(wb, db: Session, sid: uuid.UUID) -> None:
     ws = wb["4a"]
     db.query(LkpsDosenProfil).filter(LkpsDosenProfil.submission_id == sid).delete()
     no_counter = 1
+    current_kategori = None
     for row in ws.iter_rows(min_row=14, values_only=True):
         # B=nama_dosen, C=nidn_nidk, D=kategori, E=prodi_sarjana, F=prodi_magister,
         # G=prodi_doktor, H=bidang_keahlian, I=perusahaan_industri,
@@ -643,12 +742,13 @@ def _import_sheet_4a(wb, db: Session, sid: uuid.UUID) -> None:
         nama_dosen = _s(row[1])
         if not nama_dosen:
             continue
+        current_kategori = _carry_forward(row[3], current_kategori)
         db.add(LkpsDosenProfil(
             submission_id=sid,
             no=no_counter,
             nama_dosen=nama_dosen,
             nidn_nidk=_s(row[2]),
-            kategori=_s(row[3]),
+            kategori=current_kategori,
             prodi_sarjana=_s(row[4]),
             prodi_magister=_s(row[5]),
             prodi_doktor=_s(row[6]),
@@ -681,6 +781,8 @@ def _import_sheet_4b(wb, db: Session, sid: uuid.UUID) -> None:
         LkpsTenagaKependidikan.submission_id == sid
     ).delete()
     no_counter = 1
+    current_pendidikan = None
+    current_unit_kerja = None
     for row in ws.iter_rows(min_row=11, values_only=True):
         # B=nama, C=S3, D=S2, E=S1, F=D4, G=D3, H=D2, I=D1, J=SMA_SMK,
         # K=sertifikat_kompetensi, L=unit_kerja
@@ -694,13 +796,15 @@ def _import_sheet_4b(wb, db: Session, sid: uuid.UUID) -> None:
             if _b(row[col_idx]):
                 pendidikan = level
                 break
+        current_pendidikan = pendidikan or current_pendidikan
+        current_unit_kerja = _carry_forward(row[11], current_unit_kerja)
         db.add(LkpsTenagaKependidikan(
             submission_id=sid,
             no=no_counter,
             nama=nama,
-            pendidikan_terakhir=pendidikan,
+            pendidikan_terakhir=current_pendidikan,
             sertifikat_kompetensi=_s(row[10]),  # col K
-            unit_kerja=_s(row[11]),              # col L
+            unit_kerja=current_unit_kerja,        # col L
         ))
         no_counter += 1
     db.flush()
@@ -756,6 +860,8 @@ def _import_sheet_4d(wb, db: Session, sid: uuid.UUID) -> None:
     for row_num, kode_publikasi in _PUBLIKASI_ROW_AKADEMIK.items():
         row = ws[row_num]
         # C=ts2, D=ts1, E=ts
+        if not _has_data(row[2].value, row[3].value, row[4].value):
+            continue
         db.add(LkpsPublikasiIlmiah(
             submission_id=sid,
             sumber="dtps",
@@ -783,6 +889,8 @@ def _import_sheet_4e(wb, db: Session, sid: uuid.UUID) -> None:
     ).delete()
     for row_num, kode_publikasi in _PUBLIKASI_ROW_VOKASI.items():
         row = ws[row_num]
+        if not _has_data(row[2].value, row[3].value, row[4].value):
+            continue
         db.add(LkpsPublikasiIlmiah(
             submission_id=sid,
             sumber="dtps",
@@ -856,11 +964,15 @@ def _import_sheet_4g(wb, db: Session, sid: uuid.UUID) -> None:
         LkpsProdukJasa.submission_id == sid,
         LkpsProdukJasa.sumber == "dtps",
     ).delete()
+    current_nama_pembuat = None
     for row in ws.iter_rows(min_row=6, values_only=True):
         # B=nama_pembuat, C=nama_produk_jasa, D=deskripsi, E=bukti
-        nama_pembuat = _s(row[1])
+        if not _has_data(row[1], row[2], row[3], row[4]):
+            continue
+        nama_pembuat = _carry_forward(row[1], current_nama_pembuat)
         if not nama_pembuat:
             continue
+        current_nama_pembuat = nama_pembuat
         db.add(LkpsProdukJasa(
             submission_id=sid,
             sumber="dtps",
@@ -910,11 +1022,15 @@ def _import_sheet_4i(wb, db: Session, sid: uuid.UUID) -> None:
     ws = wb["4i"]
     db.query(LkpsSitasiDtps).filter(LkpsSitasiDtps.submission_id == sid).delete()
     no_counter = 1
+    current_nama_dosen = None
     for row in ws.iter_rows(min_row=6, values_only=True):
         # B=nama_dosen, C=judul_artikel, D=jumlah_sitasi
-        nama_dosen = _s(row[1])
+        if not _has_data(row[1], row[2], row[3]):
+            continue
+        nama_dosen = _carry_forward(row[1], current_nama_dosen)
         if not nama_dosen:
             continue
+        current_nama_dosen = nama_dosen
         db.add(LkpsSitasiDtps(
             submission_id=sid,
             no=no_counter,
@@ -936,24 +1052,31 @@ def _import_sheet_4j(wb, db: Session, sid: uuid.UUID) -> None:
     ws = wb["4j"]
     db.query(LkpsRekognisiDtps).filter(LkpsRekognisiDtps.submission_id == sid).delete()
     no_counter = 1
+    current_nama_dosen = None
+    current_bidang_keahlian = None
+    current_tingkat = None
     for row in ws.iter_rows(min_row=12, values_only=True):
         # B=nama_dosen, C=bidang_keahlian, D=rekognisi, E=bukti_pendukung,
         # F=lokal(V), G=nasional(V), H=internasional(V), I=tahun
         # Export writes: write_tingkat_check(ws, row, rec.tingkat, "H", "G", "F")
         # So col_intr=H, col_nas=G, col_lokal=F
-        nama_dosen = _s(row[1])
+        if not _has_data(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]):
+            continue
+        nama_dosen = _carry_forward(row[1], current_nama_dosen)
         if not nama_dosen:
             continue
+        current_nama_dosen = nama_dosen
+        current_bidang_keahlian = _carry_forward(row[2], current_bidang_keahlian)
         # F=index5=lokal, G=index6=nasional, H=index7=internasional
-        tingkat = _tingkat(row[7], row[6], row[5])  # intr=H, nas=G, lokal=F
+        current_tingkat = _tingkat(row[7], row[6], row[5]) or current_tingkat  # intr=H, nas=G, lokal=F
         db.add(LkpsRekognisiDtps(
             submission_id=sid,
             no=no_counter,
             nama_dosen=nama_dosen,
-            bidang_keahlian=_s(row[2]),
+            bidang_keahlian=current_bidang_keahlian,
             rekognisi=_s(row[3]),
             bukti_pendukung=_s(row[4]),
-            tingkat=tingkat,
+            tingkat=current_tingkat,
             tahun=_i(row[8]),  # col I
         ))
         no_counter += 1
@@ -1013,13 +1136,19 @@ def _import_sheet_5a(wb, db: Session, sid: uuid.UUID) -> None:
     ws = wb["5a"]
     db.query(LkpsPrasarana).filter(LkpsPrasarana.submission_id == sid).delete()
     no_counter = 1
+    current_nama_prasarana = None
+    current_jumlah_prasarana = None
     for row in ws.iter_rows(min_row=10, values_only=True):
         # B=nama_prasarana, C=jumlah_prasarana, D=nama_sarana, E=jumlah_standar_minimal,
         # F=jumlah_dimiliki, G=kepemilikan_sendiri(V), H=kepemilikan_sewa(V),
         # I=kondisi_terawat(V), J=kondisi_tidak_terawat(V), K=logbook_ada(V), L=logbook_tidak_ada(V)
-        nama_prasarana = _s(row[1])
+        if not _has_data(*row[1:12]):
+            continue
+        nama_prasarana = _carry_forward(row[1], current_nama_prasarana)
         if not nama_prasarana:
             continue
+        current_nama_prasarana = nama_prasarana
+        current_jumlah_prasarana = _i(row[2]) if row[2] is not None else current_jumlah_prasarana
         if _b(row[6]):
             kepemilikan = "sendiri"
         elif _b(row[7]):
@@ -1042,7 +1171,7 @@ def _import_sheet_5a(wb, db: Session, sid: uuid.UUID) -> None:
             submission_id=sid,
             no=no_counter,
             nama_prasarana=nama_prasarana,
-            jumlah_prasarana=_i(row[2]),
+            jumlah_prasarana=current_jumlah_prasarana,
             nama_sarana=_s(row[3]),
             jumlah_standar_minimal=_i(row[4]),
             jumlah_dimiliki=_i(row[5]),
@@ -1167,6 +1296,8 @@ def _import_sheet_6b(wb, db: Session, sid: uuid.UUID) -> None:
     for row_num, periode in _IPK_ROW_INV.items():
         row = ws[row_num]
         # C=jumlah_lulusan, D=ipk_min, E=ipk_rata, F=ipk_maks
+        if not _has_data(row[2].value, row[3].value, row[4].value, row[5].value):
+            continue
         db.add(LkpsIpkLulusan(
             submission_id=sid,
             periode=periode,
@@ -1233,6 +1364,8 @@ def _import_sheet_6d(wb, db: Session, sid: uuid.UUID) -> None:
             row_num = first_row + offset
             row = ws[row_num]
             # B=jumlah_masuk, C=lulus_tepat_waktu, D=lulus_terlambat, E=tidak_lulus
+            if not _has_data(row[1].value, row[2].value, row[3].value, row[4].value):
+                continue
             db.add(LkpsMasaStudi(
                 submission_id=sid,
                 jenis_program=jenis_program,
@@ -1260,6 +1393,8 @@ def _import_sheet_6e1(wb, db: Session, sid: uuid.UUID) -> None:
     ).delete()
     for row_num, kode_publikasi in _PUBLIKASI_ROW_AKADEMIK.items():
         row = ws[row_num]
+        if not _has_data(row[2].value, row[3].value, row[4].value):
+            continue
         db.add(LkpsPublikasiIlmiah(
             submission_id=sid,
             sumber="mahasiswa",
@@ -1287,6 +1422,8 @@ def _import_sheet_6e2(wb, db: Session, sid: uuid.UUID) -> None:
     ).delete()
     for row_num, kode_publikasi in _PUBLIKASI_ROW_VOKASI.items():
         row = ws[row_num]
+        if not _has_data(row[2].value, row[3].value, row[4].value):
+            continue
         db.add(LkpsPublikasiIlmiah(
             submission_id=sid,
             sumber="mahasiswa",
@@ -1311,11 +1448,15 @@ def _import_sheet_6e4(wb, db: Session, sid: uuid.UUID) -> None:
         LkpsProdukJasa.submission_id == sid,
         LkpsProdukJasa.sumber == "mahasiswa",
     ).delete()
+    current_nama_pembuat = None
     for row in ws.iter_rows(min_row=6, values_only=True):
         # B=nama_pembuat, C=nama_produk_jasa, D=deskripsi, E=bukti
-        nama_pembuat = _s(row[1])
+        if not _has_data(row[1], row[2], row[3], row[4]):
+            continue
+        nama_pembuat = _carry_forward(row[1], current_nama_pembuat)
         if not nama_pembuat:
             continue
+        current_nama_pembuat = nama_pembuat
         db.add(LkpsProdukJasa(
             submission_id=sid,
             sumber="mahasiswa",
@@ -1342,6 +1483,8 @@ def _import_sheet_6f1(wb, db: Session, sid: uuid.UUID) -> None:
             row = ws[row_num]
             # B=jumlah_lulusan, C=jumlah_terlacak, D=jumlah_dipesan_sebelum_lulus,
             # E=wt_lt_3bulan, F=wt_3_6bulan, G=wt_gt_6bulan
+            if not _has_data(row[1].value, row[2].value, row[3].value, row[4].value, row[5].value, row[6].value):
+                continue
             db.add(LkpsWaktuTunggu(
                 submission_id=sid,
                 jenis_program=jenis_program,
@@ -1371,6 +1514,8 @@ def _import_sheet_6f2(wb, db: Session, sid: uuid.UUID) -> None:
         row = ws[row_num]
         # B=jumlah_lulusan, C=jumlah_terlacak, D=kesesuaian_rendah,
         # E=kesesuaian_sedang, F=kesesuaian_tinggi
+        if not _has_data(row[1].value, row[2].value, row[3].value, row[4].value, row[5].value):
+            continue
         db.add(LkpsKesesuaianKerja(
             submission_id=sid,
             tahun_lulus=tahun_lulus,
@@ -1396,6 +1541,8 @@ def _import_sheet_6g1(wb, db: Session, sid: uuid.UUID) -> None:
         row = ws[row_num]
         # B=jumlah_lulusan, C=jumlah_pengguna_tanggapan, D=jumlah_terlacak,
         # E=bekerja_lokal, F=bekerja_nasional, G=bekerja_multinasional
+        if not _has_data(row[1].value, row[2].value, row[3].value, row[4].value, row[5].value, row[6].value):
+            continue
         db.add(LkpsTempatKerja(
             submission_id=sid,
             tahun_lulus=tahun_lulus,
@@ -1423,6 +1570,8 @@ def _import_sheet_6g2(wb, db: Session, sid: uuid.UUID) -> None:
     for row_num, jenis_kemampuan in _KEPUASAN_ROW_INV.items():
         row = ws[row_num]
         # C=sangat_baik, D=baik, E=cukup, F=kurang, G=rencana_tindak_lanjut
+        if not _has_data(row[2].value, row[3].value, row[4].value, row[5].value, row[6].value):
+            continue
         db.add(LkpsKepuasanPengguna(
             submission_id=sid,
             no=row_num - 6,  # row 7 → no=1, row 13 → no=7
@@ -1449,17 +1598,23 @@ def _import_sheet_6h1(wb, db: Session, sid: uuid.UUID) -> None:
         LkpsPenelitianMahasiswa.jenis == "penelitian",
     ).delete()
     no_counter = 1
+    current_nama_dosen = None
+    current_tema_penelitian = None
     for row in ws.iter_rows(min_row=11, values_only=True):
         # B=nama_dosen, C=tema_penelitian, D=nama_mahasiswa, E=judul_kegiatan, F=tahun
-        nama_dosen = _s(row[1])
+        if not _has_data(*row[1:6]):
+            continue
+        nama_dosen = _carry_forward(row[1], current_nama_dosen)
         if not nama_dosen:
             continue
+        current_nama_dosen = nama_dosen
+        current_tema_penelitian = _carry_forward(row[2], current_tema_penelitian)
         db.add(LkpsPenelitianMahasiswa(
             submission_id=sid,
             jenis="penelitian",
             no=no_counter,
             nama_dosen=nama_dosen,
-            tema_penelitian=_s(row[2]),
+            tema_penelitian=current_tema_penelitian,
             nama_mahasiswa=_s(row[3]),
             judul_kegiatan=_s(row[4]),
             tahun=_i(row[5]),
@@ -1481,16 +1636,22 @@ def _import_sheet_6h2(wb, db: Session, sid: uuid.UUID) -> None:
         LkpsPenelitianMahasiswa.jenis == "tesis_disertasi",
     ).delete()
     no_counter = 1
+    current_nama_dosen = None
+    current_tema_penelitian = None
     for row in ws.iter_rows(min_row=6, values_only=True):
-        nama_dosen = _s(row[1])
+        if not _has_data(*row[1:6]):
+            continue
+        nama_dosen = _carry_forward(row[1], current_nama_dosen)
         if not nama_dosen:
             continue
+        current_nama_dosen = nama_dosen
+        current_tema_penelitian = _carry_forward(row[2], current_tema_penelitian)
         db.add(LkpsPenelitianMahasiswa(
             submission_id=sid,
             jenis="tesis_disertasi",
             no=no_counter,
             nama_dosen=nama_dosen,
-            tema_penelitian=_s(row[2]),
+            tema_penelitian=current_tema_penelitian,
             nama_mahasiswa=_s(row[3]),
             judul_kegiatan=_s(row[4]),
             tahun=_i(row[5]),
@@ -1512,16 +1673,22 @@ def _import_sheet_6i(wb, db: Session, sid: uuid.UUID) -> None:
         LkpsPenelitianMahasiswa.jenis == "pkm",
     ).delete()
     no_counter = 1
+    current_nama_dosen = None
+    current_tema_penelitian = None
     for row in ws.iter_rows(min_row=6, values_only=True):
-        nama_dosen = _s(row[1])
+        if not _has_data(*row[1:6]):
+            continue
+        nama_dosen = _carry_forward(row[1], current_nama_dosen)
         if not nama_dosen:
             continue
+        current_nama_dosen = nama_dosen
+        current_tema_penelitian = _carry_forward(row[2], current_tema_penelitian)
         db.add(LkpsPenelitianMahasiswa(
             submission_id=sid,
             jenis="pkm",
             no=no_counter,
             nama_dosen=nama_dosen,
-            tema_penelitian=_s(row[2]),
+            tema_penelitian=current_tema_penelitian,
             nama_mahasiswa=_s(row[3]),
             judul_kegiatan=_s(row[4]),
             tahun=_i(row[5]),
@@ -1542,6 +1709,8 @@ def _import_sheet_7a(wb, db: Session, sid: uuid.UUID) -> None:
     for row_num, jenis_dokumen in _SPMI_DOK_ROW_INV.items():
         row = ws[row_num]
         # B=pre-labeled (jenis_dokumen), C=no_dokumen, D=tanggal_dokumen
+        if not _has_data(row[2].value, row[3].value):
+            continue
         db.add(LkpsSpmiDokumen(
             submission_id=sid,
             no=row_num - 4,  # row 5 → no=1
@@ -1566,6 +1735,8 @@ def _import_sheet_7b(wb, db: Session, sid: uuid.UUID) -> None:
     for row_num, jenis_pelaksanaan in _PPEPP_ROW_INV.items():
         row = ws[row_num]
         # C=link_dokumen, D=link_laporan_audit, E=link_laporan_rtm, F=link_dokumen_peningkatan
+        if not _has_data(row[2].value, row[3].value, row[4].value, row[5].value):
+            continue
         db.add(LkpsSpmiPelaksanaan(
             submission_id=sid,
             no=row_num - 4,  # row 5 → no=1
