@@ -6,13 +6,11 @@ import ProgressBar from "@/app/components/dashboard-prodi/ProgressBar";
 import StatusDot from "@/app/components/dashboard-prodi/StatusDot";
 import GaugeMeter from "@/app/components/dashboard-prodi/GaugeMeter";
 import SetTargetModal from "@/app/components/dashboard-prodi/SetTargetModal";
-import {
-  CriteriaRow,
-  DashboardData,
-} from "@/app/components/dashboard-prodi/types";
+import { CriteriaRow, DashboardData } from "@/app/components/dashboard-prodi/types";
 import { apiFetch } from "@/app/services/api";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useClickOutside } from "@/app/hooks/useClickOutside";
+import KomentarPanel from "@/app/components/dashboard-prodi/KomentarPanel";
 
 const canEdit = (role: string) =>
   ["admin", "koordinator", "tim_prodi"].includes(role);
@@ -536,6 +534,15 @@ export default function DashboardProdiPage() {
                 ))}
               </div>
             </section>
+
+            {/* Catatan Pimpinan */}
+            {data.target_akreditasi_id && (
+              <KomentarPanel
+                targetAkreditasiId={data.target_akreditasi_id}
+                currentUserRole={role}
+                currentUserId={user?.id ?? ""}
+              />
+            )}
           </>
         ) : (
           <div className="py-16 text-center bg-white rounded-xl border border-slate-200 shadow-sm">

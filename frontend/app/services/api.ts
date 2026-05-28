@@ -136,3 +136,59 @@ export async function setTargetDeadline(data: {
   }
   return res.json();
 }
+
+// ── Komentar Pimpinan ──────────────────────────────────────────────────────
+
+export interface UserKomentar {
+  id: string;
+  nama: string;
+  role: string;
+}
+
+export interface KomentarResponse {
+  id: string;
+  target_akreditasi_id: string;
+  user_id: string | null;
+  isi_komentar: string;
+  created_at: string;
+  updated_at: string;
+  user: UserKomentar | null;
+}
+
+export async function fetchKomentar(targetId: string): Promise<KomentarResponse[]> {
+  const res = await apiFetch(`/api/v1/target/${targetId}/komentar/`);
+  if (!res.ok) throw new Error("Gagal mengambil komentar.");
+  return res.json();
+}
+
+export async function createKomentar(
+  targetId: string,
+  isiKomentar: string
+): Promise<KomentarResponse> {
+  const res = await apiFetch(`/api/v1/target/${targetId}/komentar/`, {
+    method: "POST",
+    body: JSON.stringify({ isi_komentar: isiKomentar }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(
+      (body as Record<string, unknown>)?.detail ?? "Gagal mengirim komentar."
+    );
+  }
+  return res.json();
+}
+
+export async function deleteKomentar(
+  targetId: string,
+  komentarId: string
+): Promise<void> {
+  const res = await apiFetch(`/api/v1/target/${targetId}/komentar/${komentarId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(
+      (body as Record<string, unknown>)?.detail ?? "Gagal menghapus komentar."
+    );
+  }
+}

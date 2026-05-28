@@ -42,8 +42,15 @@ def list_notifikasi(
 ):
     sync_generated_notifications(db, current_user)
 
-    limit = min(max(limit, 1), 50)
-    query = db.query(Notifikasi).filter(Notifikasi.user_id == current_user.id)
+    from app.models.target_akreditasi import TargetAkreditasi
+    from sqlalchemy import or_
+
+    query = db.query(Notifikasi).outerjoin(
+        TargetAkreditasi, Notifikasi.target_akreditasi_id == TargetAkreditasi.id
+    ).filter(
+        Notifikasi.user_id == current_user.id,
+        or_(TargetAkreditasi.id == None, TargetAkreditasi.notifikasi_aktif == True)
+    )
     if program_studi_id:
         query = query.filter(Notifikasi.program_studi_id == program_studi_id)
 
@@ -88,9 +95,15 @@ def mark_all_notifikasi_read(
     current_user: User = Depends(get_current_user),
 ):
     now = datetime.now()
-    query = db.query(Notifikasi).filter(
+    from app.models.target_akreditasi import TargetAkreditasi
+    from sqlalchemy import or_
+
+    query = db.query(Notifikasi).outerjoin(
+        TargetAkreditasi, Notifikasi.target_akreditasi_id == TargetAkreditasi.id
+    ).filter(
         Notifikasi.user_id == current_user.id,
         Notifikasi.is_read == False,
+        or_(TargetAkreditasi.id == None, TargetAkreditasi.notifikasi_aktif == True)
     )
     if program_studi_id:
         query = query.filter(Notifikasi.program_studi_id == program_studi_id)

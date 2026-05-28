@@ -13,7 +13,8 @@ from app.api.v1.endpoints import (
     program_studi,
     simulasi,
     target_akreditasi,
-    user_management
+    user_management,
+    komentar,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -31,3 +32,4 @@ api_router.include_router(simulasi.router, prefix="/simulasi", tags=["simulasi"]
 api_router.include_router(notifikasi.router)
 api_router.include_router(target_akreditasi.router)
 api_router.include_router(user_management.router)
+api_router.include_router(komentar.router)

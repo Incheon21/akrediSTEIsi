@@ -95,7 +95,7 @@ def _sync_deadline_notification(
     include_prodi_id: bool,
     active_keys: set[str],
 ) -> None:
-    if not target.deadline or not target.notifikasi_aktif:
+    if not target.deadline:
         return
 
     days_left = (target.deadline - date.today()).days
