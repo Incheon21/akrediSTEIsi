@@ -1,25 +1,38 @@
 stages:
+  - test
   - build
+
+run-tests:
+  stage: test
+  image: python:3.13-slim
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH =~ /^(main|dev)$/
+  before_script:
+    - apt-get update && apt-get install -y curl
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - source $HOME/.local/bin/env
+    - cp ./backend/.env.example ./backend/.env
+    - cd backend && uv sync
+  script:
+    - chmod +x ./tests/run_tests.sh
+    - bash ./tests/run_tests.sh
 
 docker-build:
   stage: build
-
-  image:
-    name: docker:29
+  image: docker:29
   services:
-   - name: docker:29-dind
-     alias: thedockerhost
-
+    - name: docker:29-dind
+      alias: thedockerhost
   variables:
     DOCKER_HOST: tcp://thedockerhost:2375/
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
   rules:
     - if: $CI_COMMIT_TAG
       variables:
         TAG: $CI_COMMIT_TAG
-    - if: $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "main"
       variables:
         TAG: $CI_COMMIT_SHORT_SHA
   before_script:
@@ -29,4 +42,3 @@ docker-build:
   script:
     - docker compose build
     - docker compose push
-
