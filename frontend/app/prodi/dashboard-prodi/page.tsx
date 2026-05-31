@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProgressBar from "@/app/components/dashboard-prodi/ProgressBar";
 import StatusDot from "@/app/components/dashboard-prodi/StatusDot";
@@ -15,7 +15,7 @@ import KomentarPanel from "@/app/components/dashboard-prodi/KomentarPanel";
 const canEdit = (role: string) =>
   ["admin", "koordinator", "tim_prodi"].includes(role);
 
-export default function DashboardProdiPage() {
+function DashboardProdiPageInner() {
   const [tahun, setTahun] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -556,4 +556,13 @@ export default function DashboardProdiPage() {
       </div>
     </main>
   );
+}
+
+
+export default function DashboardProdiPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardProdiPageInner />
+    </Suspense>
+  )
 }

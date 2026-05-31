@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -24,7 +24,7 @@ interface NotificationItem {
   is_read: boolean;
 }
 
-export default function Navbar({
+function NavbarInner({
   programStudi = "",
   programStudiId = "",
   userName = "",
@@ -462,4 +462,18 @@ export default function Navbar({
       </div>
     </nav>
   );
+}
+
+export default function Navbar({
+  programStudi = "",
+  programStudiId = "",
+  userName = "",
+  userInitial = "",
+  role = "",
+}: NavbarProps) {
+  return (
+    <Suspense fallback={null}>
+      <NavbarInner programStudi={programStudi} programStudiId={programStudiId} userName={userName} userInitial={userInitial} role={role} />
+    </Suspense>
+  )
 }

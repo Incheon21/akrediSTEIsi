@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { DashboardData } from "@/app/components/dashboard-prodi/types";
@@ -95,7 +95,7 @@ interface AutomaticSimulation {
   catatan: string;
 }
 
-export default function SimulasiSkorPage() {
+function SimulasiSkorPageInner() {
   const { user, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const prodiIdFromUrl = searchParams.get("id");
@@ -664,4 +664,12 @@ export default function SimulasiSkorPage() {
       </div>
     </div>
   );
+}
+
+export default function SimulasiSkorPage() {
+  return (
+    <Suspense fallback={null}>
+      <SimulasiSkorPageInner />
+    </Suspense>
+  )
 }
