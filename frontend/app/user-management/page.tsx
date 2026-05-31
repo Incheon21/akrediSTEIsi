@@ -601,12 +601,14 @@ export default function UserManagement() {
                         >
                           Edit
                         </button>
-                        <button
-                          onClick={() => setDeleteUser(user)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
-                        >
-                          Hapus
-                        </button>
+                        {user.id !== authUser?.id && (
+                          <button
+                            onClick={() => setDeleteUser(user)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
+                          >
+                            Hapus
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

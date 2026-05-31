@@ -16,7 +16,7 @@ from app.schemas.user_management import (
     CreateUserRequest,
     UpdateUserRequest,
 )
-from app.utils.dependencies import require_role
+from app.utils.dependencies import require_role, get_current_user
 from app.core.security import hash_password
 
 router = APIRouter(prefix="/user-management", tags=["user-management"])
@@ -74,6 +74,13 @@ def create_user(body: CreateUserRequest, db: Session = Depends(get_db)) -> UserR
     role = db.get(Role, body.role_id)
     if not role:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role tidak ditemukan")
+
+    if role.name in ["admin", "pimpinan", "koordinator"]:
+        if body.program_studi_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Role '{role.name}' tidak dapat dihubungkan dengan Program Studi."
+            )
 
     if body.program_studi_id:
         prodi = db.get(ProgramStudi, body.program_studi_id)
@@ -140,6 +147,16 @@ def update_user(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role tidak ditemukan")
         user.role_id = body.role_id
 
+    # Enforce program_studi_id = None for global roles
+    current_role = db.get(Role, user.role_id)
+    if current_role and current_role.name in ["admin", "pimpinan", "koordinator"]:
+        if body.program_studi_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Role '{current_role.name}' tidak dapat dihubungkan dengan Program Studi."
+            )
+        user.program_studi_id = None
+
     if body.program_studi_id is not None:
         prodi = db.get(ProgramStudi, body.program_studi_id)
         if not prodi:
@@ -157,8 +174,17 @@ def update_user(
     summary="Delete a user",
     dependencies=[_ADMIN],
 )
-def delete_user(user_id: UUID, db: Session = Depends(get_db)) -> None:
-    """Menghapus user berdasarkan ID."""
+def delete_user(
+    user_id: UUID, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> None:
+    if user_id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Anda tidak dapat menghapus akun Anda sendiri"
+        )
+        
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User tidak ditemukan")

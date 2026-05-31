@@ -180,7 +180,7 @@ function NavbarInner({
               <Link
                 href="/user-management"
                 className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${
-                  isActive("/dashboard-multiprodi")
+                  isActive("/user-management")
                     ? "text-[#f3e412]"
                     : "text-white hover:text-[#f3e412]"
                 }`}

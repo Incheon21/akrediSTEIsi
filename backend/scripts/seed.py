@@ -5,7 +5,6 @@ from app.core.security import hash_password
 from app.db import Base, SessionLocal, engine
 from app.models.indikator import Indikator
 from app.models.kriteria import Kriteria
-from app.models.komentar import Komentar
 from app.models.program_studi import ProgramStudi
 from app.models.role import Role
 from app.models.target_akreditasi import TargetAkreditasi
@@ -63,20 +62,14 @@ def seed():
                 "perguruan_tinggi": "Institut Teknologi Bandung",
             },
             {
-                "kode": "SI",
+                "kode": "STI",
                 "nama": "Sistem dan Teknologi Informasi",
                 "jenjang": "S1",
                 "fakultas": "STEI",
                 "perguruan_tinggi": "Institut Teknologi Bandung",
+                
             },
-            {
-                "kode": "STI",
-                "nama": "Sistem Teknologi Informasi",
-                "jenjang": "S1",
-                "fakultas": "STEI",
-                "perguruan_tinggi": "Institut Teknologi Bandung",
-                "akreditasi": "Baik Sekali",
-            },
+            
         ]
         prodis = {}
         for p in prodi_data:
@@ -144,13 +137,6 @@ def seed():
                 "nama": "Tim Prodi TS",
                 "role": "tim_prodi",
                 "prodi": "TS",
-            },
-            {
-                "email": "timprodiSI@stei.itb.ac.id",
-                "password": "timprodiSI123",
-                "nama": "Tim Prodi SI",
-                "role": "tim_prodi",
-                "prodi": "SI",
             },
             {
                 "email": "timprodiSTI@stei.itb.ac.id",
@@ -478,40 +464,6 @@ def seed():
                 deadline_val=None,  # Tidak ada deadline spesifik untuk testing
                 is_aktif_val=True,
             )
-
-        # ==========================================
-        # Seed Komentar untuk Dashboard Prodi IF
-        # 1 komentar dari pimpinan untuk target IF 2026
-        # ==========================================
-        if "IF" in prodis:
-            target_if = (
-                db.query(TargetAkreditasi)
-                .filter(
-                    TargetAkreditasi.program_studi_id == prodis["IF"].id,
-                    TargetAkreditasi.tahun_akreditasi == 2026,
-                )
-                .first()
-            )
-            pimpinan_user = (
-                db.query(User).filter(User.email == "pimpinan@stei.itb.ac.id").first()
-            )
-            if target_if and pimpinan_user:
-                existing_komentar = (
-                    db.query(Komentar)
-                    .filter(Komentar.target_akreditasi_id == target_if.id)
-                    .first()
-                )
-                if not existing_komentar:
-                    komentar = Komentar(
-                        target_akreditasi_id=target_if.id,
-                        user_id=pimpinan_user.id,
-                        isi_komentar="Mohon segera lengkapi data LKPS untuk kriteria C4 (Sumber Daya Manusia) dan C6 (Mahasiswa dan Luaran Mahasiswa). Pastikan dokumen pendukung evidence sudah diunggah sebelum deadline akreditasi.",
-                    )
-                    db.add(komentar)
-                    db.commit()
-                    print("Seeded komentar untuk prodi IF 2026")
-                else:
-                    print("Komentar untuk prodi IF 2026 sudah ada")
 
         try:
             from scripts.seed_simulasi import seed as seed_simulasi
