@@ -245,7 +245,14 @@ function UserFormComponent({
           <select
             className={inputCls("role_id")}
             value={form.role_id}
-            onChange={(e) => setField("role_id", e.target.value)}
+            onChange={(e) => {
+              const selectedRoleName = roles.find(r => r.id === e.target.value)?.name ?? "";
+              const globalRoles = ["admin", "pimpinan", "koordinator"];
+              setField("role_id", e.target.value);
+              if (globalRoles.includes(selectedRoleName)) {
+                setField("program_studi_id", "");
+              }
+            }}
           >
             <option value="">Pilih role</option>
             {roles.map((r) => (
@@ -259,23 +266,30 @@ function UserFormComponent({
           )}
         </div>
 
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">
-            Program Studi
-          </label>
-          <select
-            className={inputCls("program_studi_id")}
-            value={form.program_studi_id}
-            onChange={(e) => setField("program_studi_id", e.target.value)}
-          >
-            <option value="">— Tidak ada —</option>
-            {programStudiList.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.kode} – {p.nama}
-              </option>
-            ))}
-          </select>
-        </div>
+        {(() => {
+          const selectedRoleName = roles.find(r => r.id === form.role_id)?.name ?? "";
+          const isGlobalRole = ["admin", "pimpinan", "koordinator"].includes(selectedRoleName);
+          if (isGlobalRole) return null;
+          return (
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">
+                Program Studi
+              </label>
+              <select
+                className={inputCls("program_studi_id")}
+                value={form.program_studi_id}
+                onChange={(e) => setField("program_studi_id", e.target.value)}
+              >
+                <option value="">— Tidak ada —</option>
+                {programStudiList.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.kode} – {p.nama}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        })()}
 
         <div className="col-span-2 flex items-center gap-2">
           <button
