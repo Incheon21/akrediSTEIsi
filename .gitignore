@@ -1,5 +1,11 @@
 docs/
 .gitignore
+.env
+.env.*
+!.env.production.example
+backend/.env
+frontend/.env
+frontend/.env*.local
 # Excel/LibreOffice lock files
 ~$*
 
