@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 import {
@@ -37,7 +37,7 @@ const COL_WIDTH: Record<string, number> = {
   boolean: 80,
 };
 
-export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
+function LkpsWorkspaceDetailInner({ params }: WorkspaceParams) {
   const { submissionId } = use(params);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -723,4 +723,12 @@ function defaultValueForField(field: FieldDefinition): unknown {
     default:
       return "";
   }
+}
+
+export default function LkpsWorkspaceDetail({ params }: WorkspaceParams) {
+  return (
+    <Suspense fallback={null}>
+      <LkpsWorkspaceDetailInner params={params} />
+    </Suspense>
+  )
 }

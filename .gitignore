@@ -2,3 +2,6 @@ docs/
 .gitignore
 # Excel/LibreOffice lock files
 ~$*
+
+# Local dev Docker override — do NOT commit, will break CI/CD image push
+docker-compose.override.yml

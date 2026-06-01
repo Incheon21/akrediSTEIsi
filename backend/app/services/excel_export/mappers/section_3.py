@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from app.models.lkps import (
     LkpsKurikulum,
+    LkpsMataKuliahPpi,
     LkpsIntegrasiPenelitian,
     LkpsMkBasicScience,
     LkpsCapstoneDesign,
@@ -30,6 +31,7 @@ _PKM_ROW: dict[str, int] = {
 class Section3Mapper(BaseMapper):
     def fill(self) -> None:
         self._fill_kurikulum()
+        self._fill_mata_kuliah_ppi()
         self._fill_integrasi()
         self._fill_basic_science()
         self._fill_capstone()
@@ -58,6 +60,26 @@ class Section3Mapper(BaseMapper):
             self.safe_write(ws, f"I{row}", rec.konversi_jam)
             self.safe_write(ws, f"J{row}", rec.dokumen_rps)
             self.safe_write(ws, f"K{row}", rec.unit_penyelenggara)
+
+    def _fill_mata_kuliah_ppi(self) -> None:
+        if not self.sheet_applies("3a2"):
+            return
+        ws = self.wb["3a2"]
+        records = (
+            self.db.execute(
+                select(LkpsMataKuliahPpi)
+                .where(LkpsMataKuliahPpi.submission_id == self.submission.id)
+                .order_by(LkpsMataKuliahPpi.no)
+            )
+            .scalars().all()
+        )
+        for i, rec in enumerate(records):
+            row = 10 + i
+            self.safe_write(ws, f"B{row}", rec.mata_kuliah)
+            self.safe_write(ws, f"C{row}", rec.bobot_sks)
+            self.safe_write(ws, f"D{row}", rec.konversi_teori_jam)
+            self.safe_write(ws, f"E{row}", rec.konversi_praktik_jam)
+            self.safe_write(ws, f"F{row}", rec.dokumen_rps)
 
     def _fill_integrasi(self) -> None:
         ws = self.wb["3a3"]

@@ -62,20 +62,14 @@ def seed():
                 "perguruan_tinggi": "Institut Teknologi Bandung",
             },
             {
-                "kode": "SI",
+                "kode": "STI",
                 "nama": "Sistem dan Teknologi Informasi",
                 "jenjang": "S1",
                 "fakultas": "STEI",
                 "perguruan_tinggi": "Institut Teknologi Bandung",
+                
             },
-            {
-                "kode": "STI",
-                "nama": "Sistem Teknologi Informasi",
-                "jenjang": "S1",
-                "fakultas": "STEI",
-                "perguruan_tinggi": "Institut Teknologi Bandung",
-                "akreditasi": "Baik Sekali",
-            },
+            
         ]
         prodis = {}
         for p in prodi_data:
@@ -143,13 +137,6 @@ def seed():
                 "nama": "Tim Prodi TS",
                 "role": "tim_prodi",
                 "prodi": "TS",
-            },
-            {
-                "email": "timprodiSI@stei.itb.ac.id",
-                "password": "timprodiSI123",
-                "nama": "Tim Prodi SI",
-                "role": "tim_prodi",
-                "prodi": "SI",
             },
             {
                 "email": "timprodiSTI@stei.itb.ac.id",

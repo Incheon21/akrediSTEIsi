@@ -1,23 +1,21 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProgressBar from "@/app/components/dashboard-prodi/ProgressBar";
 import StatusDot from "@/app/components/dashboard-prodi/StatusDot";
 import GaugeMeter from "@/app/components/dashboard-prodi/GaugeMeter";
 import SetTargetModal from "@/app/components/dashboard-prodi/SetTargetModal";
-import {
-  CriteriaRow,
-  DashboardData,
-} from "@/app/components/dashboard-prodi/types";
+import { CriteriaRow, DashboardData } from "@/app/components/dashboard-prodi/types";
 import { apiFetch } from "@/app/services/api";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useClickOutside } from "@/app/hooks/useClickOutside";
+import KomentarPanel from "@/app/components/dashboard-prodi/KomentarPanel";
 
 const canEdit = (role: string) =>
   ["admin", "koordinator", "tim_prodi"].includes(role);
 
-export default function DashboardProdiPage() {
+function DashboardProdiPageInner() {
   const [tahun, setTahun] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -536,6 +534,15 @@ export default function DashboardProdiPage() {
                 ))}
               </div>
             </section>
+
+            {/* Catatan Pimpinan */}
+            {data.target_akreditasi_id && (
+              <KomentarPanel
+                targetAkreditasiId={data.target_akreditasi_id}
+                currentUserRole={role}
+                currentUserId={user?.id ?? ""}
+              />
+            )}
           </>
         ) : (
           <div className="py-16 text-center bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -549,4 +556,13 @@ export default function DashboardProdiPage() {
       </div>
     </main>
   );
+}
+
+
+export default function DashboardProdiPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardProdiPageInner />
+    </Suspense>
+  )
 }

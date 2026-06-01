@@ -94,6 +94,22 @@ class LkpsSectionProgress(Base):
 
 
 # ---------------------------------------------------------------------------
+# PPI Profile – Disiplin Teknik Keinsinyuran (PSPPI)
+# ---------------------------------------------------------------------------
+
+class LkpsPppiDisiplin(Base):
+    """Sheet 'PSPPI': Disiplin teknik keinsinyuran yang diselenggarakan."""
+    __tablename__ = "lkps_pppi_disiplin"
+    __table_args__ = (UniqueConstraint("submission_id", "disiplin"),)
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    submission_id = Column(UUID(as_uuid=True), ForeignKey("lkps_submission.id"), nullable=False)
+    no = Column(Integer, nullable=True)
+    disiplin = Column(String(300), nullable=False)
+    diselenggarakan = Column(Boolean, default=False)
+
+
+# ---------------------------------------------------------------------------
 # Section 1 – Visi Misi Tujuan Strategi (VMTS)
 # ---------------------------------------------------------------------------
 
@@ -181,6 +197,24 @@ class LkpsKurikulum(Base):
     konversi_jam = Column(Numeric(6, 1), nullable=True)
     dokumen_rps = Column(Text, nullable=True)
     unit_penyelenggara = Column(String(100), nullable=True)  # Universitas | Fakultas | Prodi
+
+
+# ---------------------------------------------------------------------------
+# Section 3a2 – Mata Kuliah dan Dokumen Pembelajaran PPI
+# ---------------------------------------------------------------------------
+
+class LkpsMataKuliahPpi(Base):
+    """Sheet '3a2': Mata kuliah dan dokumen pembelajaran untuk PPI."""
+    __tablename__ = "lkps_mata_kuliah_ppi"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    submission_id = Column(UUID(as_uuid=True), ForeignKey("lkps_submission.id"), nullable=False)
+    no = Column(Integer, nullable=True)
+    mata_kuliah = Column(String(300), nullable=True)
+    bobot_sks = Column(Numeric(4, 1), nullable=True)
+    konversi_teori_jam = Column(Numeric(6, 1), nullable=True)
+    konversi_praktik_jam = Column(Numeric(6, 1), nullable=True)
+    dokumen_rps = Column(Text, nullable=True)
 
 
 # ---------------------------------------------------------------------------

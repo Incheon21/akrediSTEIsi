@@ -24,6 +24,226 @@ from app.utils.dependencies import get_db
 router = APIRouter()
 
 AUTOMATED_INDICATOR_CODES = {"9", "10", "11", "18", "19", "23", "25"}
+SCORING_GROUPS = [
+    {
+        "id": "G1",
+        "urutan": 1,
+        "nama": "Diferensiasi Misi",
+        "deskripsi": "Visi, Misi, Tujuan, dan Strategi",
+        "kode_awal": 1,
+        "kode_akhir": 3,
+    },
+    {
+        "id": "G2",
+        "urutan": 2,
+        "nama": "Akuntabilitas",
+        "deskripsi": "Tata pamong, tata kelola, kerja sama, dan keuangan.",
+        "kode_awal": 4,
+        "kode_akhir": 11,
+    },
+    {
+        "id": "G3",
+        "urutan": 3,
+        "nama": "Relevansi Pendidikan, Penelitian, dan PkM",
+        "deskripsi": "Profil lulusan, CPL, kurikulum, pembelajaran, penelitian, dan PkM.",
+        "kode_awal": 12,
+        "kode_akhir": 25,
+    },
+    {
+        "id": "G4",
+        "urutan": 4,
+        "nama": "Sumber Daya Manusia",
+        "deskripsi": "Profil dosen, tenaga kependidikan, beban kerja, dan kinerja DTPS.",
+        "kode_awal": 26,
+        "kode_akhir": 37,
+    },
+    {
+        "id": "G5",
+        "urutan": 5,
+        "nama": "Sarana, Prasarana, dan K3L",
+        "deskripsi": "Kecukupan sarana-prasarana dan keselamatan kesehatan kerja lingkungan.",
+        "kode_awal": 38,
+        "kode_akhir": 39,
+    },
+    {
+        "id": "G6",
+        "urutan": 6,
+        "nama": "Mahasiswa dan Luaran Mahasiswa",
+        "deskripsi": "Profil mahasiswa, prestasi, masa studi, kelulusan, dan luaran lulusan.",
+        "kode_awal": 40,
+        "kode_akhir": 52,
+    },
+    {
+        "id": "G7",
+        "urutan": 7,
+        "nama": "Sistem Penjaminan Mutu dan Pengembangan Berkelanjutan",
+        "deskripsi": "Siklus PPEPP, analisis lingkungan, dan strategi pengembangan berkelanjutan.",
+        "kode_awal": 53,
+        "kode_akhir": 60,
+    },
+]
+SCORING_SUBSECTIONS = [
+    {
+        "id": "G1-1",
+        "group_id": "G1",
+        "urutan": 1,
+        "kode": "1.1",
+        "nama": "Visi, Misi, Tujuan, dan Strategi",
+        "deskripsi": "Diferensiasi misi dan ketercapaian VMTS.",
+        "kode_awal": 1,
+        "kode_akhir": 3,
+    },
+    {
+        "id": "G2-1",
+        "group_id": "G2",
+        "urutan": 1,
+        "kode": "2.1",
+        "nama": "Tata Pamong dan Tata Kelola",
+        "deskripsi": "Struktur, kepemimpinan, dan kapabilitas tata kelola.",
+        "kode_awal": 4,
+        "kode_akhir": 5,
+    },
+    {
+        "id": "G2-2",
+        "group_id": "G2",
+        "urutan": 2,
+        "kode": "2.2",
+        "nama": "Kerjasama",
+        "deskripsi": "Relevansi dan pelaksanaan kerja sama tridarma.",
+        "kode_awal": 6,
+        "kode_akhir": 7,
+    },
+    {
+        "id": "G2-3",
+        "group_id": "G2",
+        "urutan": 3,
+        "kode": "2.3",
+        "nama": "Keuangan",
+        "deskripsi": "Pengelolaan dana pendidikan, penelitian, dan PkM.",
+        "kode_awal": 8,
+        "kode_akhir": 11,
+    },
+    {
+        "id": "G3-1",
+        "group_id": "G3",
+        "urutan": 1,
+        "kode": "3.1",
+        "nama": "Pendidikan",
+        "deskripsi": "Profil lulusan, CPL, kurikulum, dan proses pembelajaran.",
+        "kode_awal": 12,
+        "kode_akhir": 21,
+    },
+    {
+        "id": "G3-2",
+        "group_id": "G3",
+        "urutan": 2,
+        "kode": "3.2",
+        "nama": "Penelitian",
+        "deskripsi": "Relevansi penelitian dan pelibatan mahasiswa.",
+        "kode_awal": 22,
+        "kode_akhir": 23,
+    },
+    {
+        "id": "G3-3",
+        "group_id": "G3",
+        "urutan": 3,
+        "kode": "3.3",
+        "nama": "Pengabdian kepada Masyarakat (PkM)",
+        "deskripsi": "Relevansi PkM dan pelibatan mahasiswa.",
+        "kode_awal": 24,
+        "kode_akhir": 25,
+    },
+    {
+        "id": "G4-1",
+        "group_id": "G4",
+        "urutan": 1,
+        "kode": "4.1",
+        "nama": "Profil Dosen dan Tenaga Kependidikan",
+        "deskripsi": "Kecukupan, kualifikasi, jabatan akademik, dan tenaga kependidikan.",
+        "kode_awal": 26,
+        "kode_akhir": 29,
+    },
+    {
+        "id": "G4-2",
+        "group_id": "G4",
+        "urutan": 2,
+        "kode": "4.2",
+        "nama": "Beban Kerja dan Kinerja DTPS",
+        "deskripsi": "Beban kerja, penelitian, PkM, publikasi, luaran, dan rekognisi DTPS.",
+        "kode_awal": 30,
+        "kode_akhir": 37,
+    },
+    {
+        "id": "G5-1",
+        "group_id": "G5",
+        "urutan": 1,
+        "kode": "5.1",
+        "nama": "Sarana, Prasarana, dan K3L",
+        "deskripsi": "Kecukupan sarana-prasarana serta keselamatan kesehatan kerja lingkungan.",
+        "kode_awal": 38,
+        "kode_akhir": 39,
+    },
+    {
+        "id": "G6-1",
+        "group_id": "G6",
+        "urutan": 1,
+        "kode": "6.1",
+        "nama": "Mahasiswa",
+        "deskripsi": "Profil, rasio, dan kualitas mahasiswa.",
+        "kode_awal": 40,
+        "kode_akhir": 41,
+    },
+    {
+        "id": "G6-2",
+        "group_id": "G6",
+        "urutan": 2,
+        "kode": "6.2",
+        "nama": "Capaian Pembelajaran dan Prestasi Mahasiswa",
+        "deskripsi": "IPK, prestasi, masa studi, dan kelulusan.",
+        "kode_awal": 42,
+        "kode_akhir": 45,
+    },
+    {
+        "id": "G6-3",
+        "group_id": "G6",
+        "urutan": 3,
+        "kode": "6.3",
+        "nama": "Luaran Mahasiswa",
+        "deskripsi": "Publikasi ilmiah serta luaran penelitian dan PkM mahasiswa.",
+        "kode_awal": 46,
+        "kode_akhir": 47,
+    },
+    {
+        "id": "G6-4",
+        "group_id": "G6",
+        "urutan": 4,
+        "kode": "6.4",
+        "nama": "Tracer Study dan Luaran Lulusan",
+        "deskripsi": "Tracer study, waktu tunggu, kesesuaian bidang kerja, dan kepuasan pengguna.",
+        "kode_awal": 48,
+        "kode_akhir": 52,
+    },
+    {
+        "id": "G7-1",
+        "group_id": "G7",
+        "urutan": 1,
+        "kode": "7.1",
+        "nama": "Sistem Penjaminan Mutu",
+        "deskripsi": "Unit SPM, indikator mutu, keterlaksanaan, evaluasi, dan kepuasan.",
+        "kode_awal": 53,
+        "kode_akhir": 57,
+    },
+    {
+        "id": "G7-2",
+        "group_id": "G7",
+        "urutan": 2,
+        "kode": "B",
+        "nama": "Program Pengembangan Berkelanjutan",
+        "deskripsi": "Analisis lingkungan, tujuan strategis, dan program pengembangan.",
+        "kode_awal": 58,
+        "kode_akhir": 60,
+    },
+]
 
 
 class ManualScorePayload(BaseModel):
@@ -59,6 +279,81 @@ def _get_teknik_sarjana_matrix(db: Session) -> MatriksAkreditasi | None:
         )
         .first()
     )
+
+
+def _scoring_group_for_code(kode_indikator: str) -> dict:
+    try:
+        kode = int(kode_indikator)
+    except (TypeError, ValueError):
+        kode = 0
+
+    for group in SCORING_GROUPS:
+        if group["kode_awal"] <= kode <= group["kode_akhir"]:
+            return group
+
+    return {
+        "id": "G0",
+        "urutan": 0,
+        "nama": "Belum Terpetakan",
+        "deskripsi": "Indikator belum masuk rentang kelompok pada matriks penilaian.",
+        "kode_awal": kode,
+        "kode_akhir": kode,
+    }
+
+
+def _scoring_subsection_for_code(kode_indikator: str) -> dict:
+    try:
+        kode = int(kode_indikator)
+    except (TypeError, ValueError):
+        kode = 0
+
+    for subsection in SCORING_SUBSECTIONS:
+        if subsection["kode_awal"] <= kode <= subsection["kode_akhir"]:
+            return subsection
+
+    return {
+        "id": "G0-0",
+        "group_id": "G0",
+        "urutan": 0,
+        "kode": "-",
+        "nama": "Belum Terpetakan",
+        "deskripsi": "Indikator belum masuk rentang sub bab pada matriks penilaian.",
+        "kode_awal": kode,
+        "kode_akhir": kode,
+    }
+
+
+def _subsection_payload(subsection: dict) -> dict:
+    return {
+        "id": subsection["id"],
+        "group_id": subsection["group_id"],
+        "urutan": subsection["urutan"],
+        "kode": subsection["kode"],
+        "nama": subsection["nama"],
+        "deskripsi": subsection["deskripsi"],
+        "kode_awal": subsection["kode_awal"],
+        "kode_akhir": subsection["kode_akhir"],
+        "jumlah_indikator": 0,
+        "jumlah_manual": 0,
+        "jumlah_manual_terisi": 0,
+        "jumlah_otomatis": 0,
+    }
+
+
+def _group_payload(group: dict) -> dict:
+    return {
+        "id": group["id"],
+        "urutan": group["urutan"],
+        "nama": group["nama"],
+        "deskripsi": group["deskripsi"],
+        "kode_awal": group["kode_awal"],
+        "kode_akhir": group["kode_akhir"],
+        "sub_bab": [
+            _subsection_payload(subsection)
+            for subsection in SCORING_SUBSECTIONS
+            if subsection["group_id"] == group["id"]
+        ],
+    }
 
 
 @router.put("/manual/{submission_id}")
@@ -324,6 +619,8 @@ def hitung_simulasi_otomatis(
         ):
             max_contribution = 4.0 * komponen.bobot / component_counts[komponen.id]
             saved_manual_score = manual_scores.get(indikator.kode_indikator)
+            scoring_group = _scoring_group_for_code(indikator.kode_indikator)
+            scoring_subsection = _scoring_subsection_for_code(indikator.kode_indikator)
             manual_contribution = 0.0
             if indikator.kode_indikator not in automated_codes and saved_manual_score is not None:
                 manual_contribution = (
@@ -347,6 +644,15 @@ def hitung_simulasi_otomatis(
                     if saved_manual_score is not None
                     else None,
                     "kontribusi_manual": round(manual_contribution, 2),
+                    "kelompok_penilaian": scoring_group["id"],
+                    "kelompok_urutan": scoring_group["urutan"],
+                    "kelompok_nama": scoring_group["nama"],
+                    "kelompok_deskripsi": scoring_group["deskripsi"],
+                    "subbab_penilaian": scoring_subsection["id"],
+                    "subbab_urutan": scoring_subsection["urutan"],
+                    "subbab_kode": scoring_subsection["kode"],
+                    "subbab_nama": scoring_subsection["nama"],
+                    "subbab_deskripsi": scoring_subsection["deskripsi"],
                 }
             )
 
@@ -362,6 +668,8 @@ def hitung_simulasi_otomatis(
         max_contribution = (
             4.0 * indikator.komponen.bobot / component_counts[indikator.komponen_id]
         )
+        scoring_group = _scoring_group_for_code(kode)
+        scoring_subsection = _scoring_subsection_for_code(kode)
         total_score += contribution
         max_automated_score += max_contribution
         breakdown[indikator.komponen.nama] = (
@@ -378,8 +686,55 @@ def hitung_simulasi_otomatis(
                 "kontribusi": round(contribution, 2),
                 "kontribusi_maks": round(max_contribution, 2),
                 "sumber_data": auto_sources.get(kode, "LKPS"),
+                "kelompok_penilaian": scoring_group["id"],
+                "kelompok_urutan": scoring_group["urutan"],
+                "kelompok_nama": scoring_group["nama"],
+                "kelompok_deskripsi": scoring_group["deskripsi"],
+                "subbab_penilaian": scoring_subsection["id"],
+                "subbab_urutan": scoring_subsection["urutan"],
+                "subbab_kode": scoring_subsection["kode"],
+                "subbab_nama": scoring_subsection["nama"],
+                "subbab_deskripsi": scoring_subsection["deskripsi"],
             }
         )
+
+    group_summaries = [_group_payload(group) for group in SCORING_GROUPS]
+    summary_by_id = {group["id"]: group for group in group_summaries}
+    subsection_summary_by_id = {
+        subsection["id"]: subsection
+        for group in group_summaries
+        for subsection in group["sub_bab"]
+    }
+    for group in group_summaries:
+        group.update(
+            {
+                "jumlah_indikator": 0,
+                "jumlah_manual": 0,
+                "jumlah_manual_terisi": 0,
+                "jumlah_otomatis": 0,
+            }
+        )
+
+    for item in all_indicator_results:
+        group = summary_by_id.get(item["kelompok_penilaian"])
+        if not group:
+            continue
+        subsection = subsection_summary_by_id.get(item["subbab_penilaian"])
+        group["jumlah_indikator"] += 1
+        if subsection:
+            subsection["jumlah_indikator"] += 1
+        if item["mode"] == "AUTO_LKPS":
+            group["jumlah_otomatis"] += 1
+            if subsection:
+                subsection["jumlah_otomatis"] += 1
+        else:
+            group["jumlah_manual"] += 1
+            if subsection:
+                subsection["jumlah_manual"] += 1
+            if item["skor_manual"] is not None:
+                group["jumlah_manual_terisi"] += 1
+                if subsection:
+                    subsection["jumlah_manual_terisi"] += 1
 
     return {
         "program_studi": prodi.nama,
@@ -395,5 +750,6 @@ def hitung_simulasi_otomatis(
         "breakdown_skor": {key: round(value, 2) for key, value in breakdown.items()},
         "indikator": indikator_results,
         "semua_indikator": all_indicator_results,
+        "kelompok_penilaian": group_summaries,
         "catatan": "Skor ini hanya menghitung indikator matriks yang datanya sudah bisa diturunkan otomatis dari LKPS.",
     }

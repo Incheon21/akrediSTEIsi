@@ -17,6 +17,12 @@ const vmtsFields: FieldDefinition[] = [
   { key: "link_dokumen", label: "Link Dokumen", type: "text" },
 ];
 
+const pppiDisiplinFields: FieldDefinition[] = [
+  { key: "no", label: "No", type: "integer" },
+  { key: "disiplin", label: "Disiplin Teknik Keinsinyuran", type: "text", span: 2 },
+  { key: "diselenggarakan", label: "Diselenggarakan", type: "boolean" },
+];
+
 const kerjasamaFields: FieldDefinition[] = [
   { key: "lembaga_mitra", label: "Lembaga Mitra", type: "text", span: 2 },
   {
@@ -58,6 +64,15 @@ const kurikulumFields: FieldDefinition[] = [
   { key: "konversi_jam", label: "Konversi Jam", type: "decimal", step: 0.5 },
   { key: "dokumen_rps", label: "Link RPS", type: "text" },
   { key: "unit_penyelenggara", label: "Unit Penyelenggara", type: "text" },
+];
+
+const mataKuliahPpiFields: FieldDefinition[] = [
+  { key: "no", label: "No", type: "integer" },
+  { key: "mata_kuliah", label: "Mata Kuliah", type: "text", span: 2 },
+  { key: "bobot_sks", label: "Bobot (SKS)", type: "decimal", step: 0.5 },
+  { key: "konversi_teori_jam", label: "Teori (Jam)", type: "decimal", step: 0.5 },
+  { key: "konversi_praktik_jam", label: "Praktik (Jam)", type: "decimal", step: 0.5 },
+  { key: "dokumen_rps", label: "Dokumen RPS", type: "text", span: 2 },
 ];
 
 const integrasiPenelitianFields: FieldDefinition[] = [
@@ -359,23 +374,31 @@ const staticSections: SectionDefinition[] = [
   {
     code: "PSPPI",
     title: "Profil Program Profesi Insinyur",
-    sheetLabel: "Menu!S",
-    purpose: "Informasi PS-PPI mengikuti data identitas PS dan tidak diisi manual di LKPS.",
+    sheetLabel: "PSPPI",
+    purpose: "Disiplin teknik keinsinyuran yang diselenggarakan pada PPI.",
     group: "Menu",
-    mode: "static",
-    fields: [],
-    note: "Data otomatis dari master PPI.",
+    mode: "records",
+    fields: pppiDisiplinFields,
+    labelKey: "disiplin",
+    templateRows: [
+      { no: 1, disiplin: "Kebumian dan Energi" },
+      { no: 2, disiplin: "Rekayasa Sipil dan Lingkungan Terbangun" },
+      { no: 3, disiplin: "Industri" },
+      { no: 4, disiplin: "Konservasi dan Pengelolaan Sumber Daya Alam" },
+      { no: 5, disiplin: "Pertanian dan Hasil Pertanian" },
+      { no: 6, disiplin: "Teknologi Kelautan dan Perkapalan" },
+      { no: 7, disiplin: "Aeronotika dan Astronotika" },
+    ],
     applicableFor: ["PPI"],
   },
   {
     code: "3a2",
-    title: "Strategi Pembelajaran",
+    title: "Mata Kuliah PPI",
     sheetLabel: "3a2",
-    purpose: "Narasi strategi pembelajaran diunggah pada dokumen LED, bukan LKPS.",
+    purpose: "Mata kuliah dan dokumen pembelajaran PPI.",
     group: "Kriteria 3",
-    mode: "static",
-    fields: [],
-    note: "Isi langsung pada dokumen LED.",
+    mode: "records",
+    fields: mataKuliahPpiFields,
     applicableFor: ["PPI"],
   },
 ];

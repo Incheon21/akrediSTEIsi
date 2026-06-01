@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   fetchIndikatorsByKriteria,
@@ -10,7 +10,7 @@ import {
 } from "@/app/services/api";
 import { useAuth } from "@/app/hooks/useAuth";
 
-export default function ProdiLedPage() {
+function ProdiLedPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
@@ -533,4 +533,14 @@ export default function ProdiLedPage() {
       </div>
     </div>
   );
+}
+
+
+
+export default function ProdiLedPage() {
+  return (
+    <Suspense fallback={null}>
+      <ProdiLedPageInner />
+    </Suspense>
+  )
 }

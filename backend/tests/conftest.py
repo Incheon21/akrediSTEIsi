@@ -180,6 +180,7 @@ def mock_dashboard_prodi_response():
             "last_accreditation_status": "A",
             "last_accreditation_year": 2022,
             "is_active_accreditation": True,
+            "prodi_status": "active",
         },
         "target_akreditasi_id": "dummy-target-id",
         "lkps_submission_id": "dummy-lkps-id",
@@ -225,6 +226,7 @@ def mock_dashboard_multi_response():
                 "readiness_status": "red",
                 "is_active": True,
                 "days_remaining": 10,
+                "prodi_status": "active"
             }
         ],
         "current_year": 2025,

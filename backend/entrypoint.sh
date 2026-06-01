@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/tmp/stei-backend-venv}"
+
 echo "Running database migrations..."
 if ! uv run alembic upgrade heads; then
 	echo "Migration upgrade failed; attempting recovery with alembic stamp heads..."

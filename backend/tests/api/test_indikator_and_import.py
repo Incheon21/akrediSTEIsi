@@ -6,7 +6,7 @@ import pytest
 
 from app.models.indikator import Indikator
 from app.models.kriteria import Kriteria
-from app.models.lkps import LkpsSubmission
+from app.models.lkps import LkpsPenelitianMahasiswa, LkpsPrasarana, LkpsSubmission, LkpsVmts
 from app.models.narasi_led import NarasiLED
 from app.models.program_studi import ProgramStudi
 from app.models.target_akreditasi import TargetAkreditasi
@@ -367,6 +367,81 @@ def test_import_lkps_handles_blank_rows(client, seeded_submission, admin_token):
     )
 
     assert response.status_code == 200
+
+
+def test_import_lkps_carries_forward_grouped_fields(client, db, seeded_submission, admin_token):
+    """Continuation rows should inherit the previous non-empty category/group cells."""
+    submission = seeded_submission["submission"]
+
+    rows_vmts = [
+        [None, None, None, None, None],
+        [None, None, None, None, None],
+        [None, None, None, None, None],
+        [None, None, None, None, None],
+        [None, None, None, None, None],
+        [None, None, None, None, None],
+        [1, "VMTS PT", "Visi PT", "SK-PT", "https://pt.example"],
+        [2, None, "Misi PT lanjutan", "SK-PT-2", "https://pt2.example"],
+        [3, "Visi Keilmuan PS", "Visi PS", "SK-PS", "https://ps.example"],
+        [4, None, "Misi PS lanjutan", "SK-PS-2", "https://ps2.example"],
+    ]
+    rows_5a = [[None] * 12 for _ in range(9)] + [
+        [1, "Laboratorium Komputasi", 1, "Server", 2, 2, "V", None, "V", None, "V", None],
+        [2, None, None, "Workstation", 20, 18, "V", None, "V", None, "V", None],
+    ]
+    rows_6h1 = [[None] * 6 for _ in range(10)] + [
+        [1, "Dosen A", "AI", "Mahasiswa 1", "Penelitian 1", 2030],
+        [2, None, None, "Mahasiswa 2", "Penelitian 2", 2030],
+    ]
+    xlsx_bytes = _make_xlsx({"1": rows_vmts, "5a": rows_5a, "6h1": rows_6h1})
+
+    response = client.post(
+        f"/api/v1/lkps/import/{submission.id}",
+        files={
+            "file": (
+                "lkps.xlsx",
+                xlsx_bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
+        headers=_auth_headers(admin_token),
+    )
+
+    assert response.status_code == 200
+
+    vmts_rows = (
+        db.query(LkpsVmts)
+        .filter(LkpsVmts.submission_id == submission.id)
+        .order_by(LkpsVmts.no)
+        .all()
+    )
+    assert [row.jenis_vmts for row in vmts_rows] == [
+        "VMTS PT",
+        "VMTS PT",
+        "Visi Keilmuan PS",
+        "Visi Keilmuan PS",
+    ]
+
+    prasarana_rows = (
+        db.query(LkpsPrasarana)
+        .filter(LkpsPrasarana.submission_id == submission.id)
+        .order_by(LkpsPrasarana.no)
+        .all()
+    )
+    assert [row.nama_prasarana for row in prasarana_rows] == [
+        "Laboratorium Komputasi",
+        "Laboratorium Komputasi",
+    ]
+    assert [row.jumlah_prasarana for row in prasarana_rows] == [1, 1]
+
+    penelitian_rows = (
+        db.query(LkpsPenelitianMahasiswa)
+        .filter(LkpsPenelitianMahasiswa.submission_id == submission.id)
+        .order_by(LkpsPenelitianMahasiswa.no)
+        .all()
+    )
+    assert [row.nama_dosen for row in penelitian_rows] == ["Dosen A", "Dosen A"]
+    assert [row.tema_penelitian for row in penelitian_rows] == ["AI", "AI"]
 
 
 def test_import_lkps_unauthorized(client, seeded_submission):

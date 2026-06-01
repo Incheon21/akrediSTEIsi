@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -24,7 +24,7 @@ interface NotificationItem {
   is_read: boolean;
 }
 
-export default function Navbar({
+function NavbarInner({
   programStudi = "",
   programStudiId = "",
   userName = "",
@@ -37,6 +37,9 @@ export default function Navbar({
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notifikasiAktif, setNotifikasiAktif] = useState<boolean | null>(null);
+  const [tahunNotif, setTahunNotif] = useState<number | null>(null);
+  const [togglingNotif, setTogglingNotif] = useState(false);
   const searchParams = useSearchParams();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -53,6 +56,19 @@ export default function Navbar({
     const data = await response.json();
     setNotifications(data.items ?? []);
     setUnreadCount(data.unread_count ?? 0);
+  }
+
+  async function fetchNotifikasiStatus() {
+    if (!prodiId) return;
+    const res = await apiFetch(`/api/v1/target_akreditasi/status?prodi_id=${prodiId}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.has_target) {
+      setNotifikasiAktif(data.notifikasi_aktif);
+      setTahunNotif(data.tahun_akreditasi ?? null);
+    } else {
+      setNotifikasiAktif(null);
+    }
   }
 
   useEffect(() => {
@@ -104,6 +120,31 @@ export default function Navbar({
     await apiFetch(`/api/v1/notifikasi/read-all${readAllQuery}`, { method: "POST" });
   };
 
+  const toggleNotifikasi = async () => {
+    if (!prodiId || tahunNotif === null || togglingNotif) return;
+    setTogglingNotif(true);
+    const next = !notifikasiAktif;
+    setNotifikasiAktif(next);
+    try {
+      await apiFetch("/api/v1/target_akreditasi/notifikasi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prodi_id: prodiId,
+          tahun_akreditasi: tahunNotif,
+          notifikasi_aktif: next,
+        }),
+      });
+      // Fetch notifications immediately to reflect changes in the panel
+      await fetchNotifications();
+    } catch {
+      // revert on failure
+      setNotifikasiAktif(!next);
+    } finally {
+      setTogglingNotif(false);
+    }
+  };
+
   const severityClass = (severity: NotificationItem["severity"]) => {
     if (severity === "critical") return "bg-red-500";
     if (severity === "warning") return "bg-amber-400";
@@ -135,6 +176,16 @@ export default function Navbar({
                 }`}
               >
                 Dashboard Multiprodi
+              </Link>
+              <Link
+                href="/user-management"
+                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${
+                  isActive("/user-management")
+                    ? "text-[#f3e412]"
+                    : "text-white hover:text-[#f3e412]"
+                }`}
+              >
+                Manajemen Pengguna
               </Link>
 
               {/* Link halaman prodi — hanya muncul saat sedang di konteks prodi tertentu */}
@@ -214,7 +265,11 @@ export default function Navbar({
           <div className="relative" ref={notificationRef}>
             <button
               type="button"
-              onClick={() => setNotificationOpen((current) => !current)}
+              onClick={() => {
+                const opening = !notificationOpen;
+                setNotificationOpen(opening);
+                if (opening) fetchNotifikasiStatus();
+              }}
               className="relative flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors hover:bg-[#0060b8] focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-1 focus:ring-offset-[#00509d]"
               aria-label="Notifikasi"
             >
@@ -247,13 +302,40 @@ export default function Navbar({
                       {unreadCount} belum dibaca
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={markAllNotificationsRead}
-                    className="text-xs font-semibold text-[#00509d] hover:text-[#003f7d]"
-                  >
-                    Tandai dibaca
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {prodiId && notifikasiAktif !== null && (
+                      <button
+                        type="button"
+                        onClick={toggleNotifikasi}
+                        disabled={togglingNotif}
+                        title={notifikasiAktif ? "Matikan notifikasi deadline" : "Aktifkan notifikasi deadline"}
+                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
+                      >
+                        {/* Toggle pill */}
+                        <span
+                          className={`relative inline-flex h-4 w-7 shrink-0 rounded-full transition-colors ${
+                            notifikasiAktif ? "bg-[#00509d]" : "bg-gray-300"
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform ${
+                              notifikasiAktif ? "translate-x-3" : "translate-x-0"
+                            }`}
+                          />
+                        </span>
+                        <span className="hidden sm:inline">
+                          {notifikasiAktif ? "Notif aktif" : "Notif mati"}
+                        </span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={markAllNotificationsRead}
+                      className="text-xs font-semibold text-[#00509d] hover:text-[#003f7d]"
+                    >
+                      Tandai dibaca
+                    </button>
+                  </div>
                 </div>
 
                 <div className="max-h-96 overflow-y-auto">
@@ -380,4 +462,18 @@ export default function Navbar({
       </div>
     </nav>
   );
+}
+
+export default function Navbar({
+  programStudi = "",
+  programStudiId = "",
+  userName = "",
+  userInitial = "",
+  role = "",
+}: NavbarProps) {
+  return (
+    <Suspense fallback={null}>
+      <NavbarInner programStudi={programStudi} programStudiId={programStudiId} userName={userName} userInitial={userInitial} role={role} />
+    </Suspense>
+  )
 }

@@ -18,7 +18,7 @@ import openpyxl
 from sqlalchemy.orm import Session
 
 from app.models.lkps import LkpsSubmission
-from .mappers.menu import MenuMapper, DaftarTabelMapper
+from .mappers.menu import MenuMapper, DaftarTabelMapper, ProgramStudiSheetMapper
 from .mappers.section_1 import Section1Mapper
 from .mappers.section_2 import Section2Mapper
 from .mappers.section_3 import Section3Mapper
@@ -47,6 +47,7 @@ class LkpsExporter:
         mappers = [
             MenuMapper,
             DaftarTabelMapper,
+            ProgramStudiSheetMapper,
             Section1Mapper,
             Section2Mapper,
             Section3Mapper,

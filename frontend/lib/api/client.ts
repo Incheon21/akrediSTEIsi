@@ -16,10 +16,18 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    throw new Error(
+      `Tidak dapat terhubung ke backend API di ${API_BASE_URL}. Pastikan backend berjalan dan NEXT_PUBLIC_API_URL sudah benar.`,
+      { cause: error },
+    );
+  }
 
   if (!response.ok) {
     let message = response.statusText;

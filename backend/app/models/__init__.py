@@ -18,12 +18,14 @@ from app.models.lkps import (
     LkpsLuaranPenelitian,
     LkpsMahasiswaAktif,
     LkpsMasaStudi,
+    LkpsMataKuliahPpi,
     LkpsMkBasicScience,
     LkpsPembimbingLapangan,
     LkpsPenelitianMahasiswa,
     LkpsPenelitianSummary,
     LkpsPenggunaanDana,
     LkpsPkmSummary,
+    LkpsPppiDisiplin,
     LkpsPrasarana,
     LkpsPrestasiMahasiswa,
     LkpsProdukJasa,
@@ -52,6 +54,7 @@ from app.models.simulasi import (
 )
 from app.models.target_akreditasi import TargetAkreditasi
 from app.models.user import User
+from app.models.komentar import Komentar
 
 __all__ = [
     "ProgramStudi",
@@ -82,6 +85,7 @@ __all__ = [
     "LkpsCapstoneDesign",
     "LkpsPenelitianSummary",
     "LkpsPkmSummary",
+    "LkpsPppiDisiplin",
     "LkpsDosenProfil",
     "LkpsTenagaKependidikan",
     "LkpsBebanKerjaDosen",
@@ -99,6 +103,7 @@ __all__ = [
     "LkpsIpkLulusan",
     "LkpsPrestasiMahasiswa",
     "LkpsMasaStudi",
+    "LkpsMataKuliahPpi",
     "LkpsWaktuTunggu",
     "LkpsKesesuaianKerja",
     "LkpsTempatKerja",
@@ -106,4 +111,5 @@ __all__ = [
     "LkpsPenelitianMahasiswa",
     "LkpsSpmiDokumen",
     "LkpsSpmiPelaksanaan",
+    "Komentar",
 ]

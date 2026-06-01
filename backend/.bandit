@@ -1,0 +1,24 @@
+# Bandit security scan configuration for STEI Accreditation Backend
+# Docs: https://bandit.readthedocs.io/en/latest/config.html
+
+[bandit]
+# Direktori yang dikecualikan dari pemindaian
+exclude_dirs = [
+    ".venv",
+    "venv",
+    "tests",
+    "alembic",
+    "scripts",
+]
+
+# Tes keamanan yang dikecualikan (dengan alasan):
+# B101 - assert: digunakan di pytest (sudah dikecualikan via exclude_dirs/tests)
+# B311 - random: sistem ini tidak menggunakan random untuk kriptografi
+skips = ["B101", "B311"]
+
+# Level keparahan minimum yang dilaporkan: LOW, MEDIUM, HIGH
+# Gunakan MEDIUM untuk laporan yang lebih fokus dan actionable
+severity = "LOW"
+
+# Level kepercayaan minimum: LOW, MEDIUM, HIGH
+confidence = "LOW"
