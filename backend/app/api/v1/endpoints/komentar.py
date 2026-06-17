@@ -10,6 +10,7 @@ from app.models.komentar import Komentar
 from app.models.target_akreditasi import TargetAkreditasi
 from app.schemas.komentar import KomentarCreate, KomentarResponse, KomentarUpdate
 from app.utils.dependencies import get_current_user, require_role
+from app.services.notifikasi import notify_komentar_to_tim_prodi
 
 router = APIRouter(prefix="/target/{target_id}/komentar", tags=["komentar"])
 
@@ -61,7 +62,7 @@ def create_komentar(
     payload: KomentarCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    _: None = Depends(require_role("pimpinan", "admin", "koordinator")),
+    _: None = Depends(require_role("pimpinan", "admin")),
 ):
     target = db.query(TargetAkreditasi).filter(TargetAkreditasi.id == target_id).first()
     if not target:
@@ -76,6 +77,15 @@ def create_komentar(
         db.add(new_komentar)
         db.commit()
         db.refresh(new_komentar)
+
+        notify_komentar_to_tim_prodi(
+            db,
+            komentar_id=new_komentar.id,
+            target_akreditasi_id=target_id,
+            pengirim_nama=current_user.nama,
+            isi_komentar=payload.isi_komentar,
+            program_studi_id=target.program_studi_id,
+        )
 
         user_info = {
             "id": current_user.id,
@@ -103,7 +113,7 @@ def update_komentar(
     payload: KomentarUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    _: None = Depends(require_role("pimpinan", "admin", "koordinator")),
+    _: None = Depends(require_role("pimpinan", "admin")),
 ):
     komentar = (
         db.query(Komentar)
@@ -149,7 +159,7 @@ def delete_komentar(
     komentar_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    _: None = Depends(require_role("pimpinan", "admin", "koordinator")),
+    _: None = Depends(require_role("pimpinan", "admin")),
 ):
     komentar = (
         db.query(Komentar)

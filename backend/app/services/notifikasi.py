@@ -13,6 +13,62 @@ from app.models.user import User
 from app.services.dashboard import KRITERIA_LKPS_MODELS
 
 
+def notify_komentar_to_tim_prodi(
+    db: Session,
+    *,
+    komentar_id: UUID,
+    target_akreditasi_id: UUID,
+    pengirim_nama: str,
+    isi_komentar: str,
+    program_studi_id: UUID,
+) -> None:
+    """Create a notification for each tim_prodi member of the prodi when a comment is posted."""
+    from app.models.role import Role  # avoid circular import
+
+    tim_prodi_role = db.query(Role).filter(Role.name == "tim_prodi").first()
+    if not tim_prodi_role:
+        return
+
+    recipients = (
+        db.query(User)
+        .filter(
+            User.role_id == tim_prodi_role.id,
+            User.program_studi_id == program_studi_id,
+        )
+        .all()
+    )
+
+    target = db.query(TargetAkreditasi).filter(TargetAkreditasi.id == target_akreditasi_id).first()
+    prodi_name = target.program_studi.nama if target and target.program_studi else ""
+    tahun = target.tahun_akreditasi if target else ""
+    href = f"/prodi/dashboard-prodi"
+    source_key = f"komentar:{komentar_id}"
+    preview = isi_komentar[:80] + ("…" if len(isi_komentar) > 80 else "")
+
+    for user in recipients:
+        existing = (
+            db.query(Notifikasi)
+            .filter(Notifikasi.user_id == user.id, Notifikasi.source_key == source_key)
+            .first()
+        )
+        if existing:
+            continue
+        db.add(
+            Notifikasi(
+                user_id=user.id,
+                source_key=source_key,
+                kategori="komentar",
+                severity="info",
+                judul=f"Komentar baru dari {pengirim_nama}",
+                pesan=f"{prodi_name} ({tahun}): {preview}",
+                href=href,
+                program_studi_id=program_studi_id,
+                target_akreditasi_id=target_akreditasi_id,
+            )
+        )
+    db.commit()
+
+
 GENERATED_PREFIX = "reminder"
 
 
@@ -265,7 +321,7 @@ def _sync_led_notification(
 
 def sync_generated_notifications(db: Session, current_user: User) -> None:
     role_name = current_user.role.name if current_user.role else ""
-    include_prodi_id = role_name in {"admin", "pimpinan", "koordinator"}
+    include_prodi_id = role_name in {"admin", "pimpinan"}
     active_keys: set[str] = set()
 
     for target in _accessible_active_targets(db, current_user):

@@ -93,7 +93,7 @@ function NavbarInner({
 
   // Admin sedang di dalam dashboard prodi tertentu
   const isAdminInProdiPage =
-    (role === "admin" || role === "pimpinan") &&
+    role === "admin" &&
     (pathname.includes("/prodi/") || pathname.includes("/akreditasi/"));
 
   const markNotificationRead = async (item: NotificationItem) => {
@@ -165,7 +165,7 @@ function NavbarInner({
 
         {/* Nav links */}
         <div className="flex items-stretch flex-1 px-2">
-          {role === "admin" || role === "pimpinan" ? (
+          {role === "admin" ? (
             <>
               <Link
                 href="/dashboard-multiprodi"
@@ -223,6 +223,19 @@ function NavbarInner({
                   </Link>
                 </>
               )}
+            </>
+          ) : role === "pimpinan" ? (
+            <>
+              <Link
+                href="/dashboard-multiprodi"
+                className={`px-6 flex items-center text-sm font-semibold transition-all duration-150 ${
+                  isActive("/dashboard-multiprodi")
+                    ? "text-[#f3e412]"
+                    : "text-white hover:text-[#f3e412]"
+                }`}
+              >
+                Dashboard Multiprodi
+              </Link>
             </>
           ) : (
             <>
@@ -404,13 +417,13 @@ function NavbarInner({
           <div className="text-right hidden sm:block">
             {role === "admin" ? (
               <p className="text-sm font-semibold text-white leading-none">
-                Administrator
+                Admin/Koordinator
               </p>
             ) : role === "pimpinan" ? (
               <p className="text-sm font-semibold text-white leading-none">
                 Pimpinan STEI
               </p>
-            ) : (
+          ) : (
               <>
                 <p className="text-xs text-blue-200 leading-none mb-0.5">
                   Program Studi

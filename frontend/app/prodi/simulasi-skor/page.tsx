@@ -97,12 +97,14 @@ interface AutomaticSimulation {
 
 function SimulasiSkorPageInner() {
   const { user, loading: authLoading } = useAuth();
+  const canEdit = user?.role === "admin" || user?.role === "tim_prodi";
   const searchParams = useSearchParams();
   const prodiIdFromUrl = searchParams.get("id");
 
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [simulation, setSimulation] = useState<AutomaticSimulation | null>(null);
   const [manualScores, setManualScores] = useState<Record<string, string>>({});
+  const [manualScoreErrors, setManualScoreErrors] = useState<Record<string, string>>({});
   const [savingManual, setSavingManual] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -245,6 +247,11 @@ function SimulasiSkorPageInner() {
   async function handleSaveManualScores() {
     const currentSimulation = simulation;
     if (!currentSimulation) return;
+
+    if (Object.keys(manualScoreErrors).length > 0) {
+      setSaveMessage("Perbaiki nilai yang tidak valid sebelum menyimpan.");
+      return;
+    }
 
     setSavingManual(true);
     setSaveMessage(null);
@@ -438,17 +445,19 @@ function SimulasiSkorPageInner() {
             <h2 className="text-base font-bold text-[#132040]">
               Input Skor Manual
             </h2>
-            <button
-              type="button"
-              onClick={handleSaveManualScores}
-              disabled={savingManual}
-              className="ml-auto rounded-lg bg-[#00509d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#003f7d] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {savingManual ? "Menyimpan..." : "Simpan Skor Manual"}
-            </button>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={handleSaveManualScores}
+                disabled={savingManual}
+                className="ml-auto rounded-lg bg-[#00509d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#003f7d] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {savingManual ? "Menyimpan..." : "Simpan Skor Manual"}
+              </button>
+            )}
           </div>
           {saveMessage && (
-            <p className="mt-3 text-sm font-medium text-slate-500">
+            <p className={`mt-3 text-sm font-medium ${saveMessage.startsWith("Perbaiki") ? "text-red-500" : "text-slate-500"}`}>
               {saveMessage}
             </p>
           )}
@@ -595,29 +604,55 @@ function SimulasiSkorPageInner() {
                                             {automatic.skor_mentah.toFixed(2)} / 4
                                           </span>
                                         ) : (
-                                          <input
-                                            type="number"
-                                            min="0"
-                                            max="4"
-                                            step="0.1"
-                                            value={
-                                              manualScores[item.kode_indikator] ?? ""
-                                            }
-                                            onChange={(event) => {
-                                              const { value } = event.target;
-                                              setManualScores((current) => {
-                                                const next = { ...current };
-                                                if (value === "") {
-                                                  delete next[item.kode_indikator];
-                                                } else {
-                                                  next[item.kode_indikator] = value;
-                                                }
-                                                return next;
-                                              });
-                                            }}
-                                            className="h-9 w-24 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#00509d]"
-                                            placeholder="0-4"
-                                          />
+                                          <div>
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              max="4"
+                                              step="0.1"
+                                              value={
+                                                manualScores[item.kode_indikator] ?? ""
+                                              }
+                                              onChange={(event) => {
+                                                const { value } = event.target;
+                                                const kode = item.kode_indikator;
+                                                setManualScores((current) => {
+                                                  const next = { ...current };
+                                                  if (value === "") {
+                                                    delete next[kode];
+                                                  } else {
+                                                    next[kode] = value;
+                                                  }
+                                                  return next;
+                                                });
+                                                setManualScoreErrors((current) => {
+                                                  const next = { ...current };
+                                                  if (value === "") {
+                                                    delete next[kode];
+                                                  } else {
+                                                    const n = Number(value);
+                                                    if (Number.isNaN(n)) {
+                                                      next[kode] = "Harus berupa angka";
+                                                    } else if (n < 0) {
+                                                      next[kode] = "Tidak boleh negatif";
+                                                    } else if (n > 4) {
+                                                      next[kode] = "Maks 4";
+                                                    } else {
+                                                      delete next[kode];
+                                                    }
+                                                  }
+                                                  return next;
+                                                });
+                                              }}
+                                              className={`h-9 w-24 rounded-lg border px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#00509d] ${manualScoreErrors[item.kode_indikator] ? "border-red-400" : "border-slate-200"}`}
+                                              placeholder="0-4"
+                                            />
+                                            {manualScoreErrors[item.kode_indikator] && (
+                                              <p className="mt-0.5 text-[10px] text-red-500 leading-tight">
+                                                {manualScoreErrors[item.kode_indikator]}
+                                              </p>
+                                            )}
+                                          </div>
                                         )}
                                       </td>
                                       <td className="px-4 py-3 font-semibold text-[#00509d]">

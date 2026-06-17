@@ -15,7 +15,7 @@ def seed():
     db = SessionLocal()
     try:
         # Seed roles
-        role_names = ["admin", "pimpinan", "koordinator", "tim_prodi"]
+        role_names = ["admin", "pimpinan", "tim_prodi"]
         roles = {}
         for name in role_names:
             role = db.query(Role).filter(Role.name == name).first()
@@ -48,14 +48,14 @@ def seed():
                 "perguruan_tinggi": "Institut Teknologi Bandung",
             },
             {
-                "kode": "TE",
+                "kode": "TTL",
                 "nama": "Teknik Tenaga Listrik",
                 "jenjang": "S1",
                 "fakultas": "STEI",
                 "perguruan_tinggi": "Institut Teknologi Bandung",
             },
             {
-                "kode": "TS",
+                "kode": "TK",
                 "nama": "Teknik Telekomunikasi",
                 "jenjang": "S1",
                 "fakultas": "STEI",
@@ -67,9 +67,14 @@ def seed():
                 "jenjang": "S1",
                 "fakultas": "STEI",
                 "perguruan_tinggi": "Institut Teknologi Bandung",
-                
             },
-            
+            {
+                "kode": "BM",
+                "nama": "Teknik Biomedis",
+                "jenjang": "S1",
+                "fakultas": "STEI",
+                "perguruan_tinggi": "Institut Teknologi Bandung",
+            },
         ]
         prodis = {}
         for p in prodi_data:
@@ -104,13 +109,6 @@ def seed():
                 "prodi": None,
             },
             {
-                "email": "koordinator@stei.itb.ac.id",
-                "password": "koordinator123",
-                "nama": "Koordinator User",
-                "role": "koordinator",
-                "prodi": "IF",
-            },
-            {
                 "email": "timprodiIF@stei.itb.ac.id",
                 "password": "timprodiIF123",
                 "nama": "Tim Prodi User",
@@ -125,18 +123,18 @@ def seed():
                 "prodi": "EL",
             },
             {
-                "email": "timprodiTE@stei.itb.ac.id",
-                "password": "timprodiTE123",
-                "nama": "Tim Prodi TE",
+                "email": "timprodiTTL@stei.itb.ac.id",
+                "password": "timprodiTTL123",
+                "nama": "Tim Prodi TTL",
                 "role": "tim_prodi",
-                "prodi": "TE",
+                "prodi": "TTL",
             },
             {
-                "email": "timprodiTS@stei.itb.ac.id",
-                "password": "timprodiTS123",
-                "nama": "Tim Prodi TS",
+                "email": "timprodiTK@stei.itb.ac.id",
+                "password": "timprodiTK123",
+                "nama": "Tim Prodi TK",
                 "role": "tim_prodi",
-                "prodi": "TS",
+                "prodi": "TK",
             },
             {
                 "email": "timprodiSTI@stei.itb.ac.id",
@@ -144,6 +142,13 @@ def seed():
                 "nama": "Tim Prodi STI",
                 "role": "tim_prodi",
                 "prodi": "STI",
+            },
+            {
+                "email": "timprodiBM@stei.itb.ac.id",
+                "password": "timprodiBM123",
+                "nama": "Tim Prodi BM",
+                "role": "tim_prodi",
+                "prodi": "BM",
             },
         ]
 
@@ -443,14 +448,47 @@ def seed():
                 is_aktif_val=True,
             )
 
-        # --- TE (Teknik Tenaga Listrik): aktif 2026, BELUM set target skor ---
-        if "TE" in prodis:
-            deactivate_other_targets(prodis["TE"], keep_tahun=2026)
+        # --- TTL (Teknik Tenaga Listrik): aktif 2026, BELUM set target skor ---
+        if "TTL" in prodis:
+            deactivate_other_targets(prodis["TTL"], keep_tahun=2026)
             upsert_target(
-                prodis["TE"],
+                prodis["TTL"],
                 tahun=2026,
-                target_skor_val=None,  # Belum diset oleh tim prodi
-                deadline_val=None,     # Belum diset oleh tim prodi
+                target_skor_val=None,
+                deadline_val=None,
+                is_aktif_val=True,
+            )
+
+        # --- TK (Teknik Telekomunikasi): aktif 2026 ---
+        if "TK" in prodis:
+            deactivate_other_targets(prodis["TK"], keep_tahun=2026)
+            upsert_target(
+                prodis["TK"],
+                tahun=2026,
+                target_skor_val=None,
+                deadline_val=None,
+                is_aktif_val=True,
+            )
+
+        # --- STI (Sistem dan Teknologi Informasi): aktif 2026 ---
+        if "STI" in prodis:
+            deactivate_other_targets(prodis["STI"], keep_tahun=2026)
+            upsert_target(
+                prodis["STI"],
+                tahun=2026,
+                target_skor_val=None,
+                deadline_val=None,
+                is_aktif_val=True,
+            )
+
+        # --- BM (Teknik Biomedis): aktif 2026 ---
+        if "BM" in prodis:
+            deactivate_other_targets(prodis["BM"], keep_tahun=2026)
+            upsert_target(
+                prodis["BM"],
+                tahun=2026,
+                target_skor_val=None,
+                deadline_val=None,
                 is_aktif_val=True,
             )
 

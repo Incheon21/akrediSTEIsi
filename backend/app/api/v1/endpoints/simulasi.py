@@ -18,6 +18,7 @@ from app.models.program_studi import ProgramStudi
 from app.models.simulasi import MatriksAkreditasi, SkorManualSimulasi
 from app.models.target_akreditasi import TargetAkreditasi
 from app.schemas.simulasi import SimulasiRequest, SimulasiResponse
+from app.utils.dependencies import require_role
 from app.services.simulasi import SimulasiService
 from app.utils.dependencies import get_db
 
@@ -361,6 +362,7 @@ def simpan_skor_manual(
     submission_id: UUID,
     payload: ManualScorePayload,
     db: Session = Depends(get_db),
+    _: None = Depends(require_role("admin", "tim_prodi")),
 ):
     submission = (
         db.query(LkpsSubmission)

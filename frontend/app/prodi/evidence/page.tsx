@@ -92,11 +92,11 @@ export default function EvidencePage() {
     typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 
   const canEdit =
-    user && ["admin", "koordinator", "tim_prodi"].includes(user.role);
+    user && ["admin", "tim_prodi"].includes(user.role);
 
   const checkCanDelete = (ev: EvidenceItem) => {
     if (!user) return false;
-    if (user.role === "admin" || user.role === "koordinator") return true;
+    if (user.role === "admin") return true;
     return user.id === ev.uploaded_by;
   };
 

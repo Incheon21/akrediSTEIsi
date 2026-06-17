@@ -18,7 +18,7 @@ router = APIRouter(prefix="/multiprodi", tags=["dashboard-multiprodi"])
 def get_dashboard_prodi(
     tahun: int | None = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "pimpinan", "koordinator"))
+    current_user: User = Depends(require_role("admin", "pimpinan"))
 ) -> dict:
     return get_dashboard_multiprodi_data(db, tahun=tahun)
 
@@ -29,6 +29,6 @@ def get_dashboard_prodi(
 def toggle_target(
     req: ToggleTargetRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "pimpinan", "koordinator"))
+    current_user: User = Depends(require_role("admin", "pimpinan"))
 ) -> dict:
     return toggle_target_akreditasi(db, req.program_studi_id, req.tahun, req.is_aktif)

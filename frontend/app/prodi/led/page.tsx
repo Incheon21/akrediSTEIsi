@@ -39,7 +39,7 @@ function ProdiLedPageInner() {
   // Determine if user can edit
   const canEdit = useMemo(() => {
     if (!user) return false;
-    return ["admin", "tim_prodi", "koordinator"].includes(user.role);
+    return ["admin", "tim_prodi"].includes(user.role);
   }, [user]);
 
   const isReadOnly = !canEdit;
@@ -296,7 +296,7 @@ function ProdiLedPageInner() {
 
   if (!user) return null;
 
-  if (!["admin", "koordinator", "tim_prodi", "pimpinan"].includes(user.role)) {
+  if (!["admin", "tim_prodi", "pimpinan"].includes(user.role)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#f4f6f8] p-5">
         <div className="bg-white max-w-md w-full rounded-xl shadow-sm border border-orange-100 p-8 text-center text-[#132040]">

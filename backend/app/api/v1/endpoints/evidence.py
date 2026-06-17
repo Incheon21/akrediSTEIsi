@@ -190,7 +190,6 @@ def delete_evidence_endpoint(
 
     if current_user.id != evidence.uploaded_by and current_user.role.name not in (
         "admin",
-        "koordinator",
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

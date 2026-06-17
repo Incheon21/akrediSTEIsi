@@ -19,7 +19,7 @@ router = APIRouter(prefix="/led", tags=["led"])
     response_model=LEDSaveResponse,
     summary="Create or update narasi LED",
     dependencies=[
-        Depends(require_role("tim_prodi", "admin", "koordinator", "pimpinan"))
+        Depends(require_role("tim_prodi", "admin"))
     ],
 )
 def save_narasi_led(
@@ -52,7 +52,7 @@ def save_narasi_led(
     response_model=LEDResponse,
     summary="Get narasi LED by target and indikator",
     dependencies=[
-        Depends(require_role("tim_prodi", "admin", "koordinator", "pimpinan"))
+        Depends(require_role("tim_prodi", "admin", "pimpinan"))
     ],
 )
 def get_narasi_led(
@@ -77,7 +77,7 @@ def get_narasi_led(
     "/export/{target_akreditasi_id}",
     summary="Export LED as Word Document",
     dependencies=[
-        Depends(require_role("tim_prodi", "admin", "koordinator", "pimpinan"))
+        Depends(require_role("tim_prodi", "admin", "pimpinan"))
     ],
 )
 def export_led_word(

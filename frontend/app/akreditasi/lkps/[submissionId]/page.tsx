@@ -2,6 +2,7 @@
 
 import { use, useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useAuth } from "@/app/hooks/useAuth";
 
 import {
   createSectionRecord,
@@ -45,6 +46,9 @@ function LkpsWorkspaceDetailInner({ params }: WorkspaceParams) {
   const targetId = searchParams.get("target_akreditasi_id");
   const tahun = searchParams.get("tahun");
   const prodiId = searchParams.get("id");
+
+  const { user } = useAuth();
+  const canEdit = user?.role === "admin" || user?.role === "tim_prodi";
 
   const [jenjang, setJenjang] = useState<string | null>(null);
 
@@ -346,7 +350,7 @@ function LkpsWorkspaceDetailInner({ params }: WorkspaceParams) {
                   <p className="mt-1 text-xs text-gray-500 max-w-2xl">{activeSection.purpose}</p>
                 )}
               </div>
-              {activeSection.mode === "records" && !activeSection.templateRows && (
+              {activeSection.mode === "records" && !activeSection.templateRows && canEdit && (
                 <button
                   type="button"
                   onClick={() => handleAddRecord(activeSection)}
@@ -399,6 +403,7 @@ function LkpsWorkspaceDetailInner({ params }: WorkspaceParams) {
               onRemove={(recordIndex) => handleRemoveRecord(activeSection.code, recordIndex)}
               onAddRow={() => handleAddRecord(activeSection)}
               addingRow={addingRow}
+              canEdit={canEdit}
             />
           )}
         </section>
@@ -420,6 +425,7 @@ function SectionTable({
   onRemove,
   onAddRow,
   addingRow,
+  canEdit,
 }: {
   section: SectionDefinition;
   records: PersistedRecord[];
@@ -429,6 +435,7 @@ function SectionTable({
   onRemove: (recordIndex: number) => void;
   onAddRow: () => void;
   addingRow: boolean;
+  canEdit: boolean;
 }) {
   // Hide: labelKey for fixed sections, pinnedValues fields, and "no" (auto-filled from row index).
   const visibleFields = section.fields.filter((f) => {
@@ -448,17 +455,21 @@ function SectionTable({
           </svg>
         </div>
         <p className="text-sm font-medium text-gray-500 mb-1">Belum ada data</p>
-        <p className="text-xs text-gray-400 mb-5">Klik tombol di bawah untuk menambah baris pertama</p>
-        <button
-          onClick={onAddRow}
-          disabled={addingRow}
-          className="flex items-center gap-1.5 rounded-lg bg-[#00509d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#003f7d] disabled:opacity-50"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Tambah Baris Pertama
-        </button>
+        {canEdit && (
+          <>
+            <p className="text-xs text-gray-400 mb-5">Klik tombol di bawah untuk menambah baris pertama</p>
+            <button
+              onClick={onAddRow}
+              disabled={addingRow}
+              className="flex items-center gap-1.5 rounded-lg bg-[#00509d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#003f7d] disabled:opacity-50"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Tambah Baris Pertama
+            </button>
+          </>
+        )}
       </div>
     );
   }
@@ -485,7 +496,7 @@ function SectionTable({
                 {field.label}
               </th>
             ))}
-            {!isFixed && (
+            {!isFixed && canEdit && (
               <th className="w-14 px-2 py-3 text-center text-xs font-bold text-gray-400 uppercase tracking-wide">
                 Hapus
               </th>
@@ -515,11 +526,12 @@ function SectionTable({
                     <TableCellInput
                       field={field}
                       value={record[field.key]}
-                      onChange={(value) => onFieldChange(rowIndex, field.key, value)}
+                      onChange={(value) => canEdit && onFieldChange(rowIndex, field.key, value)}
+                      readOnly={!canEdit}
                     />
                   </td>
                 ))}
-                {!isFixed && (
+                {!isFixed && canEdit && (
                   <td className="w-14 px-2 py-1.5 text-center">
                     <button
                       type="button"
@@ -538,7 +550,7 @@ function SectionTable({
             );
           })}
         </tbody>
-        {!isFixed && (
+        {!isFixed && canEdit && (
           <tfoot>
             <tr>
               <td
@@ -582,10 +594,12 @@ function TableCellInput({
   field,
   value,
   onChange,
+  readOnly = false,
 }: {
   field: FieldDefinition;
   value: unknown;
   onChange: (value: unknown) => void;
+  readOnly?: boolean;
 }) {
   const [error, setError] = useState<string | null>(null);
 
@@ -593,15 +607,17 @@ function TableCellInput({
     "w-full bg-transparent border rounded px-1.5 py-1 text-sm text-gray-800 focus:bg-white focus:outline-none transition-colors";
   const normalBorder = "border-transparent hover:border-gray-300 focus:border-[#00509d]";
   const errorBorder = "border-red-400 focus:border-red-500";
+  const readOnlyCls = "cursor-default select-text";
 
   if (field.type === "textarea") {
     return (
       <textarea
         rows={2}
         value={(value as string | undefined) ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={field.placeholder ?? "—"}
-        className={`${base} ${normalBorder} resize-none leading-snug`}
+        onChange={(e) => !readOnly && onChange(e.target.value)}
+        readOnly={readOnly}
+        placeholder={readOnly ? "—" : (field.placeholder ?? "—")}
+        className={`${base} ${normalBorder} resize-none leading-snug ${readOnly ? readOnlyCls : ""}`}
         style={{ minWidth: COL_WIDTH.textarea, minHeight: 52 }}
       />
     );
@@ -611,7 +627,8 @@ function TableCellInput({
     return (
       <select
         value={(value as string | undefined) ?? ""}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => !readOnly && onChange(e.target.value)}
+        disabled={readOnly}
         className={`${base} ${normalBorder} cursor-pointer`}
         style={{ minWidth: COL_WIDTH.select }}
       >
@@ -631,8 +648,9 @@ function TableCellInput({
         <input
           type="checkbox"
           checked={Boolean(value)}
-          onChange={(e) => onChange(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-[#00509d] cursor-pointer focus:ring-[#00509d]"
+          onChange={(e) => !readOnly && onChange(e.target.checked)}
+          disabled={readOnly}
+          className="h-4 w-4 rounded border-gray-300 text-[#00509d] cursor-pointer focus:ring-[#00509d] disabled:cursor-default"
         />
       </div>
     );
@@ -656,7 +674,9 @@ function TableCellInput({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    setError(validate(raw));
+    const err = validate(raw);
+    setError(err);
+    if (err) return; // don't propagate invalid values
     if (field.type === "integer") {
       onChange(raw === "" ? "" : Number.parseInt(raw, 10));
     } else if (field.type === "decimal" || field.type === "number") {
@@ -667,15 +687,7 @@ function TableCellInput({
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    if (isNumber && raw !== "") {
-      const n = Number(raw);
-      if (!Number.isNaN(n) && n < 0) {
-        // Clamp to 0 on blur
-        onChange(0);
-        setError(null);
-      }
-    }
+    setError(validate(e.target.value));
   };
 
   return (
@@ -685,11 +697,12 @@ function TableCellInput({
         value={value === undefined || value === null ? "" : typeof value === "number" ? value : (value as string)}
         onChange={handleChange}
         onBlur={handleBlur}
-        placeholder={field.placeholder ?? (isNumber ? "0" : "—")}
+        readOnly={readOnly}
+        placeholder={readOnly ? "—" : (field.placeholder ?? (isNumber ? "0" : "—"))}
         min={minValue}
         max={field.max}
         step={step}
-        className={`${base} ${error ? errorBorder : normalBorder}`}
+        className={`${base} ${error ? errorBorder : normalBorder} ${readOnly ? readOnlyCls : ""}`}
         style={{ minWidth: COL_WIDTH[field.type] ?? 140 }}
       />
       {error && (

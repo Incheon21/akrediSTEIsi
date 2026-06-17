@@ -9,6 +9,12 @@ interface Role {
   name: string;
 }
 
+const ROLE_DISPLAY: Record<string, string> = {
+  admin: "Admin/Koordinator",
+  pimpinan: "Pimpinan",
+  tim_prodi: "Tim Prodi",
+};
+
 interface ProgramStudi {
   id: string;
   kode: string;
@@ -134,13 +140,28 @@ function UserFormComponent({
 
   function validate(): FormErrors {
     const e: FormErrors = {};
+
     if (!form.nama.trim()) e.nama = "Nama wajib diisi";
+    else if (form.nama.trim().length > 100) e.nama = "Nama maksimal 100 karakter";
+
     if (!form.email.trim()) e.email = "Email wajib diisi";
+    else if (form.email.length > 255) e.email = "Email maksimal 255 karakter";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       e.email = "Format email tidak valid";
+
     if (!isEdit && !form.password) e.password = "Password wajib diisi";
-    if (form.nip && !/^\d{18}$/.test(form.nip)) e.nip = "NIP harus terdiri dari 18 digit angka";
+    else if (form.password && form.password.length < 8)
+      e.password = "Password minimal 8 karakter";
+
+    if (form.nip && !/^\d{18}$/.test(form.nip))
+      e.nip = "NIP harus terdiri dari 18 digit angka";
+
     if (!form.role_id) e.role_id = "Role wajib dipilih";
+
+    const selectedRoleName = roles.find((r) => r.id === form.role_id)?.name ?? "";
+    if (selectedRoleName === "tim_prodi" && !form.program_studi_id)
+      e.program_studi_id = "Program Studi wajib dipilih untuk role Tim Prodi";
+
     return e;
   }
 
@@ -153,9 +174,9 @@ function UserFormComponent({
     }
     setLoading(true);
     try {
-      const payload = { ...form };
+      const payload = { ...form, nama: form.nama.trim(), nip: form.nip || null };
       if (isEdit && !payload.password) delete (payload as Partial<UserForm>).password;
-      await onSubmit(payload);
+      await onSubmit(payload as UserForm);
     } catch (err: any) {
       setErrors((e) => ({ ...e, api: err.message }));
     } finally {
@@ -247,7 +268,7 @@ function UserFormComponent({
             value={form.role_id}
             onChange={(e) => {
               const selectedRoleName = roles.find(r => r.id === e.target.value)?.name ?? "";
-              const globalRoles = ["admin", "pimpinan", "koordinator"];
+              const globalRoles = ["admin", "pimpinan"];
               setField("role_id", e.target.value);
               if (globalRoles.includes(selectedRoleName)) {
                 setField("program_studi_id", "");
@@ -257,7 +278,7 @@ function UserFormComponent({
             <option value="">Pilih role</option>
             {roles.map((r) => (
               <option key={r.id} value={r.id}>
-                {r.name}
+                {ROLE_DISPLAY[r.name] ?? r.name}
               </option>
             ))}
           </select>
@@ -268,7 +289,7 @@ function UserFormComponent({
 
         {(() => {
           const selectedRoleName = roles.find(r => r.id === form.role_id)?.name ?? "";
-          const isGlobalRole = ["admin", "pimpinan", "koordinator"].includes(selectedRoleName);
+          const isGlobalRole = ["admin", "pimpinan"].includes(selectedRoleName);
           if (isGlobalRole) return null;
           return (
             <div>
@@ -287,6 +308,9 @@ function UserFormComponent({
                   </option>
                 ))}
               </select>
+              {errors.program_studi_id && (
+                <p className="text-red-500 text-xs mt-1">{errors.program_studi_id}</p>
+              )}
             </div>
           );
         })()}
@@ -411,10 +435,14 @@ export default function UserManagement() {
   }, [authLoading, authUser]);
 
   async function handleCreate(payload: UserForm) {
+    const body = {
+      ...payload,
+      program_studi_id: payload.program_studi_id || null,
+    };
     const res = await apiFetch("/api/v1/user-management/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       const err = await res.json();
@@ -431,10 +459,14 @@ export default function UserManagement() {
 
   async function handleUpdate(payload: UserForm) {
     if (!editUser) return;
+    const body = {
+      ...payload,
+      program_studi_id: payload.program_studi_id || null,
+    };
     const res = await apiFetch(`/api/v1/user-management/users/${editUser.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       const err = await res.json();
@@ -521,7 +553,7 @@ export default function UserManagement() {
             <option value="">Semua Role</option>
             {roles.map((r) => (
               <option key={r.id} value={r.id}>
-                {r.name}
+                {ROLE_DISPLAY[r.name] ?? r.name}
               </option>
             ))}
           </select>
@@ -590,7 +622,7 @@ export default function UserManagement() {
                     </td>
                     <td className="px-5 py-3.5 whitespace-nowrap">
                       <span className="inline-flex items-center px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-xs font-medium">
-                        {user.role?.name}
+                        {ROLE_DISPLAY[user.role?.name ?? ""] ?? user.role?.name}
                       </span>
                     </td>
                     <td className="px-5 py-3.5 whitespace-nowrap">

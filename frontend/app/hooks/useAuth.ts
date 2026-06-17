@@ -35,7 +35,7 @@ export function useAuth() {
 
                 setLoading(true);
                 const res = await apiFetch("/api/v1/auth/me");
-                
+
                 if (res.status === 401) {
                     localStorage.removeItem("access_token");
                     if (pathname !== "/login") {

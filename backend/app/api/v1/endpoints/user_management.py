@@ -75,7 +75,7 @@ def create_user(body: CreateUserRequest, db: Session = Depends(get_db)) -> UserR
     if not role:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role tidak ditemukan")
 
-    if role.name in ["admin", "pimpinan", "koordinator"]:
+    if role.name in ["admin", "pimpinan"]:
         if body.program_studi_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -149,7 +149,7 @@ def update_user(
 
     # Enforce program_studi_id = None for global roles
     current_role = db.get(Role, user.role_id)
-    if current_role and current_role.name in ["admin", "pimpinan", "koordinator"]:
+    if current_role and current_role.name in ["admin", "pimpinan"]:
         if body.program_studi_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

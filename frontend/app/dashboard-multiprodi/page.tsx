@@ -238,7 +238,7 @@ export default function DashboardMultiProdiPage() {
                             <ProdiCard
                                 prodiList={active_prodi_list}
                                 currentYear={current_year}
-                                onToggle={user?.role === "admin" || user?.role === "koordinator" ? handleToggle : undefined}
+                                onToggle={user?.role === "admin" ? handleToggle : undefined}
 
                                 isTogglingId={togglingId}
                             />
@@ -264,7 +264,7 @@ export default function DashboardMultiProdiPage() {
                             <ProdiCard
                                 prodiList={inactive_prodi_list}
                                 currentYear={current_year}
-                                onToggle={user?.role === "admin" || user?.role === "koordinator" ? handleToggle : undefined}
+                                onToggle={user?.role === "admin" ? handleToggle : undefined}
 
                                 isTogglingId={togglingId}
                             />

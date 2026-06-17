@@ -112,10 +112,10 @@ def get_global_access_user(
 ) -> User:
     """
     Dependency that restricts access to users with global (multi-prodi) access:
-    admin, pimpinan, and koordinator.
+    admin and pimpinan.
     tim_prodi users are scoped to their own prodi and are rejected here.
     """
-    global_roles = {"admin", "pimpinan", "koordinator"}
+    global_roles = {"admin", "pimpinan"}
     if current_user.role is None or current_user.role.name not in global_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

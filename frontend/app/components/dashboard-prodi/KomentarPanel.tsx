@@ -29,14 +29,13 @@ function formatRelativeTime(isoString: string): string {
 }
 
 const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
-  pimpinan:   { label: "Pimpinan",   cls: "bg-indigo-100 text-indigo-700" },
-  admin:      { label: "Admin",      cls: "bg-slate-100 text-slate-600" },
-  koordinator:{ label: "Koordinator",cls: "bg-blue-100 text-blue-700" },
-  tim_prodi:  { label: "Tim Prodi",  cls: "bg-emerald-100 text-emerald-700" },
+  pimpinan:  { label: "Pimpinan",  cls: "bg-indigo-100 text-indigo-700" },
+  admin:     { label: "Admin/Koordinator", cls: "bg-slate-100 text-slate-600" },
+  tim_prodi: { label: "Tim Prodi", cls: "bg-emerald-100 text-emerald-700" },
 };
 
 const canComment = (role: string) =>
-  ["pimpinan", "admin", "koordinator"].includes(role);
+  ["pimpinan", "admin"].includes(role);
 
 function getInitials(nama: string) {
   return nama
@@ -124,7 +123,7 @@ export default function KomentarPanel({
         )}
       </div>
 
-      {/* Input Form — hanya untuk pimpinan, admin, koordinator */}
+      {/* Input Form — hanya untuk pimpinan dan admin */}
       {canComment(currentUserRole) && (
         <div className="px-6 pt-5 pb-4 border-b border-slate-100">
           {error && (

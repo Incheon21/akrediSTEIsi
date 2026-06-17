@@ -4,22 +4,28 @@ export const API_URL =
 export async function apiFetch(path: string, options?: RequestInit) {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options?.headers,
+  };
+
+  const doFetch = () =>
+    fetch(`${API_URL}${path}`, { cache: "no-store", ...options, headers });
+
   try {
-    const res = await fetch(`${API_URL}${path}`, {
-      cache: "no-store",
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options?.headers,
-      },
-    });
-    return res;
-  } catch (error) {
-    throw new Error(
-      `Tidak dapat terhubung ke backend API di ${API_URL}. Pastikan backend berjalan dan NEXT_PUBLIC_API_URL sudah benar.`,
-      { cause: error },
-    );
+    return await doFetch();
+  } catch {
+    // One retry after a short delay for transient connection errors (e.g. backend cold start)
+    await new Promise((r) => setTimeout(r, 800));
+    try {
+      return await doFetch();
+    } catch (error) {
+      throw new Error(
+        `Tidak dapat terhubung ke backend API di ${API_URL}. Pastikan backend berjalan dan NEXT_PUBLIC_API_URL sudah benar.`,
+        { cause: error },
+      );
+    }
   }
 }
 

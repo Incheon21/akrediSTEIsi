@@ -13,7 +13,7 @@ import { useClickOutside } from "@/app/hooks/useClickOutside";
 import KomentarPanel from "@/app/components/dashboard-prodi/KomentarPanel";
 
 const canEdit = (role: string) =>
-  ["admin", "koordinator", "tim_prodi"].includes(role);
+  ["admin", "tim_prodi"].includes(role);
 
 function DashboardProdiPageInner() {
   const [tahun, setTahun] = useState<string | null>(null);
@@ -285,7 +285,7 @@ function DashboardProdiPageInner() {
               </div>
             </div>
             {/* Import LKPS */}
-            {data.program_studi_profile.is_active_accreditation && (
+            {data.program_studi_profile.is_active_accreditation && editAllowed && (
               <>
                 <div className="flex items-center gap-2">
                   <input
@@ -505,7 +505,7 @@ function DashboardProdiPageInner() {
                         </div>
                       </div>
 
-                      {editAllowed && (
+                      {editAllowed ? (
                         <div className="mt-4 flex gap-2 md:mt-0">
                           <button
                             onClick={() =>
@@ -528,7 +528,30 @@ function DashboardProdiPageInner() {
                             Isi LED
                           </button>
                         </div>
-                      )}
+                      ) : role === "pimpinan" && data.lkps_submission_id ? (
+                        <div className="mt-4 flex gap-2 md:mt-0">
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/akreditasi/lkps/${data.lkps_submission_id}?kriteria=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}&id=${prodiIdFromUrl || ""}`,
+                              )
+                            }
+                            className="rounded-md bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                          >
+                            Lihat LKPS
+                          </button>
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/prodi/led?kriteria_kode=${kriteria.id}&target_akreditasi_id=${data.target_akreditasi_id}&tahun=${data.current_year}&id=${prodiIdFromUrl || ""}&lkps_submission_id=${data.lkps_submission_id}`,
+                              )
+                            }
+                            className="rounded-md bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200"
+                          >
+                            Lihat LED
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 ))}

@@ -79,7 +79,7 @@ def authorized_client_tim_prodi(client, tim_prodi_token):
 def seeded_roles(db):
     """Create all four roles and return them as a dict keyed by name."""
     roles = {}
-    for name in ["admin", "pimpinan", "koordinator", "tim_prodi"]:
+    for name in ["admin", "pimpinan", "tim_prodi"]:
         role = db.query(Role).filter(Role.name == name).first()
         if not role:
             role = Role(name=name)

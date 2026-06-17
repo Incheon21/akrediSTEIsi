@@ -1,6 +1,6 @@
 export type StatusColor = "green" | "yellow" | "red" | "orange";
 
-export type UserRole = "admin" | "pimpinan" | "koordinator" | "tim_prodi";
+export type UserRole = "admin" | "pimpinan" | "tim_prodi";
 
 export interface ProgramStudiProfile {
   name: string;

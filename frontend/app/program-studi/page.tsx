@@ -32,7 +32,7 @@ interface ProdiProfile {
 
 type EditableFields = Omit<ProdiProfile, "id" | "kode" | "jenjang">;
 
-const EDITABLE_ROLES = ["koordinator", "admin"];
+const EDITABLE_ROLES = ["admin"];
 
 function Field({ label, value }: { label: string; value: string | number | null }) {
   return (
