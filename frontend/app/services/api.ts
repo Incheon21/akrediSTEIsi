@@ -107,6 +107,21 @@ export async function fetchLedNarasi(
   return res.json();
 }
 
+export async function fetchLedNarasiBatch(
+  targetId: string,
+  indikatorIds: string[],
+): Promise<Record<string, LedNarasiResponse>> {
+  if (indikatorIds.length === 0) return {};
+  const params = new URLSearchParams({ target_akreditasi_id: targetId });
+  indikatorIds.forEach((id) => params.append("indikator_ids", id));
+  const res = await apiFetch(`/api/v1/led/narasi/batch?${params.toString()}`);
+  if (!res.ok) {
+    throw new Error("Gagal mengambil narasi LED.");
+  }
+  const json: { data: Record<string, LedNarasiResponse> } = await res.json();
+  return json.data;
+}
+
 export async function saveLedNarasi(
   request: SaveLedNarasiRequest,
 ): Promise<SaveLedNarasiResponse> {

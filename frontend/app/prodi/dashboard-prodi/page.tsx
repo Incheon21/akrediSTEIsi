@@ -192,12 +192,7 @@ function DashboardProdiPageInner() {
     }
   };
 
-  const onImportLKPS = async () => {
-    const file = importFileRef.current?.files?.[0];
-    if (!file) {
-      setImportError("Pilih file terlebih dahulu.");
-      return;
-    }
+  const onImportLKPS = async (file: File) => {
     if (!data?.lkps_submission_id) {
       setImportError("Belum ada submission LKPS untuk siklus ini.");
       return;
@@ -213,6 +208,11 @@ function DashboardProdiPageInner() {
     } finally {
       setIsImportingLKPS(false);
     }
+  };
+
+  const onImportButtonClick = () => {
+    setImportError(null);
+    importFileRef.current?.click();
   };
 
   const editAllowed = canEdit(role);
@@ -287,21 +287,23 @@ function DashboardProdiPageInner() {
             {/* Import LKPS */}
             {data.program_studi_profile.is_active_accreditation && editAllowed && (
               <>
-                <div className="flex items-center gap-2">
-                  <input
-                    ref={importFileRef}
-                    type="file"
-                    accept=".xls,.xlsx"
-                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-500 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-xs file:font-medium file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  <button
-                    onClick={onImportLKPS}
-                    disabled={isImportingLKPS}
-                    className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isImportingLKPS ? 'bg-[#00509d] opacity-70 cursor-not-allowed' : 'bg-[#00509d] hover:bg-[#003f7d]'}`}
-                  >
-                    {isImportingLKPS ? "Mengimpor..." : "Import LKPS"}
-                  </button>
-                </div>
+                <input
+                  ref={importFileRef}
+                  type="file"
+                  accept=".xls,.xlsx"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) onImportLKPS(file);
+                  }}
+                />
+                <button
+                  onClick={onImportButtonClick}
+                  disabled={isImportingLKPS}
+                  className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isImportingLKPS ? 'bg-[#00509d] opacity-70 cursor-not-allowed' : 'bg-[#00509d] hover:bg-[#003f7d]'}`}
+                >
+                  {isImportingLKPS ? "Mengimpor..." : "Import LKPS"}
+                </button>
                 {importError && (
                   <p className="text-xs text-red-600">{importError}</p>
                 )}

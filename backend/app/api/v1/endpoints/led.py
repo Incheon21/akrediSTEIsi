@@ -1,13 +1,13 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models.user import User
-from app.schemas.led import LEDResponse, LEDSaveRequest, LEDSaveResponse
-from app.services.led import get_led_narasi, upsert_led_narasi
+from app.schemas.led import LEDBatchResponse, LEDResponse, LEDSaveRequest, LEDSaveResponse
+from app.services.led import get_led_narasi, get_led_narasi_batch, upsert_led_narasi
 from app.services.led_exporter import generate_led_document
 from app.utils.dependencies import get_current_user, require_role
 
@@ -44,6 +44,35 @@ def save_narasi_led(
     return LEDSaveResponse(
         message="Narasi LED berhasil disimpan.",
         data=LEDResponse.model_validate(result),
+    )
+
+
+@router.get(
+    "/narasi/batch",
+    response_model=LEDBatchResponse,
+    summary="Get multiple narasi LED in one request",
+    dependencies=[
+        Depends(require_role("tim_prodi", "admin", "pimpinan"))
+    ],
+)
+def get_narasi_led_batch(
+    target_akreditasi_id: UUID,
+    indikator_ids: list[UUID] = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> LEDBatchResponse:
+    """
+    Fetch all existing narasi LED for a given target + list of indikator IDs in a single DB query.
+    Returns a dict keyed by indikator_id. Missing entries (narasi belum diisi) are absent from the dict.
+    """
+    rows = get_led_narasi_batch(
+        db=db,
+        target_akreditasi_id=target_akreditasi_id,
+        indikator_ids=indikator_ids,
+        current_user=current_user,
+    )
+    return LEDBatchResponse(
+        data={k: LEDResponse.model_validate(v) for k, v in rows.items()}
     )
 
 

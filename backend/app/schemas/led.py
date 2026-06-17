@@ -28,3 +28,7 @@ class LEDResponse(BaseModel):
 class LEDSaveResponse(BaseModel):
     message: str
     data: LEDResponse
+
+
+class LEDBatchResponse(BaseModel):
+    data: dict[str, LEDResponse]

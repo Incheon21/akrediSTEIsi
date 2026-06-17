@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   fetchIndikatorsByKriteria,
-  fetchLedNarasi,
+  fetchLedNarasiBatch,
   saveLedNarasi,
   type IndicatorResponse,
 } from "@/app/services/api";
@@ -130,25 +130,28 @@ function ProdiLedPageInner() {
         );
         setIndikators(indikatorData);
 
-        // 2) Try load existing LED narasi for all indicators
+        // 2) Load all existing LED narasi in a single batch request
         const newNarasis: Record<string, string> = {};
         const newOriginalNarasis: Record<string, string> = {};
         const newExistingIds: Record<string, string | null> = {};
 
-        await Promise.all(
-          indikatorData.map(async (ind) => {
-            const existingNarasi = await fetchLedNarasi(targetId, ind.id);
-            if (existingNarasi) {
-              newExistingIds[ind.id] = existingNarasi.id;
-              newNarasis[ind.id] = existingNarasi.narasi ?? "";
-              newOriginalNarasis[ind.id] = existingNarasi.narasi ?? "";
-            } else {
-              newExistingIds[ind.id] = null;
-              newNarasis[ind.id] = "";
-              newOriginalNarasis[ind.id] = "";
-            }
-          }),
+        const batchResult = await fetchLedNarasiBatch(
+          targetId,
+          indikatorData.map((ind) => ind.id),
         );
+
+        for (const ind of indikatorData) {
+          const existing = batchResult[ind.id] ?? null;
+          if (existing) {
+            newExistingIds[ind.id] = existing.id;
+            newNarasis[ind.id] = existing.narasi ?? "";
+            newOriginalNarasis[ind.id] = existing.narasi ?? "";
+          } else {
+            newExistingIds[ind.id] = null;
+            newNarasis[ind.id] = "";
+            newOriginalNarasis[ind.id] = "";
+          }
+        }
 
         setNarasis(newNarasis);
         setOriginalNarasis(newOriginalNarasis);

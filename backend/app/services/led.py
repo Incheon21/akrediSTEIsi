@@ -173,6 +173,35 @@ def upsert_led_narasi(
         )
 
 
+def get_led_narasi_batch(
+    db: Session,
+    *,
+    target_akreditasi_id: UUID,
+    indikator_ids: list[UUID],
+    current_user: User,
+) -> dict[str, NarasiLED]:
+    """
+    Fetch all existing narasi LED for a target + list of indikator IDs in one query.
+    Returns a dict keyed by indikator_id (str). Missing entries are simply absent.
+    """
+    _validate_target_akreditasi_for_user(
+        db=db,
+        target_akreditasi_id=target_akreditasi_id,
+        current_user=current_user,
+    )
+
+    rows = (
+        db.query(NarasiLED)
+        .filter(
+            NarasiLED.target_akreditasi_id == target_akreditasi_id,
+            NarasiLED.indikator_id.in_(indikator_ids),
+        )
+        .all()
+    )
+
+    return {str(row.indikator_id): row for row in rows}
+
+
 def get_led_narasi(
     db: Session,
     *,
