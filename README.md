@@ -56,9 +56,8 @@ You can log in to the frontend using any of the following pre-configured account
 
 | Role | Email | Password |
 |---|---|---|
-| **Admin** | `admin@stei.itb.ac.id` | `admin123` |
+| **Admin/Koordinator** | `admin@stei.itb.ac.id` | `admin123` |
 | **Pimpinan** | `pimpinan@stei.itb.ac.id` | `pimpinan123` |
-| **Koordinator** | `koordinator@stei.itb.ac.id` | `koordinator123` |
 | **Tim Prodi** | `timprodi@stei.itb.ac.id` | `timprodi123` |
 
 ### Hard Resetting the Database
