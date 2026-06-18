@@ -13,7 +13,6 @@ app = FastAPI(
     title=settings.APP_NAME,
     description="Backend API for the IABEE Accreditation Management System",
     version="0.1.0",
-    redirect_slashes=False,
 )
 
 # Ensure storage directory exists and mount it for direct file access
