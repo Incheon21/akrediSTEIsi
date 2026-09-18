@@ -17,7 +17,7 @@ const GaugeMeter = ({ score, target }: { score: number; target: number }) => {
       {/* Title */}
       <div className="flex items-center gap-2 mb-5">
         <span className="w-1 h-5 bg-[#00509d] rounded-full inline-block shrink-0" />
-        <p className="text-sm font-bold text-[#132040]">Hasil Skor Akreditasi</p>
+        <p className="text-sm font-bold text-[#132040]">Hasil Skor AkreditasiIIII</p>
       </div>
 
       {/* ── Bar area with top padding for the target marker ── */}
