@@ -4,7 +4,7 @@ stages:
 
 default:
   tags:
-    - handson
+    - gitlab--duo
 
 run-tests:
   stage: test
