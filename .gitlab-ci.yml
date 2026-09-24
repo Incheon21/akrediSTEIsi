@@ -100,3 +100,18 @@ frontend-build:
     - npm ci --no-audit --no-fund
   script:
     - npm run build
+
+backend-build:
+  stage: build
+  image: python:3.13-slim
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == "main"
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends curl
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - . "$HOME/.local/bin/env"
+    - cd backend
+  script:
+    - uv sync --frozen --no-dev
+    - uv build
