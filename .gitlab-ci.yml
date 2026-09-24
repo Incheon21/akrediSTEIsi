@@ -2,6 +2,10 @@ stages:
   - test
   - build
 
+default:
+  tags:
+    - handson
+
 run-tests:
   stage: test
   image: python:3.13-slim
@@ -11,7 +15,7 @@ run-tests:
   before_script:
     - apt-get update && apt-get install -y curl
     - curl -LsSf https://astral.sh/uv/install.sh | sh
-    - source $HOME/.local/bin/env
+    - . "$HOME/.local/bin/env"
     - cp ./backend/.env.example ./backend/.env
     - cd backend && uv sync
   script:
@@ -25,7 +29,7 @@ docker-build:
     - name: docker:29-dind
       alias: thedockerhost
   variables:
-    DOCKER_HOST: tcp://thedockerhost:2375/
+    DOCKER_HOST: tcp://thedockerhost:2375
     DOCKER_TLS_CERTDIR: ""
     DOCKER_DRIVER: overlay2
   rules:
@@ -37,7 +41,7 @@ docker-build:
         TAG: $CI_COMMIT_SHORT_SHA
   before_script:
     - apk add --no-cache bash python3
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - echo "$CI_REGISTRY_PASSWORD" | docker login --username "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
     - cp ./backend/.env.example ./backend/.env
   script:
     - docker compose build
