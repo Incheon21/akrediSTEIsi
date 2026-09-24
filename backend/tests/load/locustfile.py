@@ -12,8 +12,6 @@ Atau jalankan headless (tanpa browser):
     --html tests/load/reports/load_test_report.html
 """
 
-import random
-import uuid
 
 from locust import HttpUser, between, task
 

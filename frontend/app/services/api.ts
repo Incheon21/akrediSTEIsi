@@ -63,6 +63,7 @@ export interface SaveLedNarasiResponse {
 }
 
 export interface IndicatorResponse {
+  kriteria?: { nama: string } | null;
   id: string;
   kriteria_id: string;
   kode_indikator: string;

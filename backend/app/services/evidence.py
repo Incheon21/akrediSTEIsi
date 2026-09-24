@@ -1,4 +1,3 @@
-import os
 import shutil
 import uuid
 from pathlib import Path
@@ -134,7 +133,7 @@ def get_evidence_list(
             db.query(Evidence)
             .filter(
                 or_(
-                    Evidence.is_global == True,
+                    Evidence.is_global.is_(True),
                     Evidence.id.in_(linked_ids),
                 )
             )

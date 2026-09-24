@@ -16,7 +16,6 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.db import get_db
-from app.models.evidence import EvidenceIndikator
 from app.models.user import User
 from app.schemas.evidence import (
     EvidenceIndikatorRequest,

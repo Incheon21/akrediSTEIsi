@@ -64,8 +64,8 @@ function DashboardProdiPageInner() {
         }
         const json: DashboardData = await res.json();
         setData(json);
-      } catch (err: any) {
-        setError(err.message || "Terjadi kesalahan");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Terjadi kesalahan");
       } finally {
         setLoading(false);
       }

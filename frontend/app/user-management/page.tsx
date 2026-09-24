@@ -177,8 +177,8 @@ function UserFormComponent({
       const payload = { ...form, nama: form.nama.trim(), nip: form.nip || null };
       if (isEdit && !payload.password) delete (payload as Partial<UserForm>).password;
       await onSubmit(payload as UserForm);
-    } catch (err: any) {
-      setErrors((e) => ({ ...e, api: err.message }));
+    } catch (err: unknown) {
+      setErrors((e) => ({ ...e, api: err instanceof Error ? err.message : "Terjadi kesalahan" }));
     } finally {
       setLoading(false);
     }
@@ -449,7 +449,11 @@ export default function UserManagement() {
       const detail = err.detail;
       throw new Error(
         Array.isArray(detail)
-          ? detail.map((d: any) => d.msg).join(", ")
+          ? detail.map((d: unknown) =>
+              typeof d === "object" && d !== null && "msg" in d
+                ? String(d.msg)
+                : "Data tidak valid"
+            ).join(", ")
           : detail ?? "Gagal menambah user"
       );
     }
@@ -473,7 +477,11 @@ export default function UserManagement() {
       const detail = err.detail;
       throw new Error(
         Array.isArray(detail)
-          ? detail.map((d: any) => d.msg).join(", ")
+          ? detail.map((d: unknown) =>
+              typeof d === "object" && d !== null && "msg" in d
+                ? String(d.msg)
+                : "Data tidak valid"
+            ).join(", ")
           : detail ?? "Gagal memperbarui user"
       );
     }

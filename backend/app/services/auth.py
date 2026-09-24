@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timedelta
 from jose import jwt
 
+from app.core.config import get_settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -42,7 +43,8 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
 def create_access_token_with_role(user_id: str, role: str, expires_minutes: int = 15):
     expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
     payload = {"sub": user_id, "role": role, "exp": expire}
-    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    settings = get_settings()
+    token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return token
 def create_tokens_for_user(user: User) -> TokenResponse:
     """Issue a fresh access + refresh token pair for a given user."""

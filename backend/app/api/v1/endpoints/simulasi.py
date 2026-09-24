@@ -258,7 +258,7 @@ def hitung_simulasi(request: SimulasiRequest, db: Session = Depends(get_db)):
         return service.process_simulasi(request)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Terjadi kesalahan server")
 
 
@@ -456,7 +456,7 @@ def hitung_simulasi_otomatis(
             db.query(TargetAkreditasi)
             .filter(
                 TargetAkreditasi.program_studi_id == prodi_id,
-                TargetAkreditasi.is_aktif == True,
+                TargetAkreditasi.is_aktif.is_(True),
             )
             .first()
         )
@@ -512,7 +512,7 @@ def hitung_simulasi_otomatis(
         db.query(LkpsMahasiswaAktif)
         .filter(
             LkpsMahasiswaAktif.submission_id == submission.id,
-            LkpsMahasiswaAktif.prodi_diakreditasi == True,
+            LkpsMahasiswaAktif.prodi_diakreditasi.is_(True),
         )
         .first()
     )

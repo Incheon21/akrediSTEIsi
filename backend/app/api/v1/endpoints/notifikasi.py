@@ -49,12 +49,12 @@ def list_notifikasi(
         TargetAkreditasi, Notifikasi.target_akreditasi_id == TargetAkreditasi.id
     ).filter(
         Notifikasi.user_id == current_user.id,
-        or_(TargetAkreditasi.id == None, TargetAkreditasi.notifikasi_aktif == True)
+        or_(TargetAkreditasi.id.is_(None), TargetAkreditasi.notifikasi_aktif.is_(True))
     )
     if program_studi_id:
         query = query.filter(Notifikasi.program_studi_id == program_studi_id)
 
-    unread_count = query.filter(Notifikasi.is_read == False).count()
+    unread_count = query.filter(Notifikasi.is_read.is_(False)).count()
     items = (
         query.order_by(Notifikasi.is_read.asc(), Notifikasi.updated_at.desc())
         .limit(limit)
@@ -102,8 +102,8 @@ def mark_all_notifikasi_read(
         TargetAkreditasi, Notifikasi.target_akreditasi_id == TargetAkreditasi.id
     ).filter(
         Notifikasi.user_id == current_user.id,
-        Notifikasi.is_read == False,
-        or_(TargetAkreditasi.id == None, TargetAkreditasi.notifikasi_aktif == True)
+        Notifikasi.is_read.is_(False),
+        or_(TargetAkreditasi.id.is_(None), TargetAkreditasi.notifikasi_aktif.is_(True))
     )
     if program_studi_id:
         query = query.filter(Notifikasi.program_studi_id == program_studi_id)

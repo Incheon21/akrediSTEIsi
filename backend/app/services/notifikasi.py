@@ -41,7 +41,7 @@ def notify_komentar_to_tim_prodi(
     target = db.query(TargetAkreditasi).filter(TargetAkreditasi.id == target_akreditasi_id).first()
     prodi_name = target.program_studi.nama if target and target.program_studi else ""
     tahun = target.tahun_akreditasi if target else ""
-    href = f"/prodi/dashboard-prodi"
+    href = "/prodi/dashboard-prodi"
     source_key = f"komentar:{komentar_id}"
     preview = isi_komentar[:80] + ("…" if len(isi_komentar) > 80 else "")
 
@@ -134,7 +134,7 @@ def _upsert_generated_notification(
 
 def _accessible_active_targets(db: Session, current_user: User) -> list[TargetAkreditasi]:
     role_name = current_user.role.name if current_user.role else ""
-    query = db.query(TargetAkreditasi).filter(TargetAkreditasi.is_aktif == True)
+    query = db.query(TargetAkreditasi).filter(TargetAkreditasi.is_aktif.is_(True))
 
     if role_name == "tim_prodi":
         if not current_user.program_studi_id:

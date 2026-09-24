@@ -2,7 +2,7 @@ import re
 
 from sqlalchemy.orm import Session
 
-from app.models.simulasi import IndikatorSimulasi, KomponenPenilaian, MatriksAkreditasi
+from app.models.simulasi import IndikatorSimulasi, MatriksAkreditasi
 from app.schemas.simulasi import SimulasiRequest, SimulasiResponse
 from app.services.formula import evaluate_formula
 

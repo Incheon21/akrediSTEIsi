@@ -16,7 +16,7 @@ from app.models.lkps import (
     LkpsRekognisiDtps,
     LkpsPembimbingLapangan,
 )
-from .base import BaseMapper, CHECK
+from .base import BaseMapper
 
 # Pendidikan terakhir → column in sheet 4b (C=S3, D=S2, E=S1, F=D4, G=D3, H=D2, I=D1, J=SMA_SMK)
 _PENDIDIKAN_COL: dict[str, str] = {

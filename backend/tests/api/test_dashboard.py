@@ -1,6 +1,5 @@
 from uuid import uuid4
 
-from fastapi.testclient import TestClient
 
 
 def test_get_dashboard_prodi(

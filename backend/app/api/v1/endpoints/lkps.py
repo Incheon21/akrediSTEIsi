@@ -127,7 +127,7 @@ def create_submission(
 
     # Resolve active template
     template = db.execute(
-        select(LkpsTemplate).where(LkpsTemplate.is_active == True)
+        select(LkpsTemplate).where(LkpsTemplate.is_active.is_(True))
     ).scalar_one_or_none()
 
     sub = LkpsSubmission(

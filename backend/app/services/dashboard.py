@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models.evidence import Evidence, EvidenceIndikator
+from app.models.evidence import EvidenceIndikator
 from app.models.indikator import Indikator
 from app.models.kriteria import Kriteria
 from app.models.lkps import (

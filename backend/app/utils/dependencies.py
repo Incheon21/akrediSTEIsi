@@ -9,7 +9,6 @@ import json
 from app.core.security import decode_token
 from app.db import get_db
 from app.models.user import User
-from app.services.auth import get_user_by_id
 
 bearer_scheme = HTTPBearer()
 

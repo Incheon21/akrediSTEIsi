@@ -392,8 +392,8 @@ function ProdiLedPageInner() {
                 <p className="font-semibold text-gray-800 uppercase">
                   {kriteriaKode}
                   {indikators.length > 0 &&
-                  (indikators[0] as any).kriteria?.nama
-                    ? ` - ${(indikators[0] as any).kriteria.nama}`
+                  indikators[0].kriteria?.nama
+                    ? ` - ${indikators[0].kriteria.nama}`
                     : ""}
                 </p>
               </div>

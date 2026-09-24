@@ -8,10 +8,7 @@ from app.models.user import User
 from app.models.program_studi import ProgramStudi
 from app.models.target_akreditasi import TargetAkreditasi
 from app.schemas.target_akreditasi import SetTargetScoreRequest, SetDeadlineRequest, SetNotifikasiRequest, TargetAkreditasiResponse
-from app.services.dashboard import get_dashboard_prodi_data
-from app.services.dashboard import get_dashboard_prodi_data
-from app.utils.dependencies import get_current_user, require_role
-from datetime import datetime
+from app.utils.dependencies import get_current_user
 
 router = APIRouter(prefix="/target_akreditasi", tags=["target_akreditasi"])
 
@@ -93,7 +90,7 @@ def get_notifikasi_status(
         select(TargetAkreditasi)
         .where(
             TargetAkreditasi.program_studi_id == prodi_id,
-            TargetAkreditasi.is_aktif == True,
+            TargetAkreditasi.is_aktif.is_(True),
         )
     ).scalars().first()
 

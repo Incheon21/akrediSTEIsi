@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 import app.models  # noqa: F401 - register all models with Base
 from app.core.security import hash_password
-from app.db import Base, SessionLocal, engine
+from app.db import SessionLocal
 from app.models.indikator import Indikator
 from app.models.kriteria import Kriteria
 from app.models.program_studi import ProgramStudi

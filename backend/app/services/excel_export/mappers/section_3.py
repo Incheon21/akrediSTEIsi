@@ -13,7 +13,7 @@ from app.models.lkps import (
     LkpsPenelitianSummary,
     LkpsPkmSummary,
 )
-from .base import BaseMapper, CHECK
+from .base import BaseMapper
 
 _PENELITIAN_ROW: dict[str, int] = {
     "perguruan_tinggi_mandiri": 9,

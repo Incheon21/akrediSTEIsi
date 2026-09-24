@@ -2,7 +2,6 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.main import app
 from app.models.lkps import LkpsSubmission
 from app.models.program_studi import ProgramStudi
 from app.models.simulasi import (

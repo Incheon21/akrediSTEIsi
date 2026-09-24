@@ -139,7 +139,7 @@ export default function KomentarPanel({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  if (!submitting && inputText.trim()) handleSubmit(e as any);
+                  if (!submitting && inputText.trim()) e.currentTarget.form?.requestSubmit();
                 }
               }}
               rows={3}
