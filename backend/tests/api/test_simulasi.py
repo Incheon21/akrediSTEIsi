@@ -165,3 +165,26 @@ def test_simulasi_otomatis_mengelompokkan_indikator_penilaian(
     assert group_1["jumlah_manual_terisi"] == 1
     assert group_1["sub_bab"][0]["jumlah_manual_terisi"] == 1
     assert group_2["jumlah_otomatis"] == 1
+
+
+@pytest.mark.parametrize(
+    "value, expected", [(0.1, 2.0), (0.2, 4.0), (0.5, 4.0), (0.75, 2.0)]
+)
+def test_piecewise_uses_restricted_conditions(db: Session, value, expected):
+    service = SimulasiService(db)
+    indikator = IndikatorSimulasi(
+        tipe_evaluasi="PIECEWISE",
+        konfigurasi_rumus={"conditions": [
+            {"condition": "().__class__", "formula": "0"},
+            {"condition": "PJP < 0.2", "formula": "20 * PJP"},
+            {"condition": "0.2 <= PJP <= 0.5", "formula": "4"},
+            {"condition": "PJP > 0.5", "formula": "8 - (8 * PJP)"},
+        ]},
+    )
+    assert service._hitung_skor_mentah(indikator, value) == expected
+
+
+def test_invalid_formula_preserves_zero_fallback(db: Session):
+    service = SimulasiService(db)
+    assert service._evaluasi_formula("().__class__", {}) == 0.0
+    assert service._evaluasi_formula("1 / 0", {}) == 0.0

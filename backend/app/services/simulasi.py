@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.simulasi import IndikatorSimulasi, KomponenPenilaian, MatriksAkreditasi
 from app.schemas.simulasi import SimulasiRequest, SimulasiResponse
+from app.services.formula import evaluate_formula
 
 
 class SimulasiService:
@@ -16,17 +17,7 @@ class SimulasiService:
 
     def _evaluasi_formula(self, formula: str, variables: dict) -> float:
         try:
-            import math
-
-            allowed_names = {"math": math, "min": min, "max": max}
-            allowed_names.update(variables)
-            return float(
-                eval(
-                    self._normalisasi_formula(formula),
-                    {"__builtins__": {}},
-                    allowed_names,
-                )
-            )
+            return float(evaluate_formula(self._normalisasi_formula(formula), variables))
         except Exception:
             return 0.0
 
@@ -88,10 +79,9 @@ class SimulasiService:
                 formula_str = cond.get("formula", "")
                 vars_dict = {"PJP": nilai_input}
 
-                # Check condition
-                # Transform "PJP < 0.2" to Python eval
+                # Conditions use the same restricted expression grammar.
                 try:
-                    is_true = eval(condition_str, {"__builtins__": {}}, vars_dict)
+                    is_true = evaluate_formula(condition_str, vars_dict)
                     if is_true:
                         return min(
                             4.0,
